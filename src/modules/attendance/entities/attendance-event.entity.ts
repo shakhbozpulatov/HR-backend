@@ -7,8 +7,8 @@ import {
   JoinColumn,
   Index,
 } from 'typeorm';
-import { Employee } from '../../employees/entities/employee.entity';
-import { TerminalDevice } from '../../terminals/entities/terminal-device.entity';
+import { Employee } from '@/modules/employees/entities/employee.entity';
+import { TerminalDevice } from '@/modules/terminals/entities/terminal-device.entity';
 
 export enum EventType {
   CLOCK_IN = 'clock_in',

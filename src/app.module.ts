@@ -5,29 +5,20 @@ import { ScheduleModule } from '@nestjs/schedule';
 import { BullModule } from '@nestjs/bull';
 import { JwtModule } from '@nestjs/jwt';
 
-import { DatabaseConfig } from './config/database.config';
-import { validationSchema } from './config/validation.schema';
+import { DatabaseConfig } from '@/config/database.config';
+import { validationSchema } from '@/config/validation.schema';
 
 // Modules
-import { AuthModule } from './modules/auth/auth.module';
-import { EmployeesModule } from './modules/employees/employees.module';
-import { AnalyticsModule } from './modules/analytics/analytics.module';
-import { AuditModule } from './modules/audit/audit.module';
-import { UsersModule } from './modules/users/users.module';
-import { HolidaysModule } from './modules/holidays/holidays.module';
-import { TerminalsModule } from './modules/terminals/terminals.module';
-import { PayrollModule } from './modules/payroll/payroll.module';
-import { AttendanceModule } from './modules/attendance/attendance.module';
-import { SchedulesModule } from './modules/schedules/schedules.module';
-import { SchedulesModule } from './modules/schedules/schedules.module';
-import { AttendanceModule } from './modules/attendance/attendance.module';
-import { PayrollModule } from './modules/payroll/payroll.module';
-import { TerminalsModule } from './modules/terminals/terminals.module';
-import { AnalyticsModule } from './modules/analytics/analytics.module';
-import { HolidaysModule } from './modules/holidays/holidays.module';
-import { AuditModule } from './modules/audit/audit.module';
-import { UsersModule } from './modules/users/users.module';
-import { EmployeesModule } from './modules/employees/employees.module';
+import { AuthModule } from '@/modules/auth/auth.module';
+import { EmployeesModule } from '@/modules/employees/employees.module';
+import { SchedulesModule } from '@/modules/schedules/schedules.module';
+import { AttendanceModule } from '@/modules/attendance/attendance.module';
+import { PayrollModule } from '@/modules/payroll/payroll.module';
+import { TerminalsModule } from '@/modules/terminals/terminals.module';
+import { AnalyticsModule } from '@/modules/analytics/analytics.module';
+import { HolidaysModule } from '@/modules/holidays/holidays.module';
+import { AuditModule } from '@/modules/audit/audit.module';
+import { UsersModule } from '@/modules/users/users.module';
 
 @Module({
   imports: [

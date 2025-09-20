@@ -15,7 +15,7 @@ export class DatabaseConfig implements TypeOrmOptionsFactory {
       username: this.configService.get('DB_USERNAME', 'postgres'),
       password: this.configService.get('DB_PASSWORD', 'password'),
       database: this.configService.get('DB_NAME', 'hr_backend'),
-      entities: [__dirname + '/../**/*.entities{.ts,.js}'],
+      entities: [__dirname + '/../**/*.entity{.ts,.js}'],
       migrations: [__dirname + '/../database/migrations/*{.ts,.js}'],
       synchronize: this.configService.get('NODE_ENV') === 'development',
       logging: this.configService.get('NODE_ENV') === 'development',

@@ -8,11 +8,11 @@ import {
   ManyToOne,
   Index,
 } from 'typeorm';
-import { AttendanceEvent } from '../../attendance/entities/attendance-event.entity';
-import { AttendanceRecord } from '../../attendance/entities/attendance-record.entity';
-import { EmployeeScheduleAssignment } from '../../schedules/entities/employee-schedule-assignment.entity';
-import { PayrollItem } from '../../payroll/entities/payroll-item.entity';
-import { WorkVolumeEntry } from '../../payroll/entities/work-volume-entry.entity';
+import { AttendanceEvent } from '@/modules/attendance/entities/attendance-event.entity';
+import { AttendanceRecord } from '@/modules/attendance/entities/attendance-record.entity';
+import { EmployeeScheduleAssignment } from '@/modules/schedules/entities/employee-schedule-assignment.entity';
+import { PayrollItem } from '@/modules/payroll/entities/payroll-item.entity';
+import { WorkVolumeEntry } from '@/modules/payroll/entities/work-volume-entry.entity';
 
 export enum TariffType {
   HOURLY = 'HOURLY',

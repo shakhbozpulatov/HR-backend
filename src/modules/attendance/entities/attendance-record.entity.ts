@@ -9,7 +9,7 @@ import {
   OneToMany,
   Index,
 } from 'typeorm';
-import { Employee } from '../../employees/entities/employee.entity';
+import { Employee } from '@/modules/employees/entities/employee.entity';
 import { AttendanceEvent } from './attendance-event.entity';
 
 export enum AttendanceStatus {

@@ -8,7 +8,7 @@ import {
   JoinColumn,
   Index,
 } from 'typeorm';
-import { Employee } from '../../employees/entities/employee.entity';
+import { Employee } from '@/modules/employees/entities/employee.entity';
 import { ScheduleTemplate } from './schedule-template.entity';
 
 export interface ScheduleException {

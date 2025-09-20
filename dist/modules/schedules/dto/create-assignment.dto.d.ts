@@ -1,0 +1,8 @@
+import { ScheduleException } from '../entities/employee-schedule-assignment.entity';
+export declare class CreateAssignmentDto {
+    employee_id: string;
+    default_template_id: string;
+    effective_from: string;
+    effective_to?: string;
+    exceptions?: ScheduleException[];
+}

@@ -1,9 +1,18 @@
 import { Module } from '@nestjs/common';
-import { SchedulesService } from './schedules.service';
-import { SchedulesController } from './schedules.controller';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { ScheduleTemplatesController } from './schedule-templates.controller';
+import { ScheduleAssignmentsController } from './schedule-assignments.controller';
+import { ScheduleTemplatesService } from './schedule-templates.service';
+import { ScheduleAssignmentsService } from './schedule-assignments.service';
+import { ScheduleTemplate } from './entities/schedule-template.entity';
+import { EmployeeScheduleAssignment } from './entities/employee-schedule-assignment.entity';
 
 @Module({
-  controllers: [SchedulesController],
-  providers: [SchedulesService],
+  imports: [
+    TypeOrmModule.forFeature([ScheduleTemplate, EmployeeScheduleAssignment]),
+  ],
+  controllers: [ScheduleTemplatesController, ScheduleAssignmentsController],
+  providers: [ScheduleTemplatesService, ScheduleAssignmentsService],
+  exports: [ScheduleTemplatesService, ScheduleAssignmentsService],
 })
 export class SchedulesModule {}

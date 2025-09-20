@@ -5,39 +5,77 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="f223feb0-6502-4a9b-9c03-44f93ba47b8c" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/.env.example" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/common/decorators/public.decorator.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/common/decorators/roles.decorator.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/common/guards/auth.guard.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/common/guards/webhook.guard.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/common/interceptors/audit.interceptor.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/common/utils/crypto.utils.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/common/utils/time.utils.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/config/database.config.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/config/validation.schema.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/modules/attendance/attendance-queue.processor.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/modules/attendance/attendance-records.controller.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/modules/attendance/dto/manual-adjustment.dto.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/modules/attendance/dto/webhook-event.dto.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/modules/attendance/entities/attendance-event.entity.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/modules/attendance/entities/attendance-record.entity.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/modules/auth/entities/audit-log.entity.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/modules/employees/dto/create-employee.dto.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/modules/employees/entities/employee.entity.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/modules/holidays/entities/holiday.entity.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/modules/payroll/entities/payroll-item.entity.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/modules/payroll/entities/payroll-period.entity.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/modules/payroll/entities/work-volume-entry.entity.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/modules/payroll/payroll-queue.processor.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/modules/schedules/entities/employee-schedule-assignment.entity.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/modules/schedules/entities/schedule-templete.entity.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/modules/terminals/entities/terminal-device.entity.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/modules/users/entities/user.entity.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/common/filters/http-exception.filter.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/common/guards/roles.guard.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/common/interceptors/transform.interceptor.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/modules/analytics/dto/analytics-filter.dto.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/modules/attendance/attendance-events.service.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/modules/attendance/attendance-records.service.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/modules/attendance/dto/attendance-filter.dto.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/modules/audit/entities/audit-log.entity.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/modules/auth/dto/login.dto.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/modules/auth/strategies/jwt.strategy.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/modules/employees/dto/employee-filter.dto.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/modules/employees/dto/update-employee.dto.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/modules/holidays/dto/create-holiday.dto.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/modules/payroll/dto/create-payroll-item.dto.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/modules/payroll/dto/create-period.dto.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/modules/payroll/dto/payroll-filter.dto.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/modules/payroll/payroll.service.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/modules/schedules/dto/create-assignment.dto.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/modules/schedules/dto/create-exception.dto.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/modules/schedules/dto/create-schedule-template.dto.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/modules/schedules/schedule-assignments.controller.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/modules/schedules/schedule-assignments.service.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/modules/schedules/schedule-templates.controller.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/modules/terminals/terminals.service.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/modules/users/dto/create-user.dto.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/modules/users/dto/update-user.dto.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/package.json" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/pnpm-lock.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/pnpm-lock.yaml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/app.module.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/app.module.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/common/decorators/roles.decorator.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/common/decorators/roles.decorator.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/common/guards/auth.guard.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/common/guards/auth.guard.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/common/interceptors/audit.interceptor.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/common/interceptors/audit.interceptor.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/config/database.config.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/config/database.config.ts" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/main.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/modules/analytics/analytics.controller.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/modules/analytics/analytics.controller.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/modules/analytics/analytics.module.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/modules/analytics/analytics.module.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/modules/attendance/attendance-events.controller.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/modules/attendance/attendance-events.controller.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/modules/attendance/attendance-records.controller.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/modules/attendance/attendance-records.controller.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/modules/attendance/attendance.module.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/modules/attendance/attendance.module.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/modules/attendance/entities/attendance-event.entity.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/modules/attendance/entities/attendance-event.entity.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/modules/attendance/entities/attendance-record.entity.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/modules/attendance/entities/attendance-record.entity.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/modules/audit/audit.module.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/modules/audit/audit.module.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/modules/audit/audit.service.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/modules/audit/audit.service.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/modules/auth/auth.controller.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/modules/auth/auth.controller.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/modules/auth/auth.module.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/modules/auth/auth.module.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/modules/auth/auth.service.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/modules/auth/auth.service.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/modules/employees/employees.controller.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/modules/employees/employees.controller.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/modules/employees/employees.module.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/modules/employees/employees.module.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/modules/employees/employees.service.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/modules/employees/employees.service.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/modules/employees/entities/employee.entity.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/modules/employees/entities/employee.entity.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/modules/holidays/holidays.controller.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/modules/holidays/holidays.controller.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/modules/holidays/holidays.module.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/modules/holidays/holidays.module.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/modules/holidays/holidays.service.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/modules/holidays/holidays.service.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/modules/payroll/payroll.controller.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/modules/payroll/payroll.controller.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/modules/payroll/payroll.module.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/modules/payroll/payroll.module.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/modules/schedules/entities/employee-schedule-assignment.entity.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/modules/schedules/entities/employee-schedule-assignment.entity.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/modules/schedules/entities/schedule-templete.entity.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/modules/schedules/entities/schedule-template.entity.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/modules/schedules/schedules.controller.spec.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/modules/schedules/schedules.controller.spec.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/modules/schedules/schedules.controller.ts" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/modules/schedules/schedules.module.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/modules/schedules/schedules.module.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/modules/schedules/schedules.service.spec.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/modules/schedules/schedules.service.spec.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/modules/schedules/schedules.service.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/modules/schedules/schedule-templates.service.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/modules/terminals/entities/terminal-device.entity.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/modules/terminals/entities/terminal-device.entity.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/modules/terminals/terminals.controller.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/modules/terminals/terminals.controller.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/modules/terminals/terminals.module.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/modules/terminals/terminals.module.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/modules/users/entities/user.entity.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/modules/users/entities/user.entity.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/modules/users/users.controller.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/modules/users/users.controller.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/modules/users/users.module.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/modules/users/users.module.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/modules/users/users.service.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/modules/users/users.service.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tsconfig.json" beforeDir="false" afterPath="$PROJECT_DIR$/tsconfig.json" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -47,6 +85,7 @@
   <component name="FileTemplateManagerImpl">
     <option name="RECENT_TEMPLATES">
       <list>
+        <option value="tsconfig.json" />
         <option value="TypeScript File" />
       </list>
     </option>
@@ -100,7 +139,7 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1758386295802</updated>
-      <workItem from="1758386297851" duration="4148000" />
+      <workItem from="1758386297851" duration="10279000" />
     </task>
     <servers />
   </component>

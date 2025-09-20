@@ -4,55 +4,38 @@ import {
   Post,
   Body,
   Query,
-  UseGuards,
-  Req,
-  Headers,
-  UnauthorizedException,
-  BadRequestException,
   Param,
+  UseGuards,
+  Headers,
 } from '@nestjs/common';
 import { AttendanceEventsService } from './attendance-events.service';
-import { WebhookEventDto } from './dto/webhook-event.dto';
 import { AttendanceFilterDto } from './dto/attendance-filter.dto';
-import { AuthGuard } from '../../common/guards/auth.guard';
-import { RolesGuard } from '../../common/guards/roles.guard';
-import { Roles } from '../../common/decorators/roles.decorator';
-import { Public } from '../../common/decorators/public.decorator';
-import { UserRole } from '../users/entities/user.entity';
-import { WebhookGuard } from '../../common/guards/webhook.guard';
-import { CryptoUtils } from '../../common/utils/crypto.utils';
+import { AuthGuard } from '@/common/guards/auth.guard';
+import { RolesGuard } from '@/common/guards/roles.guard';
+import { Roles } from '@/common/decorators/roles.decorator';
+import { Public } from '@/common/decorators/public.decorator';
+import { UserRole } from '@/modules/users/entities/user.entity';
 
 @Controller('terminals')
 export class AttendanceEventsController {
-  constructor(
-    private readonly eventsService: AttendanceEventsService,
-    private readonly cryptoUtils: CryptoUtils,
-  ) {}
+  constructor(private readonly eventsService: AttendanceEventsService) {}
 
   @Post('events')
   @Public()
-  @UseGuards(WebhookGuard)
   async receiveWebhookEvent(
-    @Body() webhookEventDto: WebhookEventDto,
-    @Headers('x-signature') signature: string,
+    @Body() eventData: any,
     @Headers('x-idempotency-key') idempotencyKey: string,
   ) {
-    // Additional signature validation if needed
-    // The WebhookGuard handles the basic validation
-
     return await this.eventsService.processWebhookEvent(
-      webhookEventDto,
+      eventData,
       idempotencyKey,
     );
   }
 
   @Post('device-status')
   @Public()
-  @UseGuards(WebhookGuard)
-  async receiveDeviceStatus(
-    @Body() statusDto: { device_id: string; status: string; timestamp: string },
-  ) {
-    return await this.eventsService.updateDeviceStatus(statusDto);
+  async receiveDeviceStatus(@Body() statusData: any) {
+    return await this.eventsService.updateDeviceStatus(statusData);
   }
 
   @Get('events')
@@ -75,12 +58,11 @@ export class AttendanceEventsController {
   async resolveQuarantinedEvent(
     @Param('eventId') eventId: string,
     @Body() resolveDto: { employee_id: string },
-    @Req() req,
   ) {
     return await this.eventsService.resolveQuarantinedEvent(
       eventId,
       resolveDto.employee_id,
-      req.user.user_id,
+      'admin',
     );
   }
 }

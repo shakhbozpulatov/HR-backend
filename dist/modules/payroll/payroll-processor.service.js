@@ -1,0 +1,279 @@
+"use strict";
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+var __param = (this && this.__param) || function (paramIndex, decorator) {
+    return function (target, key) { decorator(target, key, paramIndex); }
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.PayrollProcessorService = void 0;
+const common_1 = require("@nestjs/common");
+const typeorm_1 = require("@nestjs/typeorm");
+const typeorm_2 = require("typeorm");
+const config_1 = require("@nestjs/config");
+const payroll_period_entity_1 = require("./entities/payroll-period.entity");
+const payroll_item_entity_1 = require("./entities/payroll-item.entity");
+const work_volume_entry_entity_1 = require("./entities/work-volume-entry.entity");
+const attendance_record_entity_1 = require("../attendance/entities/attendance-record.entity");
+const employee_entity_1 = require("../employees/entities/employee.entity");
+const moment = require("moment");
+let PayrollProcessorService = class PayrollProcessorService {
+    constructor(periodRepository, itemRepository, attendanceRepository, volumeRepository, employeeRepository, configService) {
+        this.periodRepository = periodRepository;
+        this.itemRepository = itemRepository;
+        this.attendanceRepository = attendanceRepository;
+        this.volumeRepository = volumeRepository;
+        this.employeeRepository = employeeRepository;
+        this.configService = configService;
+        this.overtimeMultiplier = this.configService.get('OVERTIME_MULTIPLIER', 1.5);
+    }
+    async processPayrollPeriod(periodId) {
+        const period = await this.periodRepository.findOne({
+            where: { period_id: periodId },
+        });
+        if (!period || period.status !== payroll_period_entity_1.PeriodStatus.OPEN) {
+            throw new Error('Period not found or not open for processing');
+        }
+        const employees = await this.employeeRepository.find({
+            where: { status: 'active' },
+        });
+        await this.itemRepository.delete({
+            period_id: periodId,
+            source: payroll_item_entity_1.PayrollItemSource.AUTO,
+        });
+        for (const employee of employees) {
+            await this.processEmployeePayroll(employee, period);
+        }
+    }
+    async processEmployeePayroll(employee, period) {
+        const attendanceRecords = await this.attendanceRepository.find({
+            where: {
+                employee_id: employee.employee_id,
+                date: (0, typeorm_2.Between)(period.start_date, period.end_date),
+            },
+        });
+        if (employee.tariff_type === employee_entity_1.TariffType.HOURLY) {
+            await this.processHourlyEmployee(employee, period, attendanceRecords);
+        }
+        else {
+            await this.processMonthlyEmployee(employee, period, attendanceRecords);
+        }
+        await this.processOvertime(employee, period, attendanceRecords);
+        await this.processHolidayPremium(employee, period, attendanceRecords);
+        await this.processPiecework(employee, period);
+    }
+    async processHourlyEmployee(employee, period, records) {
+        const approvedRecords = records.filter((r) => r.status === attendance_record_entity_1.AttendanceStatus.OK &&
+            r.approvals?.some((a) => a.approved_at));
+        const totalWorkedHours = approvedRecords.reduce((sum, record) => {
+            return sum + record.worked_minutes / 60;
+        }, 0);
+        if (totalWorkedHours > 0 && employee.hourly_rate) {
+            await this.createPayrollItem({
+                employee_id: employee.employee_id,
+                period_id: period.period_id,
+                type: payroll_item_entity_1.PayrollItemType.EARNING,
+                code: payroll_item_entity_1.PayrollItemCode.BASE_HOURLY,
+                quantity: totalWorkedHours,
+                rate: employee.hourly_rate,
+                amount: totalWorkedHours * Number(employee.hourly_rate),
+                source: payroll_item_entity_1.PayrollItemSource.AUTO,
+            });
+        }
+    }
+    async processMonthlyEmployee(employee, period, records) {
+        if (!employee.monthly_salary)
+            return;
+        const scheduledRecords = records.filter((r) => r.scheduled_start && r.scheduled_end);
+        const totalScheduledMinutes = scheduledRecords.reduce((sum, record) => {
+            const start = moment(record.scheduled_start, 'HH:mm');
+            const end = moment(record.scheduled_end, 'HH:mm');
+            if (end.isBefore(start))
+                end.add(1, 'day');
+            return sum + end.diff(start, 'minutes');
+        }, 0);
+        const absentRecords = records.filter((r) => r.status === attendance_record_entity_1.AttendanceStatus.ABSENT &&
+            r.scheduled_start &&
+            r.scheduled_end);
+        const unpaidAbsentMinutes = absentRecords.reduce((sum, record) => {
+            if (record.manual_adjustments?.some((adj) => adj.type === 'MARK_ABSENT_PAID')) {
+                return sum;
+            }
+            const start = moment(record.scheduled_start, 'HH:mm');
+            const end = moment(record.scheduled_end, 'HH:mm');
+            if (end.isBefore(start))
+                end.add(1, 'day');
+            return sum + end.diff(start, 'minutes');
+        }, 0);
+        let baseSalary = Number(employee.monthly_salary);
+        if (totalScheduledMinutes > 0 && unpaidAbsentMinutes > 0) {
+            const prorationRatio = 1 - unpaidAbsentMinutes / totalScheduledMinutes;
+            baseSalary = baseSalary * prorationRatio;
+        }
+        await this.createPayrollItem({
+            employee_id: employee.employee_id,
+            period_id: period.period_id,
+            type: payroll_item_entity_1.PayrollItemType.EARNING,
+            code: payroll_item_entity_1.PayrollItemCode.BASE_MONTHLY,
+            quantity: 1,
+            rate: baseSalary,
+            amount: baseSalary,
+            source: payroll_item_entity_1.PayrollItemSource.AUTO,
+        });
+    }
+    async processOvertime(employee, period, records) {
+        const approvedRecords = records.filter((r) => r.status === attendance_record_entity_1.AttendanceStatus.OK &&
+            r.approvals?.some((a) => a.approved_at));
+        const totalOvertimeHours = approvedRecords.reduce((sum, record) => {
+            return sum + record.overtime_minutes / 60;
+        }, 0);
+        if (totalOvertimeHours > 0) {
+            const baseRate = employee.tariff_type === employee_entity_1.TariffType.HOURLY
+                ? Number(employee.hourly_rate)
+                : this.calculateHourlyRateFromMonthlySalary(Number(employee.monthly_salary));
+            const overtimeRate = baseRate * this.overtimeMultiplier;
+            await this.createPayrollItem({
+                employee_id: employee.employee_id,
+                period_id: period.period_id,
+                type: payroll_item_entity_1.PayrollItemType.EARNING,
+                code: payroll_item_entity_1.PayrollItemCode.OVERTIME,
+                quantity: totalOvertimeHours,
+                rate: overtimeRate,
+                amount: totalOvertimeHours * overtimeRate,
+                source: payroll_item_entity_1.PayrollItemSource.AUTO,
+            });
+        }
+    }
+    async processHolidayPremium(employee, period, records) {
+        const holidayRecords = records.filter((r) => r.status === attendance_record_entity_1.AttendanceStatus.HOLIDAY && r.worked_minutes > 0);
+        const totalHolidayHours = holidayRecords.reduce((sum, record) => {
+            return sum + record.worked_minutes / 60;
+        }, 0);
+        if (totalHolidayHours > 0) {
+            const baseRate = employee.tariff_type === employee_entity_1.TariffType.HOURLY
+                ? Number(employee.hourly_rate)
+                : this.calculateHourlyRateFromMonthlySalary(Number(employee.monthly_salary));
+            const holidayMultiplier = this.configService.get('HOLIDAY_MULTIPLIER', 2.0);
+            const holidayRate = baseRate * holidayMultiplier;
+            await this.createPayrollItem({
+                employee_id: employee.employee_id,
+                period_id: period.period_id,
+                type: payroll_item_entity_1.PayrollItemType.EARNING,
+                code: payroll_item_entity_1.PayrollItemCode.HOLIDAY_PREMIUM,
+                quantity: totalHolidayHours,
+                rate: holidayRate,
+                amount: totalHolidayHours * holidayRate,
+                source: payroll_item_entity_1.PayrollItemSource.AUTO,
+            });
+        }
+    }
+    async processPiecework(employee, period) {
+        const volumeEntries = await this.volumeRepository.find({
+            where: {
+                employee_id: employee.employee_id,
+                date: (0, typeorm_2.Between)(period.start_date, period.end_date),
+                approved: true,
+            },
+        });
+        const totalAmount = volumeEntries.reduce((sum, entry) => {
+            return sum + Number(entry.quantity) * Number(entry.unit_rate);
+        }, 0);
+        if (totalAmount > 0) {
+            await this.createPayrollItem({
+                employee_id: employee.employee_id,
+                period_id: period.period_id,
+                type: payroll_item_entity_1.PayrollItemType.EARNING,
+                code: payroll_item_entity_1.PayrollItemCode.PIECEWORK,
+                quantity: volumeEntries.length,
+                rate: totalAmount / volumeEntries.length,
+                amount: totalAmount,
+                source: payroll_item_entity_1.PayrollItemSource.AUTO,
+                note: `${volumeEntries.length} piecework entries`,
+            });
+        }
+    }
+    calculateHourlyRateFromMonthlySalary(monthlySalary) {
+        const standardMonthlyHours = 22 * 8;
+        return monthlySalary / standardMonthlyHours;
+    }
+    async createPayrollItem(itemData) {
+        const item = this.itemRepository.create(itemData);
+        return await this.itemRepository.save(item);
+    }
+    async getPeriodSummary(periodId) {
+        const items = await this.itemRepository.find({
+            where: { period_id: periodId },
+            relations: ['employee'],
+        });
+        const summary = {
+            totalGross: 0,
+            totalDeductions: 0,
+            totalNet: 0,
+            employeeCount: 0,
+            byDepartment: {},
+            byLocation: {},
+        };
+        const employeeMap = new Map();
+        for (const item of items) {
+            if (!employeeMap.has(item.employee_id)) {
+                employeeMap.set(item.employee_id, {
+                    employee: item.employee,
+                    earnings: 0,
+                    deductions: 0,
+                    net: 0,
+                });
+            }
+            const emp = employeeMap.get(item.employee_id);
+            if (item.type === payroll_item_entity_1.PayrollItemType.EARNING) {
+                emp.earnings += Number(item.amount);
+                summary.totalGross += Number(item.amount);
+            }
+            else {
+                emp.deductions += Number(item.amount);
+                summary.totalDeductions += Number(item.amount);
+            }
+            emp.net = emp.earnings - emp.deductions;
+        }
+        summary.employeeCount = employeeMap.size;
+        summary.totalNet = summary.totalGross - summary.totalDeductions;
+        for (const [employeeId, emp] of employeeMap) {
+            const dept = emp.employee.department || 'Unknown';
+            const loc = emp.employee.location || 'Unknown';
+            if (!summary.byDepartment[dept]) {
+                summary.byDepartment[dept] = { gross: 0, net: 0, count: 0 };
+            }
+            if (!summary.byLocation[loc]) {
+                summary.byLocation[loc] = { gross: 0, net: 0, count: 0 };
+            }
+            summary.byDepartment[dept].gross += emp.earnings;
+            summary.byDepartment[dept].net += emp.net;
+            summary.byDepartment[dept].count++;
+            summary.byLocation[loc].gross += emp.earnings;
+            summary.byLocation[loc].net += emp.net;
+            summary.byLocation[loc].count++;
+        }
+        return summary;
+    }
+};
+exports.PayrollProcessorService = PayrollProcessorService;
+exports.PayrollProcessorService = PayrollProcessorService = __decorate([
+    (0, common_1.Injectable)(),
+    __param(0, (0, typeorm_1.InjectRepository)(payroll_period_entity_1.PayrollPeriod)),
+    __param(1, (0, typeorm_1.InjectRepository)(payroll_item_entity_1.PayrollItem)),
+    __param(2, (0, typeorm_1.InjectRepository)(attendance_record_entity_1.AttendanceRecord)),
+    __param(3, (0, typeorm_1.InjectRepository)(work_volume_entry_entity_1.WorkVolumeEntry)),
+    __param(4, (0, typeorm_1.InjectRepository)(employee_entity_1.Employee)),
+    __metadata("design:paramtypes", [typeorm_2.Repository,
+        typeorm_2.Repository,
+        typeorm_2.Repository,
+        typeorm_2.Repository,
+        typeorm_2.Repository,
+        config_1.ConfigService])
+], PayrollProcessorService);
+//# sourceMappingURL=payroll-processor.service.js.map

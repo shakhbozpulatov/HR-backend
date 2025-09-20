@@ -1,0 +1,86 @@
+"use strict";
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.AttendanceEvent = exports.EventType = void 0;
+const typeorm_1 = require("typeorm");
+const employee_entity_1 = require("../../employees/entities/employee.entity");
+const terminal_device_entity_1 = require("../../terminals/entities/terminal-device.entity");
+var EventType;
+(function (EventType) {
+    EventType["CLOCK_IN"] = "clock_in";
+    EventType["CLOCK_OUT"] = "clock_out";
+})(EventType || (exports.EventType = EventType = {}));
+let AttendanceEvent = class AttendanceEvent {
+};
+exports.AttendanceEvent = AttendanceEvent;
+__decorate([
+    (0, typeorm_1.PrimaryGeneratedColumn)('uuid'),
+    __metadata("design:type", String)
+], AttendanceEvent.prototype, "event_id", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ type: 'uuid', nullable: true }),
+    __metadata("design:type", String)
+], AttendanceEvent.prototype, "employee_id", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ nullable: true }),
+    __metadata("design:type", String)
+], AttendanceEvent.prototype, "terminal_user_id", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ type: 'uuid' }),
+    __metadata("design:type", String)
+], AttendanceEvent.prototype, "device_id", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ type: 'enum', enum: EventType }),
+    __metadata("design:type", String)
+], AttendanceEvent.prototype, "event_type", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ type: 'timestamptz' }),
+    __metadata("design:type", Date)
+], AttendanceEvent.prototype, "ts_utc", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ type: 'timestamptz' }),
+    __metadata("design:type", Date)
+], AttendanceEvent.prototype, "ts_local", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ type: 'json', nullable: true }),
+    __metadata("design:type", Object)
+], AttendanceEvent.prototype, "source_payload", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ unique: true }),
+    __metadata("design:type", String)
+], AttendanceEvent.prototype, "ingestion_idempotency_key", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ type: 'boolean', default: true }),
+    __metadata("design:type", Boolean)
+], AttendanceEvent.prototype, "signature_valid", void 0);
+__decorate([
+    (0, typeorm_1.CreateDateColumn)(),
+    __metadata("design:type", Date)
+], AttendanceEvent.prototype, "created_at", void 0);
+__decorate([
+    (0, typeorm_1.ManyToOne)(() => employee_entity_1.Employee, (employee) => employee.attendance_events, {
+        nullable: true,
+    }),
+    (0, typeorm_1.JoinColumn)({ name: 'employee_id' }),
+    __metadata("design:type", employee_entity_1.Employee)
+], AttendanceEvent.prototype, "employee", void 0);
+__decorate([
+    (0, typeorm_1.ManyToOne)(() => terminal_device_entity_1.TerminalDevice),
+    (0, typeorm_1.JoinColumn)({ name: 'device_id' }),
+    __metadata("design:type", terminal_device_entity_1.TerminalDevice)
+], AttendanceEvent.prototype, "device", void 0);
+exports.AttendanceEvent = AttendanceEvent = __decorate([
+    (0, typeorm_1.Entity)('attendance_events'),
+    (0, typeorm_1.Index)(['ingestion_idempotency_key'], { unique: true }),
+    (0, typeorm_1.Index)(['employee_id', 'ts_local']),
+    (0, typeorm_1.Index)(['device_id', 'ts_local'])
+], AttendanceEvent);
+//# sourceMappingURL=attendance-event.entity.js.map

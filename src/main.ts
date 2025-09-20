@@ -2,15 +2,14 @@ import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { AppModule } from './app.module';
-import { HttpExceptionFilter } from './common/filters/http-exception.filter';
-import { TransformInterceptor } from './common/interceptors/transform.interceptor';
-import { AuditInterceptor } from './common/interceptors/audit.interceptor';
+import { HttpExceptionFilter } from '@/common/filters/http-exception.filter';
+import { TransformInterceptor } from '@/common/interceptors/transform.interceptor';
+import { AuditInterceptor } from '@/common/interceptors/audit.interceptor';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   const configService = app.get(ConfigService);
 
-  // Global pipes
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,
@@ -22,19 +21,14 @@ async function bootstrap() {
     }),
   );
 
-  // Global filters
   app.useGlobalFilters(new HttpExceptionFilter());
-
-  // Global interceptors
   app.useGlobalInterceptors(new TransformInterceptor(), new AuditInterceptor());
 
-  // CORS
   app.enableCors({
     origin: configService.get('CORS_ORIGIN', '*'),
     credentials: true,
   });
 
-  // API prefix
   app.setGlobalPrefix('api/v1');
 
   const port = configService.get('PORT', 3000);

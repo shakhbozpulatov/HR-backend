@@ -6,7 +6,7 @@ import {
   UpdateDateColumn,
   OneToMany,
 } from 'typeorm';
-import { AttendanceEvent } from '../../attendance/entities/attendance-event.entity';
+import { AttendanceEvent } from '@/modules/attendance/entities/attendance-event.entity';
 
 export enum DeviceStatus {
   ONLINE = 'ONLINE',
