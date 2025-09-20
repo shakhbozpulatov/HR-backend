@@ -1,99 +1,160 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+## API Documentation Examples
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+### README.md
+```markdown
+# HR Back-Office System Backend
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://coveralls.io/github/nestjs/nest?branch=master" target="_blank"><img src="https://coveralls.io/repos/github/nestjs/nest/badge.svg?branch=master#9" alt="Coverage" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+A comprehensive HR management system built with NestJS, PostgreSQL, and TypeORM, featuring attendance tracking, payroll processing, and employee management.
 
-## Description
+## Features
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+- **Employee Management**: Complete CRUD operations with bulk import/export
+- **Dynamic Scheduling**: Flexible work schedules with templates and exceptions
+- **Attendance Tracking**: Face recognition terminal integration with webhook processing
+- **Payroll Processing**: Automated payroll calculation with multiple tariff types
+- **Analytics Dashboard**: Essential HR metrics and reporting
+- **Audit Trail**: Complete audit logging for compliance
+- **Role-Based Access Control**: Fine-grained permissions system
 
-## Project setup
+## Quick Start
 
+### Prerequisites
+
+- Node.js 18+
+- PostgreSQL 15+
+- Redis 7+
+
+### Installation
+
+1. Clone the repository:
 ```bash
-$ pnpm install
+git clone <repository-url>
+cd hr-backend
 ```
 
-## Compile and run the project
-
+2. Install dependencies:
 ```bash
-# development
-$ pnpm run start
-
-# watch mode
-$ pnpm run start:dev
-
-# production mode
-$ pnpm run start:prod
+npm install
 ```
 
-## Run tests
-
+3. Set up environment variables:
 ```bash
-# unit tests
-$ pnpm run test
-
-# e2e tests
-$ pnpm run test:e2e
-
-# test coverage
-$ pnpm run test:cov
+cp .env.example .env
+# Edit .env with your configuration
 ```
 
-## Deployment
-
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
-
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
-
+4. Run database migrations:
 ```bash
-$ pnpm install -g mau
-$ mau deploy
+npm run migration:run
 ```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+5. Start the development server:
+```bash
+npm run start:dev
+```
 
-## Resources
+The API will be available at `http://localhost:3000/api/v1`
 
-Check out a few resources that may come in handy when working with NestJS:
+### Docker Setup
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+```bash
+docker-compose up -d
+```
 
-## Support
+## API Endpoints
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+### Authentication
+- `POST /api/v1/auth/login` - User login
+- `POST /api/v1/auth/refresh` - Refresh token
+- `POST /api/v1/auth/logout` - User logout
 
-## Stay in touch
+### Employees
+- `GET /api/v1/employees` - List employees with pagination
+- `POST /api/v1/employees` - Create new employee
+- `GET /api/v1/employees/:id` - Get employee details
+- `PATCH /api/v1/employees/:id` - Update employee
+- `DELETE /api/v1/employees/:id` - Archive employee
+- `POST /api/v1/employees/import` - Bulk import employees
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+### Attendance
+- `POST /api/v1/terminals/events` - Webhook endpoint for attendance events
+- `GET /api/v1/attendance/records` - Get attendance records
+- `POST /api/v1/attendance/records/:employeeId/:date/adjustments` - Manual corrections
+- `POST /api/v1/attendance/records/:employeeId/:date/approve` - Approve attendance
+- `GET /api/v1/attendance/timesheet` - Get timesheet grid view
 
-## License
+### Payroll
+- `POST /api/v1/payroll/periods` - Create payroll period
+- `GET /api/v1/payroll/periods` - List payroll periods
+- `POST /api/v1/payroll/periods/:id/process` - Process payroll
+- `GET /api/v1/payroll/periods/:id/items` - Get payroll items
+- `POST /api/v1/payroll/periods/:id/export` - Export payroll data
 
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+### Analytics
+- `GET /api/v1/analytics/attendance` - Attendance metrics
+- `GET /api/v1/analytics/payroll` - Payroll metrics
+- `GET /api/v1/analytics/dashboard` - Dashboard summary
+
+## Webhook Integration
+
+### Terminal Events
+
+The system accepts webhook events from face recognition terminals:
+
+```json
+POST /api/v1/terminals/events
+Headers:
+  X-Signature: sha256=<hmac-signature>
+  X-Idempotency-Key: <unique-key>
+  X-Timestamp: <iso-timestamp>
+
+{
+  "event_id": "vendor-event-123",
+  "device_id": "device-001",
+  "terminal_user_id": "terminal-user-456",
+  "event_type": "clock_in",
+  "timestamp": "2024-09-20T08:55:12Z",
+  "metadata": {
+    "confidence": 0.98
+  }
+}
+```
+
+### Security
+
+- HMAC-SHA256 signature verification
+- Idempotency key handling
+- Timestamp validation (10-minute window)
+- IP allowlist support
+
+## Configuration
+
+Key environment variables:
+
+```bash
+# Database
+DB_HOST=localhost
+DB_PORT=5432
+DB_USERNAME=postgres
+DB_PASSWORD=your_password
+DB_NAME=hr_backend
+
+# Security
+JWT_SECRET=your-jwt-secret
+WEBHOOK_SECRET=your-webhook-secret
+
+# Attendance Rules
+GRACE_IN_MINUTES=5
+GRACE_OUT_MINUTES=0
+ROUNDING_MINUTES=5
+OVERTIME_THRESHOLD_MINUTES=15
+OVERTIME_MULTIPLIER=1.5
+```
+
+## Business Logic
+
+### Attendance Processing
+
+1. **Event Ingestion**: Webhooks received from terminals
+2. **Employee Resolution**: Map terminal_user_id to employee_id
+3. **Event Pairing**: Match clock_in
