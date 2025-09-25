@@ -4,11 +4,12 @@ import { PassportModule } from '@nestjs/passport';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { User } from '@/modules/users/entities/user.entity';
+import { Employee } from '@/modules/employees/entities/employee.entity';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { CryptoUtils } from '@/common/utils/crypto.utils';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([User]), PassportModule],
+  imports: [TypeOrmModule.forFeature([User, Employee]), PassportModule],
   controllers: [AuthController],
   providers: [AuthService, JwtStrategy, CryptoUtils],
   exports: [AuthService],

@@ -4,6 +4,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { ScheduleModule } from '@nestjs/schedule';
 import { BullModule } from '@nestjs/bull';
 import { JwtModule } from '@nestjs/jwt';
+import { CommonModule } from '@/common/common.module';
 
 import { DatabaseConfig } from '@/config/database.config';
 import { validationSchema } from '@/config/validation.schema';
@@ -53,6 +54,7 @@ import { UsersModule } from '@/modules/users/users.module';
     HolidaysModule,
     AuditModule,
     UsersModule,
+    CommonModule,
   ],
 })
 export class AppModule {}

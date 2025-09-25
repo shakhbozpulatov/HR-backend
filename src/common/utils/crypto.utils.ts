@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import * as crypto from 'crypto';
+import * as bcrypt from 'bcrypt'; // ← bcrypt import qo'shildi
 
 @Injectable()
 export class CryptoUtils {
@@ -26,12 +27,10 @@ export class CryptoUtils {
   }
 
   hashPassword(password: string): string {
-    const bcrypt = require('bcrypt');
     return bcrypt.hashSync(password, 10);
   }
 
   comparePassword(password: string, hash: string): boolean {
-    const bcrypt = require('bcrypt');
     return bcrypt.compareSync(password, hash);
   }
 }

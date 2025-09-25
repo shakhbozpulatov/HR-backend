@@ -9,6 +9,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.CryptoUtils = void 0;
 const common_1 = require("@nestjs/common");
 const crypto = require("crypto");
+const bcrypt = require("bcrypt");
 let CryptoUtils = class CryptoUtils {
     verifyHmacSignature(payload, signature, secret) {
         const expectedSignature = crypto
@@ -22,11 +23,9 @@ let CryptoUtils = class CryptoUtils {
         return crypto.createHmac('sha256', secret).update(payload).digest('hex');
     }
     hashPassword(password) {
-        const bcrypt = require('bcrypt');
         return bcrypt.hashSync(password, 10);
     }
     comparePassword(password, hash) {
-        const bcrypt = require('bcrypt');
         return bcrypt.compareSync(password, hash);
     }
 };

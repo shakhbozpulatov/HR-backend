@@ -13,6 +13,7 @@ const typeorm_1 = require("@nestjs/typeorm");
 const schedule_1 = require("@nestjs/schedule");
 const bull_1 = require("@nestjs/bull");
 const jwt_1 = require("@nestjs/jwt");
+const common_module_1 = require("./common/common.module");
 const database_config_1 = require("./config/database.config");
 const validation_schema_1 = require("./config/validation.schema");
 const auth_module_1 = require("./modules/auth/auth.module");
@@ -60,6 +61,7 @@ exports.AppModule = AppModule = __decorate([
             holidays_module_1.HolidaysModule,
             audit_module_1.AuditModule,
             users_module_1.UsersModule,
+            common_module_1.CommonModule,
         ],
     })
 ], AppModule);
