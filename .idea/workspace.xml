@@ -5,29 +5,7 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="f223feb0-6502-4a9b-9c03-44f93ba47b8c" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/src/common/common.module.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/modules/auth/dto/register.dto.ts" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/dist/app.module.js" beforeDir="false" afterPath="$PROJECT_DIR$/dist/app.module.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/dist/app.module.js.map" beforeDir="false" afterPath="$PROJECT_DIR$/dist/app.module.js.map" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/dist/common/utils/crypto.utils.js" beforeDir="false" afterPath="$PROJECT_DIR$/dist/common/utils/crypto.utils.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/dist/common/utils/crypto.utils.js.map" beforeDir="false" afterPath="$PROJECT_DIR$/dist/common/utils/crypto.utils.js.map" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/dist/modules/auth/auth.controller.d.ts" beforeDir="false" afterPath="$PROJECT_DIR$/dist/modules/auth/auth.controller.d.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/dist/modules/auth/auth.controller.js" beforeDir="false" afterPath="$PROJECT_DIR$/dist/modules/auth/auth.controller.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/dist/modules/auth/auth.controller.js.map" beforeDir="false" afterPath="$PROJECT_DIR$/dist/modules/auth/auth.controller.js.map" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/dist/modules/auth/auth.module.js" beforeDir="false" afterPath="$PROJECT_DIR$/dist/modules/auth/auth.module.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/dist/modules/auth/auth.module.js.map" beforeDir="false" afterPath="$PROJECT_DIR$/dist/modules/auth/auth.module.js.map" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/dist/modules/auth/auth.service.d.ts" beforeDir="false" afterPath="$PROJECT_DIR$/dist/modules/auth/auth.service.d.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/dist/modules/auth/auth.service.js" beforeDir="false" afterPath="$PROJECT_DIR$/dist/modules/auth/auth.service.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/dist/modules/auth/auth.service.js.map" beforeDir="false" afterPath="$PROJECT_DIR$/dist/modules/auth/auth.service.js.map" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/dist/tsconfig.build.tsbuildinfo" beforeDir="false" afterPath="$PROJECT_DIR$/dist/tsconfig.build.tsbuildinfo" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/package.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pnpm-lock.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/pnpm-lock.yaml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/app.module.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/app.module.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/common/utils/crypto.utils.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/common/utils/crypto.utils.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/modules/auth/auth.controller.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/modules/auth/auth.controller.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/modules/auth/auth.module.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/modules/auth/auth.module.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/modules/auth/auth.service.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/modules/auth/auth.service.ts" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -56,28 +34,28 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "ASKED_SHARE_PROJECT_CONFIGURATION_FILES": "true",
-    "ModuleVcsDetector.initialDetectionPerformed": "true",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "RunOnceActivity.git.unshallow": "true",
-    "git-widget-placeholder": "main",
-    "js.linters.configure.manually.selectedeslint": "true",
-    "last_opened_file_path": "/Users/shaxbozbekpulatov/Documents/Back/HR-back/hr-platform",
-    "node.js.detected.package.eslint": "true",
-    "node.js.detected.package.standard": "true",
-    "node.js.detected.package.tslint": "true",
-    "node.js.selected.package.eslint": "(autodetect)",
-    "node.js.selected.package.standard": "",
-    "node.js.selected.package.tslint": "(autodetect)",
-    "nodejs_package_manager_path": "npm",
-    "prettierjs.PrettierConfiguration.Package": "/Users/shaxbozbekpulatov/Documents/Back/HR-back/hr-platform/node_modules/prettier",
-    "settings.editor.selected.configurable": "settings.javascript.prettier",
-    "ts.external.directory.path": "/Users/shaxbozbekpulatov/Documents/Back/HR-back/hr-platform/node_modules/typescript/lib",
-    "vue.rearranger.settings.migration": "true"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;ASKED_SHARE_PROJECT_CONFIGURATION_FILES&quot;: &quot;true&quot;,
+    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;main&quot;,
+    &quot;js.linters.configure.manually.selectedeslint&quot;: &quot;true&quot;,
+    &quot;last_opened_file_path&quot;: &quot;/Users/shaxbozbekpulatov/Documents/Back/HR-back/hr-platform&quot;,
+    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.standard&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
+    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
+    &quot;node.js.selected.package.standard&quot;: &quot;&quot;,
+    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
+    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
+    &quot;prettierjs.PrettierConfiguration.Package&quot;: &quot;/Users/shaxbozbekpulatov/Documents/Back/HR-back/hr-platform/node_modules/prettier&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;settings.javascript.prettier&quot;,
+    &quot;ts.external.directory.path&quot;: &quot;/Users/shaxbozbekpulatov/Documents/Back/HR-back/hr-platform/node_modules/typescript/lib&quot;,
+    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
   }
-}]]></component>
+}</component>
   <component name="SharedIndexes">
     <attachedChunks>
       <set>
@@ -95,6 +73,8 @@
       <workItem from="1758386297851" duration="14585000" />
       <workItem from="1758643324639" duration="2370000" />
       <workItem from="1758731812279" duration="2513000" />
+      <workItem from="1758782229851" duration="2891000" />
+      <workItem from="1759388820786" duration="5070000" />
     </task>
     <servers />
   </component>
