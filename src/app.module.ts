@@ -21,6 +21,7 @@ import { HolidaysModule } from '@/modules/holidays/holidays.module';
 import { AuditModule } from '@/modules/audit/audit.module';
 import { UsersModule } from '@/modules/users/users.module';
 import { CompanyModule } from './modules/company/company.module';
+import { DepartmentModule } from './modules/department/department.module';
 
 @Module({
   imports: [
@@ -57,6 +58,7 @@ import { CompanyModule } from './modules/company/company.module';
     UsersModule,
     CommonModule,
     CompanyModule,
+    DepartmentModule,
   ],
 })
 export class AppModule {}
