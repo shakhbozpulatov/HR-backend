@@ -42,15 +42,12 @@ let UsersService = class UsersService {
             where: {
                 role: (0, typeorm_2.Not)((0, typeorm_2.In)([user_entity_1.UserRole.SUPER_ADMIN, user_entity_1.UserRole.COMPANY_OWNER])),
             },
-            relations: ['employee'],
-            select: ['id', 'email', 'role', 'active', 'created_at', 'employee'],
         });
     }
     async findOne(id) {
         const user = await this.userRepository.findOne({
             where: { id: id },
-            relations: ['employee'],
-            select: ['id', 'email', 'role', 'active', 'created_at', 'employee'],
+            select: ['id', 'email', 'role', 'active', 'created_at'],
         });
         if (!user) {
             throw new common_1.NotFoundException('User not found');

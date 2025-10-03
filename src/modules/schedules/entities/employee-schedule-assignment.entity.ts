@@ -8,8 +8,8 @@ import {
   JoinColumn,
   Index,
 } from 'typeorm';
-import { Employee } from '@/modules/employees/entities/employee.entity';
 import { ScheduleTemplate } from './schedule-template.entity';
+import { User } from '@/modules/users/entities/user.entity';
 
 export interface ScheduleException {
   date?: string;
@@ -19,14 +19,14 @@ export interface ScheduleException {
   type: 'OFF' | 'ALTERNATE_TEMPLATE';
 }
 
-@Entity('employee_schedule_assignments')
-@Index(['employee_id', 'effective_from'], { unique: true })
-export class EmployeeScheduleAssignment {
+@Entity('user_schedule_assignments')
+@Index(['user_id', 'effective_from'], { unique: true })
+export class UserScheduleAssignment {
   @PrimaryGeneratedColumn('uuid')
   assignment_id: string;
 
   @Column({ type: 'uuid' })
-  employee_id: string;
+  user_id: string;
 
   @Column({ type: 'uuid' })
   default_template_id: string;
@@ -47,9 +47,9 @@ export class EmployeeScheduleAssignment {
   updated_at: Date;
 
   // Relations
-  @ManyToOne(() => Employee, (employee) => employee.schedule_assignments)
-  @JoinColumn({ name: 'employee_id' })
-  employee: Employee;
+  @ManyToOne(() => User, (user) => user.schedule_assignments)
+  @JoinColumn({ name: 'user_id' })
+  user: User;
 
   @ManyToOne(() => ScheduleTemplate, (template) => template.assignments)
   @JoinColumn({ name: 'default_template_id' })

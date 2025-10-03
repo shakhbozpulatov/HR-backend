@@ -18,12 +18,12 @@ const typeorm_1 = require("@nestjs/typeorm");
 const typeorm_2 = require("typeorm");
 const attendance_record_entity_1 = require("../attendance/entities/attendance-record.entity");
 const payroll_item_entity_1 = require("../payroll/entities/payroll-item.entity");
-const employee_entity_1 = require("../employees/entities/employee.entity");
+const user_entity_1 = require("../users/entities/user.entity");
 let AnalyticsService = class AnalyticsService {
-    constructor(attendanceRepository, payrollRepository, employeeRepository) {
+    constructor(attendanceRepository, payrollRepository, userRepository) {
         this.attendanceRepository = attendanceRepository;
         this.payrollRepository = payrollRepository;
-        this.employeeRepository = employeeRepository;
+        this.userRepository = userRepository;
     }
     async getAttendanceMetrics(filterDto) {
         const { start_date, end_date, department, location } = filterDto;
@@ -49,15 +49,15 @@ let AnalyticsService = class AnalyticsService {
         const attendanceRate = totalRecords > 0 ? (okRecords / totalRecords) * 100 : 0;
         const latenessData = await queryBuilder
             .select([
-            'employee.employee_id',
-            'employee.first_name',
-            'employee.last_name',
-            'employee.department',
+            'user.id',
+            'user.first_name',
+            'user.last_name',
+            'user.department',
             'COUNT(record.record_id) as late_count',
             'SUM(record.late_minutes) as total_late_minutes',
         ])
             .where('record.late_minutes > 0')
-            .groupBy('employee.employee_id, employee.first_name, employee.last_name, employee.department')
+            .groupBy('user.user_id, user.first_name, user.last_name, user.department')
             .getRawMany();
         const overtimeData = await queryBuilder
             .select([
@@ -71,7 +71,7 @@ let AnalyticsService = class AnalyticsService {
             attendance_rate: attendanceRate,
             total_records: totalRecords,
             ok_records: okRecords,
-            lateness_by_employee: latenessData,
+            lateness_by_user: latenessData,
             overtime_by_department: overtimeData,
         };
     }
@@ -99,12 +99,12 @@ let AnalyticsService = class AnalyticsService {
             .getRawOne();
         const costByDepartment = await queryBuilder
             .select([
-            'employee.department',
+            'user.department',
             'SUM(item.amount) as total_cost',
-            'COUNT(DISTINCT employee.employee_id) as employee_count',
+            'COUNT(DISTINCT user.user_id) as user_count',
         ])
             .where('item.type = :type', { type: payroll_item_entity_1.PayrollItemType.EARNING })
-            .groupBy('employee.department')
+            .groupBy('user.department')
             .getRawMany();
         const overtimeCost = await queryBuilder
             .select('SUM(item.amount)', 'total')
@@ -131,18 +131,18 @@ let AnalyticsService = class AnalyticsService {
             this.getAttendanceMetrics(filterDto),
             this.getPayrollMetrics(filterDto),
         ]);
-        const activeEmployees = await this.employeeRepository.count({
+        const activeUsers = await this.userRepository.count({
             where: { status: 'active' },
         });
-        const topLateEmployees = attendanceMetrics.lateness_by_employee
+        const topLateUsers = attendanceMetrics.lateness_by_user
             .sort((a, b) => b.total_late_minutes - a.total_late_minutes)
             .slice(0, 10);
         return {
-            active_employees: activeEmployees,
+            active_users: activeUsers,
             attendance_rate: attendanceMetrics.attendance_rate,
             total_payroll_cost: payrollMetrics.total_cost,
             overtime_cost: payrollMetrics.overtime_cost,
-            top_late_employees: topLateEmployees,
+            top_late_users: topLateUsers,
             payroll_trend: payrollMetrics.monthly_trend,
         };
     }
@@ -157,7 +157,7 @@ let AnalyticsService = class AnalyticsService {
                 total_payroll_cost: payrollMetrics.total_cost,
                 overtime_cost: payrollMetrics.overtime_cost,
             },
-            lateness_details: attendanceMetrics.lateness_by_employee,
+            lateness_details: attendanceMetrics.lateness_by_user,
             overtime_by_department: attendanceMetrics.overtime_by_department,
             cost_by_department: payrollMetrics.cost_by_department,
             monthly_trend: payrollMetrics.monthly_trend,
@@ -179,7 +179,7 @@ let AnalyticsService = class AnalyticsService {
         csvRows.push('LATENESS BY EMPLOYEE');
         csvRows.push('Employee ID,First Name,Last Name,Department,Late Count,Total Late Minutes');
         data.lateness_details.forEach((emp) => {
-            csvRows.push(`${emp.employee_id},${emp.first_name},${emp.last_name},${emp.department},${emp.late_count},${emp.total_late_minutes}`);
+            csvRows.push(`${emp.user_id},${emp.first_name},${emp.last_name},${emp.department},${emp.late_count},${emp.total_late_minutes}`);
         });
         return csvRows.join('\n');
     }
@@ -204,7 +204,7 @@ let AnalyticsService = class AnalyticsService {
                 'Total Late Minutes',
             ],
             ...data.lateness_details.map((emp) => [
-                emp.employee_id,
+                emp.user_id,
                 emp.first_name,
                 emp.last_name,
                 emp.department,
@@ -222,7 +222,7 @@ exports.AnalyticsService = AnalyticsService = __decorate([
     (0, common_1.Injectable)(),
     __param(0, (0, typeorm_1.InjectRepository)(attendance_record_entity_1.AttendanceRecord)),
     __param(1, (0, typeorm_1.InjectRepository)(payroll_item_entity_1.PayrollItem)),
-    __param(2, (0, typeorm_1.InjectRepository)(employee_entity_1.Employee)),
+    __param(2, (0, typeorm_1.InjectRepository)(user_entity_1.User)),
     __metadata("design:paramtypes", [typeorm_2.Repository,
         typeorm_2.Repository,
         typeorm_2.Repository])

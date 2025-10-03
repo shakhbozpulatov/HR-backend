@@ -4,4 +4,5 @@ export declare class UpdateProfileDto {
     middle_name?: string;
     email?: string;
     phone?: string;
+    dob?: Date;
 }

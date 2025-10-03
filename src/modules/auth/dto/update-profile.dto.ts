@@ -4,7 +4,9 @@ import {
   IsEmail,
   MaxLength,
   Matches,
+  IsDateString,
 } from 'class-validator';
+import { Transform } from 'class-transformer';
 
 export class UpdateProfileDto {
   @IsOptional()
@@ -30,4 +32,13 @@ export class UpdateProfileDto {
   @IsString()
   @Matches(/^\+?[1-9]\d{1,14}$/)
   phone?: string;
+
+  @IsOptional()
+  @Transform(({ value }) => {
+    if (!value) return null;
+    // Convert string to Date object
+    return new Date(value);
+  })
+  @IsDateString()
+  dob?: Date; // Changed from string to Date
 }

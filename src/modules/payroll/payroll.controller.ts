@@ -99,6 +99,6 @@ export class PayrollController {
     @Param('employeeId') employeeId: string,
     @Param('periodId') periodId: string,
   ) {
-    return await this.payrollService.getEmployeePayslip(employeeId, periodId);
+    return await this.payrollService.getUserPayslip(employeeId, periodId);
   }
 }

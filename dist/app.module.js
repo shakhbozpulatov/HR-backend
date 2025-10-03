@@ -17,7 +17,6 @@ const common_module_1 = require("./common/common.module");
 const database_config_1 = require("./config/database.config");
 const validation_schema_1 = require("./config/validation.schema");
 const auth_module_1 = require("./modules/auth/auth.module");
-const employees_module_1 = require("./modules/employees/employees.module");
 const schedules_module_1 = require("./modules/schedules/schedules.module");
 const attendance_module_1 = require("./modules/attendance/attendance.module");
 const payroll_module_1 = require("./modules/payroll/payroll.module");
@@ -53,7 +52,6 @@ exports.AppModule = AppModule = __decorate([
                 signOptions: { expiresIn: '24h' },
             }),
             auth_module_1.AuthModule,
-            employees_module_1.EmployeesModule,
             schedules_module_1.SchedulesModule,
             attendance_module_1.AttendanceModule,
             payroll_module_1.PayrollModule,

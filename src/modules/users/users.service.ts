@@ -44,16 +44,13 @@ export class UsersService {
       where: {
         role: Not(In([UserRole.SUPER_ADMIN, UserRole.COMPANY_OWNER])),
       },
-      relations: ['employee'],
-      select: ['id', 'email', 'role', 'active', 'created_at', 'employee'],
     });
   }
 
   async findOne(id: string): Promise<User> {
     const user = await this.userRepository.findOne({
       where: { id: id },
-      relations: ['employee'],
-      select: ['id', 'email', 'role', 'active', 'created_at', 'employee'],
+      select: ['id', 'email', 'role', 'active', 'created_at'],
     });
 
     if (!user) {

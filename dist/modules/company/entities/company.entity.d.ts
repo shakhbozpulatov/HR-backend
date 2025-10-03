@@ -1,4 +1,3 @@
-import { Employee } from '@/modules/employees/entities/employee.entity';
 import { User } from '@/modules/users/entities/user.entity';
 import { Holiday } from '@/modules/holidays/entities/holiday.entity';
 import { Department } from './department.entity';
@@ -48,7 +47,6 @@ export declare class Company {
     };
     created_at: Date;
     updated_at: Date;
-    employees: Employee[];
     users: User[];
     holidays: Holiday[];
     departments: Department[];

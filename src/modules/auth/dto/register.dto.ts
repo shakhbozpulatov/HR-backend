@@ -68,12 +68,4 @@ export class RegisterDto {
     message: 'Invalid company code format (expected: COM001)',
   })
   company_code?: string;
-
-  // Link to existing employee
-  @IsOptional()
-  @IsString()
-  @Matches(/^EMP\d{3,}$/, {
-    message: 'Invalid employee code format (expected: EMP001)',
-  })
-  employee_code?: string;
 }

@@ -13,5 +13,5 @@ export declare class AttendanceEventsService {
         success: boolean;
     }>;
     getQuarantinedEvents(): Promise<AttendanceEvent[]>;
-    resolveQuarantinedEvent(eventId: string, employeeId: string, _actorId: string): Promise<AttendanceEvent>;
+    resolveQuarantinedEvent(eventId: string, userId: string, _actorId: string): Promise<AttendanceEvent>;
 }

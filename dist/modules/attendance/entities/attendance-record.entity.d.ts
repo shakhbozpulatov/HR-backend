@@ -1,5 +1,5 @@
-import { Employee } from '@/modules/employees/entities/employee.entity';
 import { AttendanceEvent } from './attendance-event.entity';
+import { User } from '@/modules/users/entities/user.entity';
 export declare enum AttendanceStatus {
     OK = "OK",
     MISSING = "MISSING",
@@ -23,7 +23,7 @@ export interface Approval {
 }
 export declare class AttendanceRecord {
     record_id: string;
-    employee_id: string;
+    user_id: string;
     date: Date;
     scheduled_start?: string;
     scheduled_end?: string;
@@ -39,6 +39,6 @@ export declare class AttendanceRecord {
     approvals?: Approval[];
     created_at: Date;
     updated_at: Date;
-    employee: Employee;
+    user: User;
     events: AttendanceEvent[];
 }

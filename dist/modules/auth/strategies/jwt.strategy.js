@@ -33,8 +33,6 @@ let JwtStrategy = class JwtStrategy extends (0, passport_1.PassportStrategy)(pas
                 email: user.email,
                 role: user.role,
                 company_id: user.company_id,
-                employee_id: user.employee_id,
-                employee: user.employee,
                 company: user.company,
             };
         }

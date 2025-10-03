@@ -11,7 +11,6 @@ import { validationSchema } from '@/config/validation.schema';
 
 // Modules
 import { AuthModule } from '@/modules/auth/auth.module';
-import { EmployeesModule } from '@/modules/employees/employees.module';
 import { SchedulesModule } from '@/modules/schedules/schedules.module';
 import { AttendanceModule } from '@/modules/attendance/attendance.module';
 import { PayrollModule } from '@/modules/payroll/payroll.module';
@@ -46,7 +45,6 @@ import { CompanyModule } from './modules/company/company.module';
 
     // Feature modules
     AuthModule,
-    EmployeesModule,
     SchedulesModule,
     AttendanceModule,
     PayrollModule,

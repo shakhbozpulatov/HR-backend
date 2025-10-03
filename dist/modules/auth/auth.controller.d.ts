@@ -47,8 +47,7 @@ export declare class AuthController {
             email: any;
             role: any;
             company_id: any;
-            employee_id: any;
-            employee: {
+            user: {
                 code: any;
                 full_name: string;
                 position: any;

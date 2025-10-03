@@ -1,7 +1,6 @@
 import { Repository } from 'typeorm';
 import { JwtService } from '@nestjs/jwt';
 import { User } from '@/modules/users/entities/user.entity';
-import { Employee } from '@/modules/employees/entities/employee.entity';
 import { Company } from '@/modules/company/entities/company.entity';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
@@ -11,11 +10,10 @@ import { CryptoUtils } from '@/common/utils/crypto.utils';
 import { UpdateProfileDto } from '@/modules/auth/dto/update-profile.dto';
 export declare class AuthService {
     private userRepository;
-    private employeeRepository;
     private companyRepository;
     private jwtService;
     private cryptoUtils;
-    constructor(userRepository: Repository<User>, employeeRepository: Repository<Employee>, companyRepository: Repository<Company>, jwtService: JwtService, cryptoUtils: CryptoUtils);
+    constructor(userRepository: Repository<User>, companyRepository: Repository<Company>, jwtService: JwtService, cryptoUtils: CryptoUtils);
     login(loginDto: LoginDto): Promise<{
         access_token: string;
         user: any;
@@ -41,6 +39,5 @@ export declare class AuthService {
     private generateCompanyCode;
     private generateTemporaryPassword;
     private getCompanyStatistics;
-    private getEmployeeStatistics;
     private getUserPermissions;
 }

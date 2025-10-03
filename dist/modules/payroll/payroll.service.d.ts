@@ -27,5 +27,5 @@ export declare class PayrollService {
     getPeriodSummary(id: string): Promise<any>;
     exportPeriod(id: string, format: string): Promise<Buffer>;
     importVolumeEntries(file: any, actorId: string): Promise<any>;
-    getEmployeePayslip(employeeId: string, periodId: string): Promise<any>;
+    getUserPayslip(userId: string, periodId: string): Promise<any>;
 }

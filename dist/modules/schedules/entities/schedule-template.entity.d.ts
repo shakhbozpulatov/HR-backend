@@ -1,4 +1,4 @@
-import { EmployeeScheduleAssignment } from './employee-schedule-assignment.entity';
+import { UserScheduleAssignment } from './employee-schedule-assignment.entity';
 export interface BreakTime {
     start_time: string;
     end_time: string;
@@ -16,5 +16,5 @@ export declare class ScheduleTemplate {
     rounding_min: number;
     created_at: Date;
     updated_at: Date;
-    assignments: EmployeeScheduleAssignment[];
+    assignments: UserScheduleAssignment[];
 }

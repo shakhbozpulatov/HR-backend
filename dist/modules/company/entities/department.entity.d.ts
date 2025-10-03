@@ -1,5 +1,5 @@
 import { Company } from '@/modules/company/entities/company.entity';
-import { Employee } from '@/modules/employees/entities/employee.entity';
+import { User } from '@/modules/users/entities/user.entity';
 export declare class Department {
     department_id: string;
     company_id: string;
@@ -12,7 +12,7 @@ export declare class Department {
     created_at: Date;
     updated_at: Date;
     company: Company;
-    employees: Employee[];
+    users: User[];
     parent_department?: Department;
     sub_departments: Department[];
 }

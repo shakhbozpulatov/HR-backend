@@ -7,10 +7,8 @@ import {
   AttendanceRecord,
   AttendanceStatus,
 } from './entities/attendance-record.entity';
-import { Employee } from '../employees/entities/employee.entity';
 import { ScheduleAssignmentsService } from '../schedules/schedule-assignments.service';
 import { HolidaysService } from '../holidays/holidays.service';
-import { TimeUtils } from '../../common/utils/time.utils';
 import * as moment from 'moment-timezone';
 
 @Injectable()
@@ -60,12 +58,12 @@ export class AttendanceProcessorService {
 
     // Find or create attendance record
     let record = await this.recordRepository.findOne({
-      where: { employee_id: employeeId, date: dateStr as any },
+      where: { user_id: employeeId, date: dateStr as any },
     });
 
     if (!record) {
       record = this.recordRepository.create({
-        employee_id: employeeId,
+        user_id: employeeId,
         date: dateStr as any,
       });
     }
@@ -128,7 +126,7 @@ export class AttendanceProcessorService {
 
     return await this.eventRepository.find({
       where: {
-        employee_id: employeeId,
+        user_id: employeeId,
         ts_local: Between(startOfDay, endOfDay),
       },
       order: { ts_local: 'ASC' },

@@ -54,7 +54,7 @@ let PayrollController = class PayrollController {
         return await this.payrollService.exportPeriod(id, format);
     }
     async getPayslip(employeeId, periodId) {
-        return await this.payrollService.getEmployeePayslip(employeeId, periodId);
+        return await this.payrollService.getUserPayslip(employeeId, periodId);
     }
 };
 exports.PayrollController = PayrollController;

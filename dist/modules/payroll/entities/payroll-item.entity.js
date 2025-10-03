@@ -11,8 +11,8 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.PayrollItem = exports.PayrollItemSource = exports.PayrollItemCode = exports.PayrollItemType = void 0;
 const typeorm_1 = require("typeorm");
-const employee_entity_1 = require("../../employees/entities/employee.entity");
 const payroll_period_entity_1 = require("./payroll-period.entity");
+const user_entity_1 = require("../../users/entities/user.entity");
 var PayrollItemType;
 (function (PayrollItemType) {
     PayrollItemType["EARNING"] = "EARNING";
@@ -44,7 +44,7 @@ __decorate([
 __decorate([
     (0, typeorm_1.Column)({ type: 'uuid' }),
     __metadata("design:type", String)
-], PayrollItem.prototype, "employee_id", void 0);
+], PayrollItem.prototype, "user_id", void 0);
 __decorate([
     (0, typeorm_1.Column)({ type: 'uuid' }),
     __metadata("design:type", String)
@@ -86,10 +86,10 @@ __decorate([
     __metadata("design:type", Date)
 ], PayrollItem.prototype, "created_at", void 0);
 __decorate([
-    (0, typeorm_1.ManyToOne)(() => employee_entity_1.Employee, (employee) => employee.payroll_items),
-    (0, typeorm_1.JoinColumn)({ name: 'employee_id' }),
-    __metadata("design:type", employee_entity_1.Employee)
-], PayrollItem.prototype, "employee", void 0);
+    (0, typeorm_1.ManyToOne)(() => user_entity_1.User, (user) => user.payroll_items),
+    (0, typeorm_1.JoinColumn)({ name: 'user_id' }),
+    __metadata("design:type", user_entity_1.User)
+], PayrollItem.prototype, "user", void 0);
 __decorate([
     (0, typeorm_1.ManyToOne)(() => payroll_period_entity_1.PayrollPeriod, (period) => period.items),
     (0, typeorm_1.JoinColumn)({ name: 'period_id' }),
@@ -97,6 +97,6 @@ __decorate([
 ], PayrollItem.prototype, "period", void 0);
 exports.PayrollItem = PayrollItem = __decorate([
     (0, typeorm_1.Entity)('payroll_items'),
-    (0, typeorm_1.Index)(['employee_id', 'period_id', 'code'])
+    (0, typeorm_1.Index)(['user_id', 'period_id', 'code'])
 ], PayrollItem);
 //# sourceMappingURL=payroll-item.entity.js.map

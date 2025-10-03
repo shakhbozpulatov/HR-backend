@@ -22,7 +22,7 @@ export class AttendanceFilterDto {
 
   @IsOptional()
   @IsString()
-  employee_id?: string;
+  user_id?: string;
 
   @IsOptional()
   @IsDateString()

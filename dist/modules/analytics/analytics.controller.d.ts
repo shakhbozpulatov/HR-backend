@@ -7,7 +7,7 @@ export declare class AnalyticsController {
         attendance_rate: number;
         total_records: number;
         ok_records: number;
-        lateness_by_employee: any[];
+        lateness_by_user: any[];
         overtime_by_department: any[];
     }>;
     getPayrollMetrics(filterDto: AnalyticsFilterDto): Promise<{
@@ -17,11 +17,11 @@ export declare class AnalyticsController {
         monthly_trend: any[];
     }>;
     getDashboardSummary(filterDto: AnalyticsFilterDto): Promise<{
-        active_employees: number;
+        active_users: number;
         attendance_rate: number;
         total_payroll_cost: any;
         overtime_cost: any;
-        top_late_employees: any[];
+        top_late_users: any[];
         payroll_trend: any[];
     }>;
 }

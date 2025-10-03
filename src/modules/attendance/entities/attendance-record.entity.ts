@@ -9,8 +9,8 @@ import {
   OneToMany,
   Index,
 } from 'typeorm';
-import { Employee } from '@/modules/employees/entities/employee.entity';
 import { AttendanceEvent } from './attendance-event.entity';
+import { User } from '@/modules/users/entities/user.entity';
 
 export enum AttendanceStatus {
   OK = 'OK',
@@ -37,14 +37,14 @@ export interface Approval {
 }
 
 @Entity('attendance_records')
-@Index(['employee_id', 'date'], { unique: true })
+@Index(['user_id', 'date'], { unique: true })
 @Index(['date', 'status'])
 export class AttendanceRecord {
   @PrimaryGeneratedColumn('uuid')
   record_id: string;
 
   @Column({ type: 'uuid' })
-  employee_id: string;
+  user_id: string;
 
   @Column({ type: 'date' })
   date: Date;
@@ -96,10 +96,10 @@ export class AttendanceRecord {
   updated_at: Date;
 
   // Relations
-  @ManyToOne(() => Employee, (employee) => employee.attendance_records)
-  @JoinColumn({ name: 'employee_id' })
-  employee: Employee;
+  @ManyToOne(() => User, (user) => user.attendance_records)
+  @JoinColumn({ name: 'user_id' })
+  user: User;
 
-  @OneToMany(() => AttendanceEvent, (event) => event.employee)
+  @OneToMany(() => AttendanceEvent, (event) => event.user)
   events: AttendanceEvent[];
 }

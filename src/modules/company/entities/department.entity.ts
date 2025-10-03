@@ -9,7 +9,7 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 import { Company } from '@/modules/company/entities/company.entity';
-import { Employee } from '@/modules/employees/entities/employee.entity';
+import { User } from '@/modules/users/entities/user.entity';
 
 @Entity('departments')
 export class Department {
@@ -48,8 +48,8 @@ export class Department {
   @JoinColumn({ name: 'company_id' })
   company: Company;
 
-  @OneToMany(() => Employee, (employee) => employee.department)
-  employees: Employee[];
+  @OneToMany(() => User, (user) => user.department)
+  users: User[];
 
   @ManyToOne(() => Department, { nullable: true })
   @JoinColumn({ name: 'parent_department_id' })

@@ -3,5 +3,5 @@ export declare class AnalyticsFilterDto {
     end_date?: string;
     department?: string;
     location?: string;
-    employee_id?: string;
+    user_id?: string;
 }

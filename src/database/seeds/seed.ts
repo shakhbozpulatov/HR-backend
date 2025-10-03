@@ -1,4 +1,3 @@
-import { DataSource } from 'typeorm';
 import { seedAdminUser } from './admin-user.seed';
 import dataSource from '@/config/database.config';
 

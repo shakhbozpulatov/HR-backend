@@ -38,7 +38,7 @@ let AttendanceEventsController = class AttendanceEventsController {
         return await this.eventsService.getQuarantinedEvents();
     }
     async resolveQuarantinedEvent(eventId, resolveDto) {
-        return await this.eventsService.resolveQuarantinedEvent(eventId, resolveDto.employee_id, 'admin');
+        return await this.eventsService.resolveQuarantinedEvent(eventId, resolveDto.user_id, 'admin');
     }
 };
 exports.AttendanceEventsController = AttendanceEventsController;

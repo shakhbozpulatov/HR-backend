@@ -10,5 +10,4 @@ export declare class RegisterDto {
     create_company?: boolean;
     company_name?: string;
     company_code?: string;
-    employee_code?: string;
 }

@@ -9,8 +9,8 @@ import {
   PayrollItem,
   PayrollItemType,
 } from '../payroll/entities/payroll-item.entity';
-import { Employee } from '../employees/entities/employee.entity';
 import { AnalyticsFilterDto } from './dto/analytics-filter.dto';
+import { User } from '@/modules/users/entities/user.entity';
 
 @Injectable()
 export class AnalyticsService {
@@ -19,8 +19,8 @@ export class AnalyticsService {
     private attendanceRepository: Repository<AttendanceRecord>,
     @InjectRepository(PayrollItem)
     private payrollRepository: Repository<PayrollItem>,
-    @InjectRepository(Employee)
-    private employeeRepository: Repository<Employee>,
+    @InjectRepository(User)
+    private userRepository: Repository<User>,
   ) {}
 
   async getAttendanceMetrics(filterDto: AnalyticsFilterDto) {
@@ -56,17 +56,15 @@ export class AnalyticsService {
     // Lateness metrics
     const latenessData = await queryBuilder
       .select([
-        'employee.employee_id',
-        'employee.first_name',
-        'employee.last_name',
-        'employee.department',
+        'user.id',
+        'user.first_name',
+        'user.last_name',
+        'user.department',
         'COUNT(record.record_id) as late_count',
         'SUM(record.late_minutes) as total_late_minutes',
       ])
       .where('record.late_minutes > 0')
-      .groupBy(
-        'employee.employee_id, employee.first_name, employee.last_name, employee.department',
-      )
+      .groupBy('user.user_id, user.first_name, user.last_name, user.department')
       .getRawMany();
 
     // Overtime metrics
@@ -83,7 +81,7 @@ export class AnalyticsService {
       attendance_rate: attendanceRate,
       total_records: totalRecords,
       ok_records: okRecords,
-      lateness_by_employee: latenessData,
+      lateness_by_user: latenessData,
       overtime_by_department: overtimeData,
     };
   }
@@ -122,12 +120,12 @@ export class AnalyticsService {
     // Cost by department
     const costByDepartment = await queryBuilder
       .select([
-        'employee.department',
+        'user.department',
         'SUM(item.amount) as total_cost',
-        'COUNT(DISTINCT employee.employee_id) as employee_count',
+        'COUNT(DISTINCT user.user_id) as user_count',
       ])
       .where('item.type = :type', { type: PayrollItemType.EARNING })
-      .groupBy('employee.department')
+      .groupBy('user.department')
       .getRawMany();
 
     // Overtime cost
@@ -162,21 +160,21 @@ export class AnalyticsService {
     ]);
 
     // Active employees count
-    const activeEmployees = await this.employeeRepository.count({
+    const activeUsers = await this.userRepository.count({
       where: { status: 'active' as any },
     });
 
     // Top late employees
-    const topLateEmployees = attendanceMetrics.lateness_by_employee
+    const topLateUsers = attendanceMetrics.lateness_by_user
       .sort((a, b) => b.total_late_minutes - a.total_late_minutes)
       .slice(0, 10);
 
     return {
-      active_employees: activeEmployees,
+      active_users: activeUsers,
       attendance_rate: attendanceMetrics.attendance_rate,
       total_payroll_cost: payrollMetrics.total_cost,
       overtime_cost: payrollMetrics.overtime_cost,
-      top_late_employees: topLateEmployees,
+      top_late_users: topLateUsers,
       payroll_trend: payrollMetrics.monthly_trend,
     };
   }
@@ -197,7 +195,7 @@ export class AnalyticsService {
         total_payroll_cost: payrollMetrics.total_cost,
         overtime_cost: payrollMetrics.overtime_cost,
       },
-      lateness_details: attendanceMetrics.lateness_by_employee,
+      lateness_details: attendanceMetrics.lateness_by_user,
       overtime_by_department: attendanceMetrics.overtime_by_department,
       cost_by_department: payrollMetrics.cost_by_department,
       monthly_trend: payrollMetrics.monthly_trend,
@@ -228,7 +226,7 @@ export class AnalyticsService {
     );
     data.lateness_details.forEach((emp: any) => {
       csvRows.push(
-        `${emp.employee_id},${emp.first_name},${emp.last_name},${emp.department},${emp.late_count},${emp.total_late_minutes}`,
+        `${emp.user_id},${emp.first_name},${emp.last_name},${emp.department},${emp.late_count},${emp.total_late_minutes}`,
       );
     });
 
@@ -261,7 +259,7 @@ export class AnalyticsService {
         'Total Late Minutes',
       ],
       ...data.lateness_details.map((emp: any) => [
-        emp.employee_id,
+        emp.user_id,
         emp.first_name,
         emp.last_name,
         emp.department,

@@ -18,13 +18,11 @@ const typeorm_1 = require("@nestjs/typeorm");
 const typeorm_2 = require("typeorm");
 const jwt_1 = require("@nestjs/jwt");
 const user_entity_1 = require("../users/entities/user.entity");
-const employee_entity_1 = require("../employees/entities/employee.entity");
 const company_entity_1 = require("../company/entities/company.entity");
 const crypto_utils_1 = require("../../common/utils/crypto.utils");
 let AuthService = class AuthService {
-    constructor(userRepository, employeeRepository, companyRepository, jwtService, cryptoUtils) {
+    constructor(userRepository, companyRepository, jwtService, cryptoUtils) {
         this.userRepository = userRepository;
-        this.employeeRepository = employeeRepository;
         this.companyRepository = companyRepository;
         this.jwtService = jwtService;
         this.cryptoUtils = cryptoUtils;
@@ -33,7 +31,7 @@ let AuthService = class AuthService {
         const { email, password } = loginDto;
         const user = await this.userRepository.findOne({
             where: { email, active: true },
-            relations: ['employee', 'company'],
+            relations: ['company'],
         });
         if (!user) {
             throw new common_1.UnauthorizedException('Invalid credentials');
@@ -54,7 +52,6 @@ let AuthService = class AuthService {
             sub: user.id,
             email: user.email,
             role: user.role,
-            employee_id: user.employee_id,
             company_id: user.company_id,
         };
         const access_token = this.jwtService.sign(payload);
@@ -64,8 +61,9 @@ let AuthService = class AuthService {
                 user_id: user.id,
                 email: user.email,
                 role: user.role,
+                first_name: user.first_name,
+                last_name: user.last_name,
                 company_id: user.company_id,
-                employee: user.employee,
                 company: user.company,
             },
         };
@@ -131,62 +129,18 @@ let AuthService = class AuthService {
             if (company.status !== company_entity_1.CompanyStatus.ACTIVE) {
                 throw new common_1.BadRequestException('Company is not active. Cannot join at this time.');
             }
-            const employeeCount = await this.employeeRepository.count({
+            const userCount = await this.userRepository.count({
                 where: {
                     company_id: company.company_id,
-                    status: employee_entity_1.EmployeeStatus.ACTIVE,
+                    status: user_entity_1.UserStatus.ACTIVE,
                 },
             });
-            if (employeeCount >= company.max_employees) {
+            if (userCount >= company.max_employees) {
                 throw new common_1.BadRequestException(`Company has reached maximum employee limit (${company.max_employees}). Please contact company admin.`);
             }
             companyId = company.company_id;
             userRole = user_entity_1.UserRole.EMPLOYEE;
             console.log(`✅ User joining company: ${company.name} (${company.code})`);
-        }
-        let employee;
-        if (registerDto.employee_code) {
-            employee = await this.employeeRepository.findOne({
-                where: {
-                    company_id: companyId,
-                    email: registerDto.email,
-                    status: employee_entity_1.EmployeeStatus.ACTIVE,
-                },
-            });
-            if (!employee) {
-                throw new common_1.BadRequestException(`Employee code '${registerDto.employee_code}' not found in this company`);
-            }
-            const existingUserForEmployee = await this.userRepository.findOne({
-                where: { id: employee.id },
-            });
-            if (existingUserForEmployee) {
-                throw new common_1.ConflictException('This employee already has a user account');
-            }
-            if (!employee.email || employee.email !== registerDto.email) {
-                employee.email = registerDto.email;
-                if (registerDto.phone)
-                    employee.phone = registerDto.phone;
-                await this.employeeRepository.save(employee);
-            }
-            console.log(`✅ Linked to existing employee: ${employee.email}`);
-        }
-        else {
-            employee = this.employeeRepository.create({
-                company_id: companyId,
-                first_name: registerDto.first_name.trim(),
-                last_name: registerDto.last_name.trim(),
-                middle_name: registerDto.middle_name?.trim(),
-                email: registerDto.email,
-                phone: registerDto.phone,
-                department: registerDto.department?.trim(),
-                position: registerDto.position?.trim(),
-                start_date: new Date(),
-                tariff_type: employee_entity_1.TariffType.MONTHLY,
-                monthly_salary: 0,
-                status: employee_entity_1.EmployeeStatus.ACTIVE,
-            });
-            employee = await this.employeeRepository.save(employee);
-            console.log(`✅ New employee created: ${employee.email}`);
         }
         const hashedPassword = this.cryptoUtils.hashPassword(registerDto.password);
         const user = this.userRepository.create({
@@ -194,14 +148,22 @@ let AuthService = class AuthService {
             email: registerDto.email,
             password_hash: hashedPassword,
             role: userRole,
-            id: employee.id,
+            first_name: registerDto.first_name.trim(),
+            last_name: registerDto.last_name.trim(),
+            middle_name: registerDto.middle_name?.trim(),
+            phone: registerDto.phone,
+            department: registerDto.department?.trim(),
+            position: registerDto.position?.trim(),
+            start_date: new Date(),
+            status: user_entity_1.UserStatus.ACTIVE,
             active: true,
         });
         const savedUser = await this.userRepository.save(user);
+        console.log(`✅ New user created: ${savedUser.email}`);
         const payload = {
+            sub: savedUser.id,
             email: savedUser.email,
             role: savedUser.role,
-            id: savedUser.id,
             company_id: savedUser.company_id,
         };
         const access_token = this.jwtService.sign(payload);
@@ -211,8 +173,9 @@ let AuthService = class AuthService {
                 user_id: savedUser.id,
                 email: savedUser.email,
                 role: savedUser.role,
+                first_name: savedUser.first_name,
+                last_name: savedUser.last_name,
                 company_id: savedUser.company_id,
-                employee: employee,
                 company: company,
             },
         };
@@ -226,6 +189,12 @@ let AuthService = class AuthService {
             throw new common_1.UnauthorizedException('Actor not found or inactive');
         }
         this.validateUserCreationPermissions(actor.role, createUserDto.role);
+        const existingUser = await this.userRepository.findOne({
+            where: { email: createUserDto.email },
+        });
+        if (existingUser) {
+            throw new common_1.ConflictException('Email already exists');
+        }
         let targetCompanyId;
         if (actor.role === user_entity_1.UserRole.SUPER_ADMIN) {
             if (!createUserDto.company_id) {
@@ -245,36 +214,12 @@ let AuthService = class AuthService {
             }
             targetCompanyId = actor.company_id;
         }
-        const employee = await this.employeeRepository.findOne({
-            where: {
-                id: createUserDto.employee_id,
-                company_id: targetCompanyId,
-            },
-        });
-        if (!employee) {
-            throw new common_1.BadRequestException('Employee not found in target company');
-        }
-        const existingEmployeeUser = await this.userRepository.findOne({
-            where: { employee_id: createUserDto.employee_id },
-        });
-        if (existingEmployeeUser) {
-            throw new common_1.ConflictException('This employee already has a user account');
-        }
-        const existingUser = await this.userRepository.findOne({
-            where: { email: employee.email },
-        });
-        if (existingUser) {
-            throw new common_1.ConflictException('Email already exists');
-        }
         const temporaryPassword = this.generateTemporaryPassword();
         const hashedPassword = this.cryptoUtils.hashPassword(temporaryPassword);
         const newUser = this.userRepository.create({
-            company_id: targetCompanyId,
-            email: employee.email,
             password_hash: hashedPassword,
-            role: createUserDto.role,
-            employee_id: employee.id,
-            active: true,
+            company_id: targetCompanyId,
+            ...createUserDto,
         });
         const savedUser = await this.userRepository.save(newUser);
         console.log(`✅ User created by ${actor.email}: ${savedUser.email} (${savedUser.role})`);
@@ -284,16 +229,9 @@ let AuthService = class AuthService {
         };
     }
     async getProfile(userId) {
-        console.log('getProfile', userId);
         const user = await this.userRepository.findOne({
-            where: { employee_id: userId, active: true },
-            relations: [
-                'employee',
-                'employee.manager',
-                'employee.department_entity',
-                'company',
-                'company.departments',
-            ],
+            where: { id: userId, active: true },
+            relations: ['company', 'company.departments'],
         });
         if (!user) {
             throw new common_1.NotFoundException('User not found');
@@ -302,6 +240,16 @@ let AuthService = class AuthService {
             user_id: user.id,
             email: user.email,
             role: user.role,
+            first_name: user.first_name,
+            last_name: user.last_name,
+            middle_name: user.middle_name,
+            full_name: `${user.first_name} ${user.last_name}`,
+            phone: user.phone,
+            dob: user.dob,
+            position: user.position,
+            department: user.department,
+            start_date: user.start_date,
+            status: user.status,
             active: user.active,
             mfa_enabled: user.mfa_enabled,
             created_at: user.created_at,
@@ -325,51 +273,12 @@ let AuthService = class AuthService {
             };
             profile.company.statistics = await this.getCompanyStatistics(user.company.company_id);
         }
-        if (user.employee) {
-            profile.employee = {
-                employee_id: user.employee.id,
-                first_name: user.employee.first_name,
-                last_name: user.employee.last_name,
-                middle_name: user.employee.middle_name,
-                full_name: `${user.employee.first_name} ${user.employee.last_name}`,
-                email: user.employee.email,
-                phone: user.employee.phone,
-                dob: user.employee.dob,
-                position: user.employee.position,
-                department: user.employee.department,
-                location: user.employee.location,
-                start_date: user.employee.start_date,
-                status: user.employee.status,
-                tariff_type: user.employee.tariff_type,
-                hourly_rate: user.employee.hourly_rate,
-                monthly_salary: user.employee.monthly_salary,
-                terminal_user_id: user.employee.terminal_user_id,
-            };
-            if (user.employee.department_entity) {
-                profile.employee.department_details = {
-                    department_id: user.employee.department_entity.department_id,
-                    code: user.employee.department_entity.code,
-                    name: user.employee.department_entity.name,
-                    description: user.employee.department_entity.description,
-                };
-            }
-            if (user.employee.manager) {
-                profile.employee.manager = {
-                    employee_id: user.employee.manager.id,
-                    full_name: `${user.employee.manager.first_name} ${user.employee.manager.last_name}`,
-                    email: user.employee.manager.email,
-                    position: user.employee.manager.position,
-                };
-            }
-            profile.employee.statistics = await this.getEmployeeStatistics(user.employee.id);
-        }
         profile.permissions = this.getUserPermissions(user.role);
         return profile;
     }
     async updateProfile(userId, updateProfileDto) {
         const user = await this.userRepository.findOne({
             where: { id: userId },
-            relations: ['employee'],
         });
         if (!user) {
             throw new common_1.NotFoundException('User not found');
@@ -383,25 +292,22 @@ let AuthService = class AuthService {
             }
             user.email = updateProfileDto.email;
         }
-        await this.userRepository.save(user);
-        if (user.employee) {
-            if (updateProfileDto.first_name) {
-                user.employee.first_name = updateProfileDto.first_name;
-            }
-            if (updateProfileDto.last_name) {
-                user.employee.last_name = updateProfileDto.last_name;
-            }
-            if (updateProfileDto.middle_name !== undefined) {
-                user.employee.middle_name = updateProfileDto.middle_name;
-            }
-            if (updateProfileDto.email) {
-                user.employee.email = updateProfileDto.email;
-            }
-            if (updateProfileDto.phone) {
-                user.employee.phone = updateProfileDto.phone;
-            }
-            await this.employeeRepository.save(user.employee);
+        if (updateProfileDto.first_name) {
+            user.first_name = updateProfileDto.first_name;
         }
+        if (updateProfileDto.last_name) {
+            user.last_name = updateProfileDto.last_name;
+        }
+        if (updateProfileDto.middle_name !== undefined) {
+            user.middle_name = updateProfileDto.middle_name;
+        }
+        if (updateProfileDto.phone) {
+            user.phone = updateProfileDto.phone;
+        }
+        if (updateProfileDto.dob) {
+            user.dob = updateProfileDto.dob;
+        }
+        await this.userRepository.save(user);
         return await this.getProfile(userId);
     }
     async changePassword(userId, changePasswordDto) {
@@ -452,7 +358,7 @@ let AuthService = class AuthService {
     async validateUser(payload) {
         const user = await this.userRepository.findOne({
             where: { id: payload.sub, active: true },
-            relations: ['employee', 'company'],
+            relations: ['company'],
         });
         if (!user) {
             throw new common_1.UnauthorizedException('User not found or inactive');
@@ -536,51 +442,17 @@ let AuthService = class AuthService {
             .join('');
     }
     async getCompanyStatistics(companyId) {
-        const totalEmployees = await this.employeeRepository.count({
-            where: { company_id: companyId },
-        });
-        const activeEmployees = await this.employeeRepository.count({
-            where: { company_id: companyId, status: employee_entity_1.EmployeeStatus.ACTIVE },
-        });
         const totalUsers = await this.userRepository.count({
             where: { company_id: companyId },
         });
         const activeUsers = await this.userRepository.count({
-            where: { company_id: companyId, active: true },
+            where: { company_id: companyId, active: true, status: user_entity_1.UserStatus.ACTIVE },
         });
         return {
-            total_employees: totalEmployees,
-            active_employees: activeEmployees,
-            inactive_employees: totalEmployees - activeEmployees,
             total_users: totalUsers,
             active_users: activeUsers,
-            employees_remaining: 0,
+            inactive_users: totalUsers - activeUsers,
         };
-    }
-    async getEmployeeStatistics(employeeId) {
-        const currentMonth = new Date();
-        const firstDayOfMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1);
-        try {
-            const attendanceRecords = await this.employeeRepository.manager
-                .getRepository('AttendanceRecord')
-                .count({
-                where: {
-                    employee_id: employeeId,
-                    date: { $gte: firstDayOfMonth },
-                },
-            })
-                .catch(() => 0);
-            return {
-                attendance_this_month: attendanceRecords,
-                working_days_this_month: attendanceRecords,
-            };
-        }
-        catch (error) {
-            return {
-                attendance_this_month: 0,
-                working_days_this_month: 0,
-            };
-        }
     }
     getUserPermissions(role) {
         const permissionMap = {
@@ -591,10 +463,6 @@ let AuthService = class AuthService {
                 'manage_subscriptions',
                 'view_all_users',
                 'manage_all_users',
-                'view_all_employees',
-                'manage_all_employees',
-                'view_all_payroll',
-                'manage_all_payroll',
                 'view_analytics',
                 'manage_system_settings',
             ],
@@ -604,66 +472,35 @@ let AuthService = class AuthService {
                 'manage_subscription',
                 'create_admin',
                 'create_hr_manager',
-                'view_all_employees',
-                'manage_employees',
-                'view_attendance',
-                'manage_attendance',
-                'view_payroll',
-                'manage_payroll',
-                'approve_payroll',
+                'view_all_users',
+                'manage_users',
                 'view_analytics',
                 'manage_departments',
-                'manage_terminals',
             ],
             [user_entity_1.UserRole.ADMIN]: [
                 'view_company',
                 'manage_company_settings',
                 'create_hr_manager',
                 'create_manager',
-                'view_all_employees',
-                'manage_employees',
-                'view_attendance',
-                'manage_attendance',
-                'view_payroll',
-                'manage_payroll',
+                'view_all_users',
+                'manage_users',
                 'view_analytics',
                 'manage_departments',
             ],
             [user_entity_1.UserRole.HR_MANAGER]: [
                 'view_company',
                 'create_employee',
-                'view_all_employees',
-                'manage_employees',
-                'view_attendance',
-                'approve_attendance',
-                'manage_schedules',
-                'view_payroll',
-                'run_payroll',
-                'manage_holidays',
+                'view_all_users',
+                'manage_users',
             ],
             [user_entity_1.UserRole.PAYROLL]: [
-                'view_all_employees',
-                'view_attendance',
+                'view_all_users',
                 'view_payroll',
                 'manage_payroll',
                 'export_payroll',
-                'add_bonuses',
-                'add_deductions',
             ],
-            [user_entity_1.UserRole.MANAGER]: [
-                'view_team',
-                'view_team_attendance',
-                'approve_team_attendance',
-                'view_team_schedules',
-                'request_corrections',
-            ],
-            [user_entity_1.UserRole.EMPLOYEE]: [
-                'view_own_profile',
-                'view_own_attendance',
-                'view_own_schedule',
-                'view_own_payslip',
-                'update_own_profile',
-            ],
+            [user_entity_1.UserRole.MANAGER]: ['view_team', 'view_team_users'],
+            [user_entity_1.UserRole.EMPLOYEE]: ['view_own_profile', 'update_own_profile'],
         };
         return permissionMap[role] || [];
     }
@@ -672,10 +509,8 @@ exports.AuthService = AuthService;
 exports.AuthService = AuthService = __decorate([
     (0, common_1.Injectable)(),
     __param(0, (0, typeorm_1.InjectRepository)(user_entity_1.User)),
-    __param(1, (0, typeorm_1.InjectRepository)(employee_entity_1.Employee)),
-    __param(2, (0, typeorm_1.InjectRepository)(company_entity_1.Company)),
+    __param(1, (0, typeorm_1.InjectRepository)(company_entity_1.Company)),
     __metadata("design:paramtypes", [typeorm_2.Repository,
-        typeorm_2.Repository,
         typeorm_2.Repository,
         jwt_1.JwtService,
         crypto_utils_1.CryptoUtils])

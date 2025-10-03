@@ -8,16 +8,16 @@ import {
   JoinColumn,
   Index,
 } from 'typeorm';
-import { Employee } from '../../employees/entities/employee.entity';
+import { User } from '@/modules/users/entities/user.entity';
 
 @Entity('work_volume_entries')
-@Index(['employee_id', 'date', 'work_type'])
+@Index(['user_id', 'date', 'work_type'])
 export class WorkVolumeEntry {
   @PrimaryGeneratedColumn('uuid')
   entry_id: string;
 
   @Column({ type: 'uuid' })
-  employee_id: string;
+  user_id: string;
 
   @Column({ type: 'date' })
   date: Date;
@@ -47,7 +47,7 @@ export class WorkVolumeEntry {
   updated_at: Date;
 
   // Relations
-  @ManyToOne(() => Employee, (employee) => employee.work_volume_entries)
-  @JoinColumn({ name: 'employee_id' })
-  employee: Employee;
+  @ManyToOne(() => User, (user) => user.work_volume_entries)
+  @JoinColumn({ name: 'user_id' })
+  user: User;
 }

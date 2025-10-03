@@ -7,8 +7,8 @@ import {
   JoinColumn,
   Index,
 } from 'typeorm';
-import { Employee } from '../../employees/entities/employee.entity';
 import { PayrollPeriod } from './payroll-period.entity';
+import { User } from '@/modules/users/entities/user.entity';
 
 export enum PayrollItemType {
   EARNING = 'EARNING',
@@ -32,13 +32,13 @@ export enum PayrollItemSource {
 }
 
 @Entity('payroll_items')
-@Index(['employee_id', 'period_id', 'code'])
+@Index(['user_id', 'period_id', 'code'])
 export class PayrollItem {
   @PrimaryGeneratedColumn('uuid')
   item_id: string;
 
   @Column({ type: 'uuid' })
-  employee_id: string;
+  user_id: string;
 
   @Column({ type: 'uuid' })
   period_id: string;
@@ -72,9 +72,9 @@ export class PayrollItem {
   created_at: Date;
 
   // Relations
-  @ManyToOne(() => Employee, (employee) => employee.payroll_items)
-  @JoinColumn({ name: 'employee_id' })
-  employee: Employee;
+  @ManyToOne(() => User, (user) => user.payroll_items)
+  @JoinColumn({ name: 'user_id' })
+  user: User;
 
   @ManyToOne(() => PayrollPeriod, (period) => period.items)
   @JoinColumn({ name: 'period_id' })

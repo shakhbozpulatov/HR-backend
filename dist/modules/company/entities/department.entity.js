@@ -12,7 +12,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.Department = void 0;
 const typeorm_1 = require("typeorm");
 const company_entity_1 = require("./company.entity");
-const employee_entity_1 = require("../../employees/entities/employee.entity");
+const user_entity_1 = require("../../users/entities/user.entity");
 let Department = class Department {
 };
 exports.Department = Department;
@@ -62,9 +62,9 @@ __decorate([
     __metadata("design:type", company_entity_1.Company)
 ], Department.prototype, "company", void 0);
 __decorate([
-    (0, typeorm_1.OneToMany)(() => employee_entity_1.Employee, (employee) => employee.department),
+    (0, typeorm_1.OneToMany)(() => user_entity_1.User, (user) => user.department),
     __metadata("design:type", Array)
-], Department.prototype, "employees", void 0);
+], Department.prototype, "users", void 0);
 __decorate([
     (0, typeorm_1.ManyToOne)(() => Department, { nullable: true }),
     (0, typeorm_1.JoinColumn)({ name: 'parent_department_id' }),

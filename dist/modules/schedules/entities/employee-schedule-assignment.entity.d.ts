@@ -1,5 +1,5 @@
-import { Employee } from '@/modules/employees/entities/employee.entity';
 import { ScheduleTemplate } from './schedule-template.entity';
+import { User } from '@/modules/users/entities/user.entity';
 export interface ScheduleException {
     date?: string;
     start_date?: string;
@@ -7,15 +7,15 @@ export interface ScheduleException {
     template_id?: string;
     type: 'OFF' | 'ALTERNATE_TEMPLATE';
 }
-export declare class EmployeeScheduleAssignment {
+export declare class UserScheduleAssignment {
     assignment_id: string;
-    employee_id: string;
+    user_id: string;
     default_template_id: string;
     effective_from: Date;
     effective_to?: Date;
     exceptions?: ScheduleException[];
     created_at: Date;
     updated_at: Date;
-    employee: Employee;
+    user: User;
     default_template: ScheduleTemplate;
 }

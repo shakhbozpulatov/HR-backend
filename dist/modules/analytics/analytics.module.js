@@ -13,15 +13,13 @@ const analytics_controller_1 = require("./analytics.controller");
 const analytics_service_1 = require("./analytics.service");
 const attendance_record_entity_1 = require("../attendance/entities/attendance-record.entity");
 const payroll_item_entity_1 = require("../payroll/entities/payroll-item.entity");
-const employee_entity_1 = require("../employees/entities/employee.entity");
+const user_entity_1 = require("../users/entities/user.entity");
 let AnalyticsModule = class AnalyticsModule {
 };
 exports.AnalyticsModule = AnalyticsModule;
 exports.AnalyticsModule = AnalyticsModule = __decorate([
     (0, common_1.Module)({
-        imports: [
-            typeorm_1.TypeOrmModule.forFeature([attendance_record_entity_1.AttendanceRecord, payroll_item_entity_1.PayrollItem, employee_entity_1.Employee]),
-        ],
+        imports: [typeorm_1.TypeOrmModule.forFeature([attendance_record_entity_1.AttendanceRecord, payroll_item_entity_1.PayrollItem, user_entity_1.User])],
         controllers: [analytics_controller_1.AnalyticsController],
         providers: [analytics_service_1.AnalyticsService],
         exports: [analytics_service_1.AnalyticsService],

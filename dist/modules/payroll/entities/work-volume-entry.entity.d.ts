@@ -1,7 +1,7 @@
-import { Employee } from '../../employees/entities/employee.entity';
+import { User } from '@/modules/users/entities/user.entity';
 export declare class WorkVolumeEntry {
     entry_id: string;
-    employee_id: string;
+    user_id: string;
     date: Date;
     work_type: string;
     quantity: number;
@@ -11,5 +11,5 @@ export declare class WorkVolumeEntry {
     approved_at?: Date;
     created_at: Date;
     updated_at: Date;
-    employee: Employee;
+    user: User;
 }

@@ -13,6 +13,6 @@ export declare class AttendanceEventsController {
     }>;
     getQuarantinedEvents(): Promise<import("./entities/attendance-event.entity").AttendanceEvent[]>;
     resolveQuarantinedEvent(eventId: string, resolveDto: {
-        employee_id: string;
+        user_id: string;
     }): Promise<import("./entities/attendance-event.entity").AttendanceEvent>;
 }

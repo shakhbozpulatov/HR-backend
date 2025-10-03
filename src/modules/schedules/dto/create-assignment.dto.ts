@@ -3,7 +3,7 @@ import { ScheduleException } from '../entities/employee-schedule-assignment.enti
 
 export class CreateAssignmentDto {
   @IsString()
-  employee_id: string;
+  user_id: string;
 
   @IsString()
   default_template_id: string;

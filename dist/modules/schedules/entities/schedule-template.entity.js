@@ -60,7 +60,7 @@ __decorate([
     __metadata("design:type", Date)
 ], ScheduleTemplate.prototype, "updated_at", void 0);
 __decorate([
-    (0, typeorm_1.OneToMany)(() => employee_schedule_assignment_entity_1.EmployeeScheduleAssignment, (assignment) => assignment.default_template),
+    (0, typeorm_1.OneToMany)(() => employee_schedule_assignment_entity_1.UserScheduleAssignment, (assignment) => assignment.default_template),
     __metadata("design:type", Array)
 ], ScheduleTemplate.prototype, "assignments", void 0);
 exports.ScheduleTemplate = ScheduleTemplate = __decorate([

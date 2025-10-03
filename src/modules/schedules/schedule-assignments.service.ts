@@ -1,28 +1,28 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { EmployeeScheduleAssignment } from './entities/employee-schedule-assignment.entity';
+import { UserScheduleAssignment } from './entities/employee-schedule-assignment.entity';
 import { CreateAssignmentDto } from './dto/create-assignment.dto';
 
 @Injectable()
 export class ScheduleAssignmentsService {
   constructor(
-    @InjectRepository(EmployeeScheduleAssignment)
-    private assignmentRepository: Repository<EmployeeScheduleAssignment>,
+    @InjectRepository(UserScheduleAssignment)
+    private assignmentRepository: Repository<UserScheduleAssignment>,
   ) {}
 
   async createAssignment(
     createAssignmentDto: CreateAssignmentDto,
-  ): Promise<EmployeeScheduleAssignment> {
+  ): Promise<UserScheduleAssignment> {
     const assignment = this.assignmentRepository.create(createAssignmentDto);
     return await this.assignmentRepository.save(assignment);
   }
 
   async findEmployeeAssignments(
     employeeId: string,
-  ): Promise<EmployeeScheduleAssignment[]> {
+  ): Promise<UserScheduleAssignment[]> {
     return await this.assignmentRepository.find({
-      where: { employee_id: employeeId },
+      where: { user_id: employeeId },
       relations: ['default_template'],
       order: { effective_from: 'DESC' },
     });
@@ -31,7 +31,7 @@ export class ScheduleAssignmentsService {
   async getEffectiveSchedule(employeeId: string, date: Date): Promise<any> {
     const assignment = await this.assignmentRepository.findOne({
       where: {
-        employee_id: employeeId,
+        user_id: employeeId,
         effective_from: { $lte: date } as any,
         effective_to: { $gte: date } as any,
       },
@@ -67,7 +67,7 @@ export class ScheduleAssignmentsService {
   async addException(
     assignmentId: string,
     exception: any,
-  ): Promise<EmployeeScheduleAssignment> {
+  ): Promise<UserScheduleAssignment> {
     const assignment = await this.assignmentRepository.findOne({
       where: { assignment_id: assignmentId },
     });

@@ -83,12 +83,4 @@ __decorate([
     }),
     __metadata("design:type", String)
 ], RegisterDto.prototype, "company_code", void 0);
-__decorate([
-    (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.IsString)(),
-    (0, class_validator_1.Matches)(/^EMP\d{3,}$/, {
-        message: 'Invalid employee code format (expected: EMP001)',
-    }),
-    __metadata("design:type", String)
-], RegisterDto.prototype, "employee_code", void 0);
 //# sourceMappingURL=register.dto.js.map

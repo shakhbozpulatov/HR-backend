@@ -72,16 +72,16 @@ let PayrollService = class PayrollService {
         return await this.periodRepository.save(period);
     }
     async findPeriodItems(periodId, filterDto) {
-        const { page = 1, limit = 10, employee_id } = filterDto;
+        const { page = 1, limit = 10, user_id } = filterDto;
         const queryBuilder = this.itemRepository
             .createQueryBuilder('item')
             .leftJoinAndSelect('item.employee', 'employee')
             .where('item.period_id = :periodId', { periodId });
-        if (employee_id) {
-            queryBuilder.andWhere('item.employee_id = :employee_id', { employee_id });
+        if (user_id) {
+            queryBuilder.andWhere('item.user_id = :user_id', { user_id });
         }
         const [data, total] = await queryBuilder
-            .orderBy('employee.last_name', 'ASC')
+            .orderBy('user.last_name', 'ASC')
             .skip((page - 1) * limit)
             .take(limit)
             .getManyAndCount();
@@ -98,7 +98,7 @@ let PayrollService = class PayrollService {
         const period = await this.findOnePeriod(id);
         const items = period.items || [];
         const summary = {
-            total_employees: new Set(items.map((item) => item.employee_id)).size,
+            total_users: new Set(items.map((item) => item.user_id)).size,
             total_earnings: items
                 .filter((item) => item.type === 'EARNING')
                 .reduce((sum, item) => sum + Number(item.amount), 0),
@@ -116,13 +116,13 @@ let PayrollService = class PayrollService {
     async importVolumeEntries(file, actorId) {
         return { success: true, imported: 0 };
     }
-    async getEmployeePayslip(employeeId, periodId) {
+    async getUserPayslip(userId, periodId) {
         const items = await this.itemRepository.find({
-            where: { employee_id: employeeId, period_id: periodId },
-            relations: ['employee', 'period'],
+            where: { user_id: userId, period_id: periodId },
+            relations: ['user', 'period'],
         });
         return {
-            employee: items[0]?.employee,
+            user: items[0]?.user,
             period: items[0]?.period,
             items: items,
             summary: {

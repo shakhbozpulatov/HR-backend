@@ -7,7 +7,6 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
-import { Employee } from '@/modules/employees/entities/employee.entity';
 import { User } from '@/modules/users/entities/user.entity';
 import { Holiday } from '@/modules/holidays/entities/holiday.entity';
 import { Department } from './department.entity';
@@ -108,9 +107,6 @@ export class Company {
   updated_at: Date;
 
   // Relations
-  @OneToMany(() => Employee, (employee) => employee.company)
-  employees: Employee[];
-
   @OneToMany(() => User, (user) => user.company)
   users: User[];
 

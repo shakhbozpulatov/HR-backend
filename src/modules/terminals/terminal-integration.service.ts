@@ -3,9 +3,10 @@ import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { TerminalDevice } from './entities/terminal-device.entity';
-import { Employee } from '../employees/entities/employee.entity';
+// import { Employee } from '../employees/entities/employee.entity';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import axios from 'axios';
+import { User } from '@/modules/users/entities/user.entity';
 
 interface CreateTerminalUserRequest {
   display_name: string;
@@ -26,8 +27,8 @@ export class TerminalIntegrationService {
   constructor(
     @InjectRepository(TerminalDevice)
     private deviceRepository: Repository<TerminalDevice>,
-    @InjectRepository(Employee)
-    private employeeRepository: Repository<Employee>,
+    @InjectRepository(User)
+    private userRepository: Repository<User>,
     private configService: ConfigService,
   ) {
     this.vendorApiUrl = this.configService.get('VENDOR_API_URL');
@@ -122,7 +123,7 @@ export class TerminalIntegrationService {
       );
 
       // Get all employees with terminal user mappings
-      const employees = await this.employeeRepository.find({
+      const employees = await this.userRepository.find({
         where: { status: 'active' as any },
       });
 
@@ -143,7 +144,7 @@ export class TerminalIntegrationService {
             });
 
             employee.terminal_user_id = terminalUserId;
-            await this.employeeRepository.save(employee);
+            await this.userRepository.save(employee);
             syncResults.created++;
           } else {
             // Check if terminal user exists in vendor system
@@ -212,7 +213,7 @@ export class TerminalIntegrationService {
 
   async retryFailedOperations(): Promise<void> {
     // Find employees with terminal_user_id = null but status = active
-    const pendingEmployees = await this.employeeRepository.find({
+    const pendingEmployees = await this.userRepository.find({
       where: {
         status: 'active' as any,
         terminal_user_id: null as any,
@@ -227,7 +228,7 @@ export class TerminalIntegrationService {
         });
 
         employee.terminal_user_id = terminalUserId;
-        await this.employeeRepository.save(employee);
+        await this.userRepository.save(employee);
 
         this.logger.log(
           `Successfully created terminal user for employee ${employee.id}`,

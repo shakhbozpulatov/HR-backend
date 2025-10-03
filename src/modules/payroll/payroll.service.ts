@@ -90,19 +90,19 @@ export class PayrollService {
     periodId: string,
     filterDto: PayrollFilterDto,
   ): Promise<{ data: PayrollItem[]; total: number }> {
-    const { page = 1, limit = 10, employee_id } = filterDto;
+    const { page = 1, limit = 10, user_id } = filterDto;
 
     const queryBuilder = this.itemRepository
       .createQueryBuilder('item')
       .leftJoinAndSelect('item.employee', 'employee')
       .where('item.period_id = :periodId', { periodId });
 
-    if (employee_id) {
-      queryBuilder.andWhere('item.employee_id = :employee_id', { employee_id });
+    if (user_id) {
+      queryBuilder.andWhere('item.user_id = :user_id', { user_id });
     }
 
     const [data, total] = await queryBuilder
-      .orderBy('employee.last_name', 'ASC')
+      .orderBy('user.last_name', 'ASC')
       .skip((page - 1) * limit)
       .take(limit)
       .getManyAndCount();
@@ -127,7 +127,7 @@ export class PayrollService {
     const items = period.items || [];
 
     const summary = {
-      total_employees: new Set(items.map((item) => item.employee_id)).size,
+      total_users: new Set(items.map((item) => item.user_id)).size,
       total_earnings: items
         .filter((item) => item.type === 'EARNING')
         .reduce((sum, item) => sum + Number(item.amount), 0),
@@ -153,14 +153,14 @@ export class PayrollService {
     return { success: true, imported: 0 };
   }
 
-  async getEmployeePayslip(employeeId: string, periodId: string): Promise<any> {
+  async getUserPayslip(userId: string, periodId: string): Promise<any> {
     const items = await this.itemRepository.find({
-      where: { employee_id: employeeId, period_id: periodId },
-      relations: ['employee', 'period'],
+      where: { user_id: userId, period_id: periodId },
+      relations: ['user', 'period'],
     });
 
     return {
-      employee: items[0]?.employee,
+      user: items[0]?.user,
       period: items[0]?.period,
       items: items,
       summary: {

@@ -1,7 +1,7 @@
 export declare class AttendanceFilterDto {
     page?: number;
     limit?: number;
-    employee_id?: string;
+    user_id?: string;
     from?: string;
     to?: string;
     status?: string;

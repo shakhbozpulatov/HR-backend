@@ -41,11 +41,11 @@ let AttendanceProcessorService = class AttendanceProcessorService {
         const isHoliday = await this.holidaysService.isHoliday(date, 'global');
         const events = await this.getEventsForDay(employeeId, date);
         let record = await this.recordRepository.findOne({
-            where: { employee_id: employeeId, date: dateStr },
+            where: { user_id: employeeId, date: dateStr },
         });
         if (!record) {
             record = this.recordRepository.create({
-                employee_id: employeeId,
+                user_id: employeeId,
                 date: dateStr,
             });
         }
@@ -95,7 +95,7 @@ let AttendanceProcessorService = class AttendanceProcessorService {
         const endOfDay = moment.tz(date, this.timezone).endOf('day').toDate();
         return await this.eventRepository.find({
             where: {
-                employee_id: employeeId,
+                user_id: employeeId,
                 ts_local: (0, typeorm_2.Between)(startOfDay, endOfDay),
             },
             order: { ts_local: 'ASC' },

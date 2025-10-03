@@ -27,7 +27,7 @@ let ScheduleAssignmentsService = class ScheduleAssignmentsService {
     }
     async findEmployeeAssignments(employeeId) {
         return await this.assignmentRepository.find({
-            where: { employee_id: employeeId },
+            where: { user_id: employeeId },
             relations: ['default_template'],
             order: { effective_from: 'DESC' },
         });
@@ -35,7 +35,7 @@ let ScheduleAssignmentsService = class ScheduleAssignmentsService {
     async getEffectiveSchedule(employeeId, date) {
         const assignment = await this.assignmentRepository.findOne({
             where: {
-                employee_id: employeeId,
+                user_id: employeeId,
                 effective_from: { $lte: date },
                 effective_to: { $gte: date },
             },
@@ -75,7 +75,7 @@ let ScheduleAssignmentsService = class ScheduleAssignmentsService {
 exports.ScheduleAssignmentsService = ScheduleAssignmentsService;
 exports.ScheduleAssignmentsService = ScheduleAssignmentsService = __decorate([
     (0, common_1.Injectable)(),
-    __param(0, (0, typeorm_1.InjectRepository)(employee_schedule_assignment_entity_1.EmployeeScheduleAssignment)),
+    __param(0, (0, typeorm_1.InjectRepository)(employee_schedule_assignment_entity_1.UserScheduleAssignment)),
     __metadata("design:paramtypes", [typeorm_2.Repository])
 ], ScheduleAssignmentsService);
 //# sourceMappingURL=schedule-assignments.service.js.map

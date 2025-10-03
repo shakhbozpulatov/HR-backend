@@ -5,11 +5,11 @@ import { ScheduleAssignmentsController } from './schedule-assignments.controller
 import { ScheduleTemplatesService } from './schedule-templates.service';
 import { ScheduleAssignmentsService } from './schedule-assignments.service';
 import { ScheduleTemplate } from './entities/schedule-template.entity';
-import { EmployeeScheduleAssignment } from './entities/employee-schedule-assignment.entity';
+import { UserScheduleAssignment } from './entities/employee-schedule-assignment.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([ScheduleTemplate, EmployeeScheduleAssignment]),
+    TypeOrmModule.forFeature([ScheduleTemplate, UserScheduleAssignment]),
   ],
   controllers: [ScheduleTemplatesController, ScheduleAssignmentsController],
   providers: [ScheduleTemplatesService, ScheduleAssignmentsService],

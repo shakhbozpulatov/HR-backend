@@ -14,8 +14,9 @@ import {
   AttendanceRecord,
   AttendanceStatus,
 } from '../attendance/entities/attendance-record.entity';
-import { Employee, TariffType } from '../employees/entities/employee.entity';
+// import { Employee } from '../employees/entities/employee.entity';
 import * as moment from 'moment';
+import { TariffType, User } from '@/modules/users/entities/user.entity';
 
 @Injectable()
 export class PayrollProcessorService {
@@ -30,8 +31,8 @@ export class PayrollProcessorService {
     private attendanceRepository: Repository<AttendanceRecord>,
     @InjectRepository(WorkVolumeEntry)
     private volumeRepository: Repository<WorkVolumeEntry>,
-    @InjectRepository(Employee)
-    private employeeRepository: Repository<Employee>,
+    @InjectRepository(User)
+    private userRepository: Repository<User>,
     private configService: ConfigService,
   ) {
     this.overtimeMultiplier = this.configService.get(
@@ -50,7 +51,7 @@ export class PayrollProcessorService {
     }
 
     // Get all active employees
-    const employees = await this.employeeRepository.find({
+    const users = await this.userRepository.find({
       where: { status: 'active' as any },
     });
 
@@ -61,42 +62,42 @@ export class PayrollProcessorService {
     });
 
     // Process each employee
-    for (const employee of employees) {
-      await this.processEmployeePayroll(employee, period);
+    for (const user of users) {
+      await this.processUserPayroll(user, period);
     }
   }
 
-  private async processEmployeePayroll(
-    employee: Employee,
+  private async processUserPayroll(
+    user: User,
     period: PayrollPeriod,
   ): Promise<void> {
     // Get attendance records for the period
     const attendanceRecords = await this.attendanceRepository.find({
       where: {
-        employee_id: employee.id,
+        user_id: user.id,
         date: Between(period.start_date, period.end_date),
       },
     });
 
     // Calculate base pay
-    if (employee.tariff_type === TariffType.HOURLY) {
-      await this.processHourlyEmployee(employee, period, attendanceRecords);
+    if (user.tariff_type === TariffType.HOURLY) {
+      await this.processHourlyUser(user, period, attendanceRecords);
     } else {
-      await this.processMonthlyEmployee(employee, period, attendanceRecords);
+      await this.processMonthlyEmployee(user, period, attendanceRecords);
     }
 
     // Process overtime
-    await this.processOvertime(employee, period, attendanceRecords);
+    await this.processOvertime(user, period, attendanceRecords);
 
     // Process holiday premium (if configured)
-    await this.processHolidayPremium(employee, period, attendanceRecords);
+    await this.processHolidayPremium(user, period, attendanceRecords);
 
     // Process piecework
-    await this.processPiecework(employee, period);
+    await this.processPiecework(user, period);
   }
 
-  private async processHourlyEmployee(
-    employee: Employee,
+  private async processHourlyUser(
+    user: User,
     period: PayrollPeriod,
     records: AttendanceRecord[],
   ): Promise<void> {
@@ -110,26 +111,26 @@ export class PayrollProcessorService {
       return sum + record.worked_minutes / 60;
     }, 0);
 
-    if (totalWorkedHours > 0 && employee.hourly_rate) {
+    if (totalWorkedHours > 0 && user.hourly_rate) {
       await this.createPayrollItem({
-        employee_id: employee.id,
+        user_id: user.id,
         period_id: period.period_id,
         type: PayrollItemType.EARNING,
         code: PayrollItemCode.BASE_HOURLY,
         quantity: totalWorkedHours,
-        rate: employee.hourly_rate,
-        amount: totalWorkedHours * Number(employee.hourly_rate),
+        rate: user.hourly_rate,
+        amount: totalWorkedHours * Number(user.hourly_rate),
         source: PayrollItemSource.AUTO,
       });
     }
   }
 
   private async processMonthlyEmployee(
-    employee: Employee,
+    user: User,
     period: PayrollPeriod,
     records: AttendanceRecord[],
   ): Promise<void> {
-    if (!employee.monthly_salary) return;
+    if (!user.monthly_salary) return;
 
     const scheduledRecords = records.filter(
       (r) => r.scheduled_start && r.scheduled_end,
@@ -164,14 +165,14 @@ export class PayrollProcessorService {
     }, 0);
 
     // Calculate proration
-    let baseSalary = Number(employee.monthly_salary);
+    let baseSalary = Number(user.monthly_salary);
     if (totalScheduledMinutes > 0 && unpaidAbsentMinutes > 0) {
       const prorationRatio = 1 - unpaidAbsentMinutes / totalScheduledMinutes;
       baseSalary = baseSalary * prorationRatio;
     }
 
     await this.createPayrollItem({
-      employee_id: employee.id,
+      user_id: user.id,
       period_id: period.period_id,
       type: PayrollItemType.EARNING,
       code: PayrollItemCode.BASE_MONTHLY,
@@ -183,7 +184,7 @@ export class PayrollProcessorService {
   }
 
   private async processOvertime(
-    employee: Employee,
+    user: User,
     period: PayrollPeriod,
     records: AttendanceRecord[],
   ): Promise<void> {
@@ -199,16 +200,16 @@ export class PayrollProcessorService {
 
     if (totalOvertimeHours > 0) {
       const baseRate =
-        employee.tariff_type === TariffType.HOURLY
-          ? Number(employee.hourly_rate)
+        user.tariff_type === TariffType.HOURLY
+          ? Number(user.hourly_rate)
           : this.calculateHourlyRateFromMonthlySalary(
-              Number(employee.monthly_salary),
+              Number(user.monthly_salary),
             );
 
       const overtimeRate = baseRate * this.overtimeMultiplier;
 
       await this.createPayrollItem({
-        employee_id: employee.id,
+        user_id: user.id,
         period_id: period.period_id,
         type: PayrollItemType.EARNING,
         code: PayrollItemCode.OVERTIME,
@@ -221,7 +222,7 @@ export class PayrollProcessorService {
   }
 
   private async processHolidayPremium(
-    employee: Employee,
+    user: User,
     period: PayrollPeriod,
     records: AttendanceRecord[],
   ): Promise<void> {
@@ -235,10 +236,10 @@ export class PayrollProcessorService {
 
     if (totalHolidayHours > 0) {
       const baseRate =
-        employee.tariff_type === TariffType.HOURLY
-          ? Number(employee.hourly_rate)
+        user.tariff_type === TariffType.HOURLY
+          ? Number(user.hourly_rate)
           : this.calculateHourlyRateFromMonthlySalary(
-              Number(employee.monthly_salary),
+              Number(user.monthly_salary),
             );
 
       // Holiday premium could be configurable (e.g., 2.0x)
@@ -249,7 +250,7 @@ export class PayrollProcessorService {
       const holidayRate = baseRate * holidayMultiplier;
 
       await this.createPayrollItem({
-        employee_id: employee.id,
+        user_id: user.id,
         period_id: period.period_id,
         type: PayrollItemType.EARNING,
         code: PayrollItemCode.HOLIDAY_PREMIUM,
@@ -262,12 +263,12 @@ export class PayrollProcessorService {
   }
 
   private async processPiecework(
-    employee: Employee,
+    user: User,
     period: PayrollPeriod,
   ): Promise<void> {
     const volumeEntries = await this.volumeRepository.find({
       where: {
-        employee_id: employee.id,
+        user_id: user.id,
         date: Between(period.start_date, period.end_date),
         approved: true,
       },
@@ -279,7 +280,7 @@ export class PayrollProcessorService {
 
     if (totalAmount > 0) {
       await this.createPayrollItem({
-        employee_id: employee.id,
+        user_id: user.id,
         period_id: period.period_id,
         type: PayrollItemType.EARNING,
         code: PayrollItemCode.PIECEWORK,
@@ -315,24 +316,24 @@ export class PayrollProcessorService {
       totalGross: 0,
       totalDeductions: 0,
       totalNet: 0,
-      employeeCount: 0,
+      userCount: 0,
       byDepartment: {},
       byLocation: {},
     };
 
-    const employeeMap = new Map();
+    const userMap = new Map();
 
     for (const item of items) {
-      if (!employeeMap.has(item.employee_id)) {
-        employeeMap.set(item.employee_id, {
-          employee: item.employee,
+      if (!userMap.has(item.user_id)) {
+        userMap.set(item.user_id, {
+          user: item.user,
           earnings: 0,
           deductions: 0,
           net: 0,
         });
       }
 
-      const emp = employeeMap.get(item.employee_id);
+      const emp = userMap.get(item.user_id);
 
       if (item.type === PayrollItemType.EARNING) {
         emp.earnings += Number(item.amount);
@@ -345,11 +346,11 @@ export class PayrollProcessorService {
       emp.net = emp.earnings - emp.deductions;
     }
 
-    summary.employeeCount = employeeMap.size;
+    summary.userCount = userMap.size;
     summary.totalNet = summary.totalGross - summary.totalDeductions;
 
     // Group by department and location
-    for (const [employeeId, emp] of employeeMap) {
+    for (const [_userId, emp] of userMap) {
       const dept = emp.employee.department || 'Unknown';
       const loc = emp.employee.location || 'Unknown';
 

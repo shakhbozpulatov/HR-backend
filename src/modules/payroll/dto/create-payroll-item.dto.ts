@@ -7,7 +7,7 @@ import {
 
 export class CreatePayrollItemDto {
   @IsString()
-  employee_id: string;
+  user_id: string;
 
   @IsEnum(PayrollItemType)
   type: PayrollItemType;

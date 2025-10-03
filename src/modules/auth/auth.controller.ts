@@ -64,10 +64,10 @@ export class AuthController {
     @Body() createUserDto: AdminCreateUserDto,
     @Req() req,
   ) {
-    console.log('emplId', req.user.employee_id);
+    console.log('emplId', req.user.user_id);
     const result = await this.authService.createUserByAdmin(
       createUserDto,
-      req.user.employee_id,
+      req.user.user_id,
     );
 
     return {
@@ -125,7 +125,7 @@ export class AuthController {
   @Get('profile')
   @UseGuards(AuthGuard)
   async getProfile(@Req() req) {
-    const profile = await this.authService.getProfile(req.user.employee_id);
+    const profile = await this.authService.getProfile(req.user.user_id);
 
     return {
       success: true,
@@ -147,12 +147,11 @@ export class AuthController {
         email: req.user.email,
         role: req.user.role,
         company_id: req.user.company_id,
-        employee_id: req.user.employee_id,
-        employee: req.user.employee
+        user: req.user.user
           ? {
-              code: req.user.employee.code,
-              full_name: `${req.user.employee.first_name} ${req.user.employee.last_name}`,
-              position: req.user.employee.position,
+              code: req.user.code,
+              full_name: `${req.user.first_name} ${req.user.last_name}`,
+              position: req.user.position,
             }
           : null,
         company: req.user.company

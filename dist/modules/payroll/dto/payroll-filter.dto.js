@@ -38,7 +38,7 @@ __decorate([
     (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
-], PayrollFilterDto.prototype, "employee_id", void 0);
+], PayrollFilterDto.prototype, "user_id", void 0);
 __decorate([
     (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsEnum)(payroll_period_entity_1.PeriodStatus),

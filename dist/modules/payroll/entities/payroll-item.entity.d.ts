@@ -1,5 +1,5 @@
-import { Employee } from '../../employees/entities/employee.entity';
 import { PayrollPeriod } from './payroll-period.entity';
+import { User } from '@/modules/users/entities/user.entity';
 export declare enum PayrollItemType {
     EARNING = "EARNING",
     DEDUCTION = "DEDUCTION"
@@ -20,7 +20,7 @@ export declare enum PayrollItemSource {
 }
 export declare class PayrollItem {
     item_id: string;
-    employee_id: string;
+    user_id: string;
     period_id: string;
     type: PayrollItemType;
     code: PayrollItemCode;
@@ -30,6 +30,6 @@ export declare class PayrollItem {
     note?: string;
     source: PayrollItemSource;
     created_at: Date;
-    employee: Employee;
+    user: User;
     period: PayrollPeriod;
 }

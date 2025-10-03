@@ -22,13 +22,13 @@ let AttendanceRecordsService = class AttendanceRecordsService {
         this.recordRepository = recordRepository;
     }
     async findAll(filterDto) {
-        const { page = 1, limit = 10, employee_id, from, to } = filterDto;
+        const { page = 1, limit = 10, user_id, from, to } = filterDto;
         const queryBuilder = this.recordRepository
             .createQueryBuilder('record')
-            .leftJoinAndSelect('record.employee', 'employee');
-        if (employee_id) {
-            queryBuilder.andWhere('record.employee_id = :employee_id', {
-                employee_id,
+            .leftJoinAndSelect('record.user', 'user');
+        if (user_id) {
+            queryBuilder.andWhere('record.user_id = :user_id', {
+                user_id,
             });
         }
         if (from) {
@@ -46,7 +46,7 @@ let AttendanceRecordsService = class AttendanceRecordsService {
     }
     async findOne(employeeId, date) {
         return await this.recordRepository.findOne({
-            where: { employee_id: employeeId, date },
+            where: { user_id: employeeId, date },
             relations: ['employee'],
         });
     }

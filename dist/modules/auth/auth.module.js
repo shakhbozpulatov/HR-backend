@@ -13,7 +13,6 @@ const passport_1 = require("@nestjs/passport");
 const auth_controller_1 = require("./auth.controller");
 const auth_service_1 = require("./auth.service");
 const user_entity_1 = require("../users/entities/user.entity");
-const employee_entity_1 = require("../employees/entities/employee.entity");
 const company_entity_1 = require("../company/entities/company.entity");
 const jwt_strategy_1 = require("./strategies/jwt.strategy");
 const crypto_utils_1 = require("../../common/utils/crypto.utils");
@@ -25,7 +24,6 @@ exports.AuthModule = AuthModule = __decorate([
         imports: [
             typeorm_1.TypeOrmModule.forFeature([
                 user_entity_1.User,
-                employee_entity_1.Employee,
                 company_entity_1.Company,
             ]),
             passport_1.PassportModule,

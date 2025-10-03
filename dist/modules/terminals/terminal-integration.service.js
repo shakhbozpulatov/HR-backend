@@ -19,13 +19,13 @@ const config_1 = require("@nestjs/config");
 const typeorm_1 = require("@nestjs/typeorm");
 const typeorm_2 = require("typeorm");
 const terminal_device_entity_1 = require("./entities/terminal-device.entity");
-const employee_entity_1 = require("../employees/entities/employee.entity");
 const schedule_1 = require("@nestjs/schedule");
 const axios_1 = require("axios");
+const user_entity_1 = require("../users/entities/user.entity");
 let TerminalIntegrationService = TerminalIntegrationService_1 = class TerminalIntegrationService {
-    constructor(deviceRepository, employeeRepository, configService) {
+    constructor(deviceRepository, userRepository, configService) {
         this.deviceRepository = deviceRepository;
-        this.employeeRepository = employeeRepository;
+        this.userRepository = userRepository;
         this.configService = configService;
         this.logger = new common_1.Logger(TerminalIntegrationService_1.name);
         this.vendorApiUrl = this.configService.get('VENDOR_API_URL');
@@ -90,7 +90,7 @@ let TerminalIntegrationService = TerminalIntegrationService_1 = class TerminalIn
             });
             const vendorUsers = response.data.users || [];
             const vendorUserMap = new Map(vendorUsers.map((user) => [user.terminal_user_external_id, user]));
-            const employees = await this.employeeRepository.find({
+            const employees = await this.userRepository.find({
                 where: { status: 'active' },
             });
             const syncResults = {
@@ -107,7 +107,7 @@ let TerminalIntegrationService = TerminalIntegrationService_1 = class TerminalIn
                             terminal_user_external_id: employee.id,
                         });
                         employee.terminal_user_id = terminalUserId;
-                        await this.employeeRepository.save(employee);
+                        await this.userRepository.save(employee);
                         syncResults.created++;
                     }
                     else {
@@ -161,7 +161,7 @@ let TerminalIntegrationService = TerminalIntegrationService_1 = class TerminalIn
         await this.pullMissedEvents();
     }
     async retryFailedOperations() {
-        const pendingEmployees = await this.employeeRepository.find({
+        const pendingEmployees = await this.userRepository.find({
             where: {
                 status: 'active',
                 terminal_user_id: null,
@@ -174,7 +174,7 @@ let TerminalIntegrationService = TerminalIntegrationService_1 = class TerminalIn
                     terminal_user_external_id: employee.id,
                 });
                 employee.terminal_user_id = terminalUserId;
-                await this.employeeRepository.save(employee);
+                await this.userRepository.save(employee);
                 this.logger.log(`Successfully created terminal user for employee ${employee.id}`);
             }
             catch (error) {
@@ -193,7 +193,7 @@ __decorate([
 exports.TerminalIntegrationService = TerminalIntegrationService = TerminalIntegrationService_1 = __decorate([
     (0, common_1.Injectable)(),
     __param(0, (0, typeorm_1.InjectRepository)(terminal_device_entity_1.TerminalDevice)),
-    __param(1, (0, typeorm_1.InjectRepository)(employee_entity_1.Employee)),
+    __param(1, (0, typeorm_1.InjectRepository)(user_entity_1.User)),
     __metadata("design:paramtypes", [typeorm_2.Repository,
         typeorm_2.Repository,
         config_1.ConfigService])

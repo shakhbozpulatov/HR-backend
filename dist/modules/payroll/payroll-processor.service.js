@@ -21,15 +21,15 @@ const payroll_period_entity_1 = require("./entities/payroll-period.entity");
 const payroll_item_entity_1 = require("./entities/payroll-item.entity");
 const work_volume_entry_entity_1 = require("./entities/work-volume-entry.entity");
 const attendance_record_entity_1 = require("../attendance/entities/attendance-record.entity");
-const employee_entity_1 = require("../employees/entities/employee.entity");
 const moment = require("moment");
+const user_entity_1 = require("../users/entities/user.entity");
 let PayrollProcessorService = class PayrollProcessorService {
-    constructor(periodRepository, itemRepository, attendanceRepository, volumeRepository, employeeRepository, configService) {
+    constructor(periodRepository, itemRepository, attendanceRepository, volumeRepository, userRepository, configService) {
         this.periodRepository = periodRepository;
         this.itemRepository = itemRepository;
         this.attendanceRepository = attendanceRepository;
         this.volumeRepository = volumeRepository;
-        this.employeeRepository = employeeRepository;
+        this.userRepository = userRepository;
         this.configService = configService;
         this.overtimeMultiplier = this.configService.get('OVERTIME_MULTIPLIER', 1.5);
     }
@@ -40,55 +40,55 @@ let PayrollProcessorService = class PayrollProcessorService {
         if (!period || period.status !== payroll_period_entity_1.PeriodStatus.OPEN) {
             throw new Error('Period not found or not open for processing');
         }
-        const employees = await this.employeeRepository.find({
+        const users = await this.userRepository.find({
             where: { status: 'active' },
         });
         await this.itemRepository.delete({
             period_id: periodId,
             source: payroll_item_entity_1.PayrollItemSource.AUTO,
         });
-        for (const employee of employees) {
-            await this.processEmployeePayroll(employee, period);
+        for (const user of users) {
+            await this.processUserPayroll(user, period);
         }
     }
-    async processEmployeePayroll(employee, period) {
+    async processUserPayroll(user, period) {
         const attendanceRecords = await this.attendanceRepository.find({
             where: {
-                employee_id: employee.id,
+                user_id: user.id,
                 date: (0, typeorm_2.Between)(period.start_date, period.end_date),
             },
         });
-        if (employee.tariff_type === employee_entity_1.TariffType.HOURLY) {
-            await this.processHourlyEmployee(employee, period, attendanceRecords);
+        if (user.tariff_type === user_entity_1.TariffType.HOURLY) {
+            await this.processHourlyUser(user, period, attendanceRecords);
         }
         else {
-            await this.processMonthlyEmployee(employee, period, attendanceRecords);
+            await this.processMonthlyEmployee(user, period, attendanceRecords);
         }
-        await this.processOvertime(employee, period, attendanceRecords);
-        await this.processHolidayPremium(employee, period, attendanceRecords);
-        await this.processPiecework(employee, period);
+        await this.processOvertime(user, period, attendanceRecords);
+        await this.processHolidayPremium(user, period, attendanceRecords);
+        await this.processPiecework(user, period);
     }
-    async processHourlyEmployee(employee, period, records) {
+    async processHourlyUser(user, period, records) {
         const approvedRecords = records.filter((r) => r.status === attendance_record_entity_1.AttendanceStatus.OK &&
             r.approvals?.some((a) => a.approved_at));
         const totalWorkedHours = approvedRecords.reduce((sum, record) => {
             return sum + record.worked_minutes / 60;
         }, 0);
-        if (totalWorkedHours > 0 && employee.hourly_rate) {
+        if (totalWorkedHours > 0 && user.hourly_rate) {
             await this.createPayrollItem({
-                employee_id: employee.id,
+                user_id: user.id,
                 period_id: period.period_id,
                 type: payroll_item_entity_1.PayrollItemType.EARNING,
                 code: payroll_item_entity_1.PayrollItemCode.BASE_HOURLY,
                 quantity: totalWorkedHours,
-                rate: employee.hourly_rate,
-                amount: totalWorkedHours * Number(employee.hourly_rate),
+                rate: user.hourly_rate,
+                amount: totalWorkedHours * Number(user.hourly_rate),
                 source: payroll_item_entity_1.PayrollItemSource.AUTO,
             });
         }
     }
-    async processMonthlyEmployee(employee, period, records) {
-        if (!employee.monthly_salary)
+    async processMonthlyEmployee(user, period, records) {
+        if (!user.monthly_salary)
             return;
         const scheduledRecords = records.filter((r) => r.scheduled_start && r.scheduled_end);
         const totalScheduledMinutes = scheduledRecords.reduce((sum, record) => {
@@ -111,13 +111,13 @@ let PayrollProcessorService = class PayrollProcessorService {
                 end.add(1, 'day');
             return sum + end.diff(start, 'minutes');
         }, 0);
-        let baseSalary = Number(employee.monthly_salary);
+        let baseSalary = Number(user.monthly_salary);
         if (totalScheduledMinutes > 0 && unpaidAbsentMinutes > 0) {
             const prorationRatio = 1 - unpaidAbsentMinutes / totalScheduledMinutes;
             baseSalary = baseSalary * prorationRatio;
         }
         await this.createPayrollItem({
-            employee_id: employee.id,
+            user_id: user.id,
             period_id: period.period_id,
             type: payroll_item_entity_1.PayrollItemType.EARNING,
             code: payroll_item_entity_1.PayrollItemCode.BASE_MONTHLY,
@@ -127,19 +127,19 @@ let PayrollProcessorService = class PayrollProcessorService {
             source: payroll_item_entity_1.PayrollItemSource.AUTO,
         });
     }
-    async processOvertime(employee, period, records) {
+    async processOvertime(user, period, records) {
         const approvedRecords = records.filter((r) => r.status === attendance_record_entity_1.AttendanceStatus.OK &&
             r.approvals?.some((a) => a.approved_at));
         const totalOvertimeHours = approvedRecords.reduce((sum, record) => {
             return sum + record.overtime_minutes / 60;
         }, 0);
         if (totalOvertimeHours > 0) {
-            const baseRate = employee.tariff_type === employee_entity_1.TariffType.HOURLY
-                ? Number(employee.hourly_rate)
-                : this.calculateHourlyRateFromMonthlySalary(Number(employee.monthly_salary));
+            const baseRate = user.tariff_type === user_entity_1.TariffType.HOURLY
+                ? Number(user.hourly_rate)
+                : this.calculateHourlyRateFromMonthlySalary(Number(user.monthly_salary));
             const overtimeRate = baseRate * this.overtimeMultiplier;
             await this.createPayrollItem({
-                employee_id: employee.id,
+                user_id: user.id,
                 period_id: period.period_id,
                 type: payroll_item_entity_1.PayrollItemType.EARNING,
                 code: payroll_item_entity_1.PayrollItemCode.OVERTIME,
@@ -150,19 +150,19 @@ let PayrollProcessorService = class PayrollProcessorService {
             });
         }
     }
-    async processHolidayPremium(employee, period, records) {
+    async processHolidayPremium(user, period, records) {
         const holidayRecords = records.filter((r) => r.status === attendance_record_entity_1.AttendanceStatus.HOLIDAY && r.worked_minutes > 0);
         const totalHolidayHours = holidayRecords.reduce((sum, record) => {
             return sum + record.worked_minutes / 60;
         }, 0);
         if (totalHolidayHours > 0) {
-            const baseRate = employee.tariff_type === employee_entity_1.TariffType.HOURLY
-                ? Number(employee.hourly_rate)
-                : this.calculateHourlyRateFromMonthlySalary(Number(employee.monthly_salary));
+            const baseRate = user.tariff_type === user_entity_1.TariffType.HOURLY
+                ? Number(user.hourly_rate)
+                : this.calculateHourlyRateFromMonthlySalary(Number(user.monthly_salary));
             const holidayMultiplier = this.configService.get('HOLIDAY_MULTIPLIER', 2.0);
             const holidayRate = baseRate * holidayMultiplier;
             await this.createPayrollItem({
-                employee_id: employee.id,
+                user_id: user.id,
                 period_id: period.period_id,
                 type: payroll_item_entity_1.PayrollItemType.EARNING,
                 code: payroll_item_entity_1.PayrollItemCode.HOLIDAY_PREMIUM,
@@ -173,10 +173,10 @@ let PayrollProcessorService = class PayrollProcessorService {
             });
         }
     }
-    async processPiecework(employee, period) {
+    async processPiecework(user, period) {
         const volumeEntries = await this.volumeRepository.find({
             where: {
-                employee_id: employee.id,
+                user_id: user.id,
                 date: (0, typeorm_2.Between)(period.start_date, period.end_date),
                 approved: true,
             },
@@ -186,7 +186,7 @@ let PayrollProcessorService = class PayrollProcessorService {
         }, 0);
         if (totalAmount > 0) {
             await this.createPayrollItem({
-                employee_id: employee.id,
+                user_id: user.id,
                 period_id: period.period_id,
                 type: payroll_item_entity_1.PayrollItemType.EARNING,
                 code: payroll_item_entity_1.PayrollItemCode.PIECEWORK,
@@ -215,21 +215,21 @@ let PayrollProcessorService = class PayrollProcessorService {
             totalGross: 0,
             totalDeductions: 0,
             totalNet: 0,
-            employeeCount: 0,
+            userCount: 0,
             byDepartment: {},
             byLocation: {},
         };
-        const employeeMap = new Map();
+        const userMap = new Map();
         for (const item of items) {
-            if (!employeeMap.has(item.employee_id)) {
-                employeeMap.set(item.employee_id, {
-                    employee: item.employee,
+            if (!userMap.has(item.user_id)) {
+                userMap.set(item.user_id, {
+                    user: item.user,
                     earnings: 0,
                     deductions: 0,
                     net: 0,
                 });
             }
-            const emp = employeeMap.get(item.employee_id);
+            const emp = userMap.get(item.user_id);
             if (item.type === payroll_item_entity_1.PayrollItemType.EARNING) {
                 emp.earnings += Number(item.amount);
                 summary.totalGross += Number(item.amount);
@@ -240,9 +240,9 @@ let PayrollProcessorService = class PayrollProcessorService {
             }
             emp.net = emp.earnings - emp.deductions;
         }
-        summary.employeeCount = employeeMap.size;
+        summary.userCount = userMap.size;
         summary.totalNet = summary.totalGross - summary.totalDeductions;
-        for (const [employeeId, emp] of employeeMap) {
+        for (const [_userId, emp] of userMap) {
             const dept = emp.employee.department || 'Unknown';
             const loc = emp.employee.location || 'Unknown';
             if (!summary.byDepartment[dept]) {
@@ -268,7 +268,7 @@ exports.PayrollProcessorService = PayrollProcessorService = __decorate([
     __param(1, (0, typeorm_1.InjectRepository)(payroll_item_entity_1.PayrollItem)),
     __param(2, (0, typeorm_1.InjectRepository)(attendance_record_entity_1.AttendanceRecord)),
     __param(3, (0, typeorm_1.InjectRepository)(work_volume_entry_entity_1.WorkVolumeEntry)),
-    __param(4, (0, typeorm_1.InjectRepository)(employee_entity_1.Employee)),
+    __param(4, (0, typeorm_1.InjectRepository)(user_entity_1.User)),
     __metadata("design:paramtypes", [typeorm_2.Repository,
         typeorm_2.Repository,
         typeorm_2.Repository,

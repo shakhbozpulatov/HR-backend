@@ -31,14 +31,14 @@ let AttendanceEventsService = class AttendanceEventsService {
         return await this.eventRepository.save(event);
     }
     async findAll(filterDto) {
-        const { page = 1, limit = 10, employee_id, from, to } = filterDto;
+        const { page = 1, limit = 10, user_id, from, to } = filterDto;
         const queryBuilder = this.eventRepository
             .createQueryBuilder('event')
-            .leftJoinAndSelect('event.employee', 'employee')
+            .leftJoinAndSelect('event.user', 'user')
             .leftJoinAndSelect('event.device', 'device');
-        if (employee_id) {
-            queryBuilder.andWhere('event.employee_id = :employee_id', {
-                employee_id,
+        if (user_id) {
+            queryBuilder.andWhere('event.user_id = :user_id', {
+                user_id,
             });
         }
         if (from) {
@@ -60,17 +60,17 @@ let AttendanceEventsService = class AttendanceEventsService {
     }
     async getQuarantinedEvents() {
         return await this.eventRepository.find({
-            where: { employee_id: null },
+            where: { user_id: null },
             relations: ['device'],
             order: { created_at: 'DESC' },
         });
     }
-    async resolveQuarantinedEvent(eventId, employeeId, _actorId) {
+    async resolveQuarantinedEvent(eventId, userId, _actorId) {
         const event = await this.eventRepository.findOne({
             where: { event_id: eventId },
         });
         if (event) {
-            event.employee_id = employeeId;
+            event.user_id = userId;
             return await this.eventRepository.save(event);
         }
         return event;

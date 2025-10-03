@@ -38,5 +38,5 @@ __decorate([
     (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
-], AnalyticsFilterDto.prototype, "employee_id", void 0);
+], AnalyticsFilterDto.prototype, "user_id", void 0);
 //# sourceMappingURL=analytics-filter.dto.js.map

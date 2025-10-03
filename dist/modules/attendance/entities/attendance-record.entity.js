@@ -11,8 +11,8 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.AttendanceRecord = exports.AttendanceStatus = void 0;
 const typeorm_1 = require("typeorm");
-const employee_entity_1 = require("../../employees/entities/employee.entity");
 const attendance_event_entity_1 = require("./attendance-event.entity");
+const user_entity_1 = require("../../users/entities/user.entity");
 var AttendanceStatus;
 (function (AttendanceStatus) {
     AttendanceStatus["OK"] = "OK";
@@ -31,7 +31,7 @@ __decorate([
 __decorate([
     (0, typeorm_1.Column)({ type: 'uuid' }),
     __metadata("design:type", String)
-], AttendanceRecord.prototype, "employee_id", void 0);
+], AttendanceRecord.prototype, "user_id", void 0);
 __decorate([
     (0, typeorm_1.Column)({ type: 'date' }),
     __metadata("design:type", Date)
@@ -97,17 +97,17 @@ __decorate([
     __metadata("design:type", Date)
 ], AttendanceRecord.prototype, "updated_at", void 0);
 __decorate([
-    (0, typeorm_1.ManyToOne)(() => employee_entity_1.Employee, (employee) => employee.attendance_records),
-    (0, typeorm_1.JoinColumn)({ name: 'employee_id' }),
-    __metadata("design:type", employee_entity_1.Employee)
-], AttendanceRecord.prototype, "employee", void 0);
+    (0, typeorm_1.ManyToOne)(() => user_entity_1.User, (user) => user.attendance_records),
+    (0, typeorm_1.JoinColumn)({ name: 'user_id' }),
+    __metadata("design:type", user_entity_1.User)
+], AttendanceRecord.prototype, "user", void 0);
 __decorate([
-    (0, typeorm_1.OneToMany)(() => attendance_event_entity_1.AttendanceEvent, (event) => event.employee),
+    (0, typeorm_1.OneToMany)(() => attendance_event_entity_1.AttendanceEvent, (event) => event.user),
     __metadata("design:type", Array)
 ], AttendanceRecord.prototype, "events", void 0);
 exports.AttendanceRecord = AttendanceRecord = __decorate([
     (0, typeorm_1.Entity)('attendance_records'),
-    (0, typeorm_1.Index)(['employee_id', 'date'], { unique: true }),
+    (0, typeorm_1.Index)(['user_id', 'date'], { unique: true }),
     (0, typeorm_1.Index)(['date', 'status'])
 ], AttendanceRecord);
 //# sourceMappingURL=attendance-record.entity.js.map

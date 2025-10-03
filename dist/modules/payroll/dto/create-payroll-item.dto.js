@@ -18,7 +18,7 @@ exports.CreatePayrollItemDto = CreatePayrollItemDto;
 __decorate([
     (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
-], CreatePayrollItemDto.prototype, "employee_id", void 0);
+], CreatePayrollItemDto.prototype, "user_id", void 0);
 __decorate([
     (0, class_validator_1.IsEnum)(payroll_item_entity_1.PayrollItemType),
     __metadata("design:type", String)

@@ -120,8 +120,8 @@ let CompaniesService = class CompaniesService {
             .leftJoin('company.users', 'user')
             .leftJoin('company.departments', 'department')
             .select([
-            'COUNT(DISTINCT employee.employee_id) as total_employees',
-            'COUNT(DISTINCT CASE WHEN employee.status = :active THEN employee.employee_id END) as active_employees',
+            'COUNT(DISTINCT employee.user_id) as total_users',
+            'COUNT(DISTINCT CASE WHEN user.status = :active THEN user.id END) as active_users',
             'COUNT(DISTINCT user.user_id) as total_users',
             'COUNT(DISTINCT department.department_id) as total_departments',
         ])

@@ -6,7 +6,7 @@ import {
   UpdateDateColumn,
   OneToMany,
 } from 'typeorm';
-import { EmployeeScheduleAssignment } from './employee-schedule-assignment.entity';
+import { UserScheduleAssignment } from './employee-schedule-assignment.entity';
 
 export interface BreakTime {
   start_time: string;
@@ -50,8 +50,8 @@ export class ScheduleTemplate {
   updated_at: Date;
 
   @OneToMany(
-    () => EmployeeScheduleAssignment,
+    () => UserScheduleAssignment,
     (assignment) => assignment.default_template,
   )
-  assignments: EmployeeScheduleAssignment[];
+  assignments: UserScheduleAssignment[];
 }

@@ -21,7 +21,7 @@ exports.SchedulesModule = SchedulesModule;
 exports.SchedulesModule = SchedulesModule = __decorate([
     (0, common_1.Module)({
         imports: [
-            typeorm_1.TypeOrmModule.forFeature([schedule_template_entity_1.ScheduleTemplate, employee_schedule_assignment_entity_1.EmployeeScheduleAssignment]),
+            typeorm_1.TypeOrmModule.forFeature([schedule_template_entity_1.ScheduleTemplate, employee_schedule_assignment_entity_1.UserScheduleAssignment]),
         ],
         controllers: [schedule_templates_controller_1.ScheduleTemplatesController, schedule_assignments_controller_1.ScheduleAssignmentsController],
         providers: [schedule_templates_service_1.ScheduleTemplatesService, schedule_assignments_service_1.ScheduleAssignmentsService],

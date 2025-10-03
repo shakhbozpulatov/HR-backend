@@ -19,5 +19,5 @@ export class AnalyticsFilterDto {
 
   @IsOptional()
   @IsString()
-  employee_id?: string;
+  user_id?: string;
 }

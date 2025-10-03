@@ -57,11 +57,11 @@ export class AttendanceEventsController {
   @Roles(UserRole.ADMIN, UserRole.HR_MANAGER)
   async resolveQuarantinedEvent(
     @Param('eventId') eventId: string,
-    @Body() resolveDto: { employee_id: string },
+    @Body() resolveDto: { user_id: string },
   ) {
     return await this.eventsService.resolveQuarantinedEvent(
       eventId,
-      resolveDto.employee_id,
+      resolveDto.user_id,
       'admin',
     );
   }

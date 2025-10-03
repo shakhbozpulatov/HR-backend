@@ -17,7 +17,7 @@ export class PayrollFilterDto {
 
   @IsOptional()
   @IsString()
-  employee_id?: string;
+  user_id?: string;
 
   @IsOptional()
   @IsEnum(PeriodStatus)

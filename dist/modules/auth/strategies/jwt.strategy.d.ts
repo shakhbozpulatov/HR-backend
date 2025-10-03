@@ -11,8 +11,6 @@ export declare class JwtStrategy extends JwtStrategy_base {
         email: string;
         role: import("../../users/entities/user.entity").UserRole;
         company_id: string;
-        employee_id: string;
-        employee: import("../../employees/entities/employee.entity").Employee;
         company: import("../../company/entities/company.entity").Company;
     }>;
 }

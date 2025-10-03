@@ -11,6 +11,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.UpdateProfileDto = void 0;
 const class_validator_1 = require("class-validator");
+const class_transformer_1 = require("class-transformer");
 class UpdateProfileDto {
 }
 exports.UpdateProfileDto = UpdateProfileDto;
@@ -43,4 +44,14 @@ __decorate([
     (0, class_validator_1.Matches)(/^\+?[1-9]\d{1,14}$/),
     __metadata("design:type", String)
 ], UpdateProfileDto.prototype, "phone", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_transformer_1.Transform)(({ value }) => {
+        if (!value)
+            return null;
+        return new Date(value);
+    }),
+    (0, class_validator_1.IsDateString)(),
+    __metadata("design:type", Date)
+], UpdateProfileDto.prototype, "dob", void 0);
 //# sourceMappingURL=update-profile.dto.js.map

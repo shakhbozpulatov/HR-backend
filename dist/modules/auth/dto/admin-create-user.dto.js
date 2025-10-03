@@ -25,7 +25,75 @@ __decorate([
     __metadata("design:type", String)
 ], AdminCreateUserDto.prototype, "company_id", void 0);
 __decorate([
-    (0, class_validator_1.IsUUID)('4', { message: 'Invalid employee ID format' }),
+    (0, class_validator_1.IsEmail)(),
     __metadata("design:type", String)
-], AdminCreateUserDto.prototype, "employee_id", void 0);
+], AdminCreateUserDto.prototype, "email", void 0);
+__decorate([
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], AdminCreateUserDto.prototype, "first_name", void 0);
+__decorate([
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], AdminCreateUserDto.prototype, "last_name", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], AdminCreateUserDto.prototype, "middle_name", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsDateString)(),
+    __metadata("design:type", String)
+], AdminCreateUserDto.prototype, "dob", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], AdminCreateUserDto.prototype, "phone", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], AdminCreateUserDto.prototype, "department", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], AdminCreateUserDto.prototype, "location", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], AdminCreateUserDto.prototype, "manager_id", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], AdminCreateUserDto.prototype, "position", void 0);
+__decorate([
+    (0, class_validator_1.IsDateString)(),
+    __metadata("design:type", String)
+], AdminCreateUserDto.prototype, "start_date", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsDateString)(),
+    __metadata("design:type", String)
+], AdminCreateUserDto.prototype, "end_date", void 0);
+__decorate([
+    (0, class_validator_1.IsEnum)(user_entity_1.TariffType),
+    __metadata("design:type", String)
+], AdminCreateUserDto.prototype, "tariff_type", void 0);
+__decorate([
+    (0, class_validator_1.ValidateIf)((o) => o.tariff_type === user_entity_1.TariffType.HOURLY),
+    (0, class_validator_1.IsNumber)(),
+    (0, class_validator_1.IsPositive)(),
+    __metadata("design:type", Number)
+], AdminCreateUserDto.prototype, "hourly_rate", void 0);
+__decorate([
+    (0, class_validator_1.ValidateIf)((o) => o.tariff_type === user_entity_1.TariffType.MONTHLY),
+    (0, class_validator_1.IsNumber)(),
+    (0, class_validator_1.IsPositive)(),
+    __metadata("design:type", Number)
+], AdminCreateUserDto.prototype, "monthly_salary", void 0);
 //# sourceMappingURL=admin-create-user.dto.js.map
