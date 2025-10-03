@@ -16,12 +16,14 @@ exports.AuthController = void 0;
 const common_1 = require("@nestjs/common");
 const auth_service_1 = require("./auth.service");
 const login_dto_1 = require("./dto/login.dto");
+const register_dto_1 = require("./dto/register.dto");
+const admin_create_user_dto_1 = require("./dto/admin-create-user.dto");
+const change_password_dto_1 = require("./dto/change-password.dto");
 const public_decorator_1 = require("../../common/decorators/public.decorator");
 const auth_guard_1 = require("../../common/guards/auth.guard");
 const roles_guard_1 = require("../../common/guards/roles.guard");
-const user_entity_1 = require("../users/entities/user.entity");
 const roles_decorator_1 = require("../../common/decorators/roles.decorator");
-const register_dto_1 = require("./dto/register.dto");
+const user_entity_1 = require("../users/entities/user.entity");
 let AuthController = class AuthController {
     constructor(authService) {
         this.authService = authService;
@@ -32,32 +34,52 @@ let AuthController = class AuthController {
     async register(registerDto) {
         return await this.authService.register(registerDto);
     }
-    async createUserByAdmin(adminRegisterDto, req) {
-        const user = await this.authService.createUserByAdmin(adminRegisterDto, req.user.user_id);
+    async createUserByAdmin(createUserDto, req) {
+        const result = await this.authService.createUserByAdmin(createUserDto, req.user.user_id);
         return {
+            message: 'User created successfully',
             user: {
-                user_id: user.user_id,
-                email: user.email,
-                role: user.role,
-                employee_id: user.employee_id,
+                user_id: result.user.user_id,
+                email: result.user.email,
+                role: result.user.role,
+                company_id: result.user.company_id,
             },
+            temporary_password: result.temporary_password,
+            note: 'Please share this temporary password securely with the new user',
         };
     }
     async changePassword(changePasswordDto, req) {
-        await this.authService.changePassword(req.user.user_id, changePasswordDto.old_password, changePasswordDto.new_password);
-        return { message: 'Password changed successfully' };
+        return await this.authService.changePassword(req.user.user_id, changePasswordDto);
     }
-    async forgotPassword(forgotPasswordDto) {
-        return await this.authService.forgotPassword(forgotPasswordDto.email);
+    async resetUserPassword(userId, req) {
+        const result = await this.authService.resetUserPassword(req.user.user_id, userId);
+        return {
+            message: 'Password reset successfully',
+            temporary_password: result.temporary_password,
+            note: 'Please share this temporary password securely with the user',
+        };
     }
-    async resetPassword(resetPasswordDto) {
-        return await this.authService.resetPassword(resetPasswordDto.token, resetPasswordDto.new_password);
+    async getProfile(req) {
+        return {
+            user: {
+                user_id: req.user.user_id,
+                email: req.user.email,
+                role: req.user.role,
+                company_id: req.user.company_id,
+                employee: req.user.employee,
+                company: req.user.company,
+            },
+        };
+    }
+    async logout() {
+        return { message: 'Logged out successfully' };
     }
 };
 exports.AuthController = AuthController;
 __decorate([
     (0, common_1.Post)('login'),
     (0, public_decorator_1.Public)(),
+    (0, common_1.HttpCode)(common_1.HttpStatus.OK),
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [login_dto_1.LoginDto]),
@@ -66,6 +88,7 @@ __decorate([
 __decorate([
     (0, common_1.Post)('register'),
     (0, public_decorator_1.Public)(),
+    (0, common_1.HttpCode)(common_1.HttpStatus.CREATED),
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [register_dto_1.RegisterDto]),
@@ -74,38 +97,51 @@ __decorate([
 __decorate([
     (0, common_1.Post)('create-user'),
     (0, common_1.UseGuards)(auth_guard_1.AuthGuard, roles_guard_1.RolesGuard),
-    (0, roles_decorator_1.Roles)(user_entity_1.UserRole.ADMIN, user_entity_1.UserRole.HR_MANAGER),
+    (0, roles_decorator_1.Roles)(user_entity_1.UserRole.SUPER_ADMIN, user_entity_1.UserRole.COMPANY_OWNER, user_entity_1.UserRole.ADMIN, user_entity_1.UserRole.HR_MANAGER),
+    (0, common_1.HttpCode)(common_1.HttpStatus.CREATED),
     __param(0, (0, common_1.Body)()),
     __param(1, (0, common_1.Req)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [register_dto_1.AdminRegisterDto, Object]),
+    __metadata("design:paramtypes", [admin_create_user_dto_1.AdminCreateUserDto, Object]),
     __metadata("design:returntype", Promise)
 ], AuthController.prototype, "createUserByAdmin", null);
 __decorate([
     (0, common_1.Patch)('change-password'),
     (0, common_1.UseGuards)(auth_guard_1.AuthGuard),
+    (0, common_1.HttpCode)(common_1.HttpStatus.OK),
     __param(0, (0, common_1.Body)()),
     __param(1, (0, common_1.Req)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object, Object]),
+    __metadata("design:paramtypes", [change_password_dto_1.ChangePasswordDto, Object]),
     __metadata("design:returntype", Promise)
 ], AuthController.prototype, "changePassword", null);
 __decorate([
-    (0, common_1.Post)('forgot-password'),
-    (0, public_decorator_1.Public)(),
-    __param(0, (0, common_1.Body)()),
+    (0, common_1.Post)('reset-password/:userId'),
+    (0, common_1.UseGuards)(auth_guard_1.AuthGuard, roles_guard_1.RolesGuard),
+    (0, roles_decorator_1.Roles)(user_entity_1.UserRole.SUPER_ADMIN, user_entity_1.UserRole.COMPANY_OWNER, user_entity_1.UserRole.ADMIN),
+    (0, common_1.HttpCode)(common_1.HttpStatus.OK),
+    __param(0, (0, common_1.Param)('userId')),
+    __param(1, (0, common_1.Req)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object]),
+    __metadata("design:paramtypes", [String, Object]),
     __metadata("design:returntype", Promise)
-], AuthController.prototype, "forgotPassword", null);
+], AuthController.prototype, "resetUserPassword", null);
 __decorate([
-    (0, common_1.Post)('reset-password'),
-    (0, public_decorator_1.Public)(),
-    __param(0, (0, common_1.Body)()),
+    (0, common_1.Get)('profile'),
+    (0, common_1.UseGuards)(auth_guard_1.AuthGuard),
+    __param(0, (0, common_1.Req)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Object]),
     __metadata("design:returntype", Promise)
-], AuthController.prototype, "resetPassword", null);
+], AuthController.prototype, "getProfile", null);
+__decorate([
+    (0, common_1.Post)('logout'),
+    (0, common_1.UseGuards)(auth_guard_1.AuthGuard),
+    (0, common_1.HttpCode)(common_1.HttpStatus.OK),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", Promise)
+], AuthController.prototype, "logout", null);
 exports.AuthController = AuthController = __decorate([
     (0, common_1.Controller)('auth'),
     __metadata("design:paramtypes", [auth_service_1.AuthService])

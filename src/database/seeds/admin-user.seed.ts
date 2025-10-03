@@ -23,7 +23,7 @@ export async function seedAdminUser(dataSource: DataSource) {
   const adminUser = userRepository.create({
     email: adminEmail,
     password_hash: cryptoUtils.hashPassword(adminPassword),
-    role: UserRole.ADMIN,
+    role: UserRole.SUPER_ADMIN,
     active: true,
     mfa_enabled: false,
   });

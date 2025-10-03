@@ -3,6 +3,8 @@ import { AttendanceRecord } from '@/modules/attendance/entities/attendance-recor
 import { EmployeeScheduleAssignment } from '@/modules/schedules/entities/employee-schedule-assignment.entity';
 import { PayrollItem } from '@/modules/payroll/entities/payroll-item.entity';
 import { WorkVolumeEntry } from '@/modules/payroll/entities/work-volume-entry.entity';
+import { Company } from '@/modules/company/entities/company.entity';
+import { Department } from '@/modules/company/entities/department.entity';
 export declare enum TariffType {
     HOURLY = "HOURLY",
     MONTHLY = "MONTHLY"
@@ -13,6 +15,7 @@ export declare enum EmployeeStatus {
 }
 export declare class Employee {
     employee_id: string;
+    company_id?: string;
     code: string;
     status: EmployeeStatus;
     first_name: string;
@@ -21,6 +24,7 @@ export declare class Employee {
     dob?: Date;
     email?: string;
     phone?: string;
+    department_id?: string;
     department?: string;
     location?: string;
     manager_id?: string;
@@ -34,6 +38,8 @@ export declare class Employee {
     external_ids?: Record<string, string>;
     created_at: Date;
     updated_at: Date;
+    company: Company;
+    department_entity?: Department;
     manager: Employee;
     attendance_events: AttendanceEvent[];
     attendance_records: AttendanceRecord[];

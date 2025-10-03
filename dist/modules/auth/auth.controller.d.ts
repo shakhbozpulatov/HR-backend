@@ -1,41 +1,50 @@
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
+import { RegisterDto } from './dto/register.dto';
+import { AdminCreateUserDto } from './dto/admin-create-user.dto';
+import { ChangePasswordDto } from './dto/change-password.dto';
 import { UserRole } from '@/modules/users/entities/user.entity';
-import { AdminRegisterDto, RegisterDto } from '@/modules/auth/dto/register.dto';
 export declare class AuthController {
     private readonly authService;
     constructor(authService: AuthService);
     login(loginDto: LoginDto): Promise<{
         access_token: string;
-        user: Partial<import("@/modules/users/entities/user.entity").User>;
+        user: any;
     }>;
     register(registerDto: RegisterDto): Promise<{
         access_token: string;
-        user: Partial<import("@/modules/users/entities/user.entity").User>;
+        user: any;
     }>;
-    createUserByAdmin(adminRegisterDto: AdminRegisterDto, req: any): Promise<{
+    createUserByAdmin(createUserDto: AdminCreateUserDto, req: any): Promise<{
+        message: string;
         user: {
             user_id: string;
             email: string;
             role: UserRole;
-            employee_id: string;
+            company_id: string;
+        };
+        temporary_password: string;
+        note: string;
+    }>;
+    changePassword(changePasswordDto: ChangePasswordDto, req: any): Promise<{
+        message: string;
+    }>;
+    resetUserPassword(userId: string, req: any): Promise<{
+        message: string;
+        temporary_password: string;
+        note: string;
+    }>;
+    getProfile(req: any): Promise<{
+        user: {
+            user_id: any;
+            email: any;
+            role: any;
+            company_id: any;
+            employee: any;
+            company: any;
         };
     }>;
-    changePassword(changePasswordDto: {
-        old_password: string;
-        new_password: string;
-    }, req: any): Promise<{
-        message: string;
-    }>;
-    forgotPassword(forgotPasswordDto: {
-        email: string;
-    }): Promise<{
-        message: string;
-    }>;
-    resetPassword(resetPasswordDto: {
-        token: string;
-        new_password: string;
-    }): Promise<{
+    logout(): Promise<{
         message: string;
     }>;
 }

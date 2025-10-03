@@ -5,8 +5,68 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="f223feb0-6502-4a9b-9c03-44f93ba47b8c" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/src/common/guards/company.guard.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/modules/auth/dto/admin-create-user.dto.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/modules/auth/dto/change-password.dto.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/modules/company/entities/department.entity.ts" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/dist/app.module.js" beforeDir="false" afterPath="$PROJECT_DIR$/dist/app.module.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/dist/app.module.js.map" beforeDir="false" afterPath="$PROJECT_DIR$/dist/app.module.js.map" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/dist/common/guards/roles.guard.js" beforeDir="false" afterPath="$PROJECT_DIR$/dist/common/guards/roles.guard.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/dist/common/guards/roles.guard.js.map" beforeDir="false" afterPath="$PROJECT_DIR$/dist/common/guards/roles.guard.js.map" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/dist/database/seeds/admin-user.seed.js" beforeDir="false" afterPath="$PROJECT_DIR$/dist/database/seeds/admin-user.seed.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/dist/database/seeds/admin-user.seed.js.map" beforeDir="false" afterPath="$PROJECT_DIR$/dist/database/seeds/admin-user.seed.js.map" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/dist/modules/auth/auth.controller.d.ts" beforeDir="false" afterPath="$PROJECT_DIR$/dist/modules/auth/auth.controller.d.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/dist/modules/auth/auth.controller.js" beforeDir="false" afterPath="$PROJECT_DIR$/dist/modules/auth/auth.controller.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/dist/modules/auth/auth.controller.js.map" beforeDir="false" afterPath="$PROJECT_DIR$/dist/modules/auth/auth.controller.js.map" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/dist/modules/auth/auth.module.js" beforeDir="false" afterPath="$PROJECT_DIR$/dist/modules/auth/auth.module.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/dist/modules/auth/auth.module.js.map" beforeDir="false" afterPath="$PROJECT_DIR$/dist/modules/auth/auth.module.js.map" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/dist/modules/auth/auth.service.d.ts" beforeDir="false" afterPath="$PROJECT_DIR$/dist/modules/auth/auth.service.d.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/dist/modules/auth/auth.service.js" beforeDir="false" afterPath="$PROJECT_DIR$/dist/modules/auth/auth.service.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/dist/modules/auth/auth.service.js.map" beforeDir="false" afterPath="$PROJECT_DIR$/dist/modules/auth/auth.service.js.map" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/dist/modules/auth/dto/login.dto.js" beforeDir="false" afterPath="$PROJECT_DIR$/dist/modules/auth/dto/login.dto.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/dist/modules/auth/dto/login.dto.js.map" beforeDir="false" afterPath="$PROJECT_DIR$/dist/modules/auth/dto/login.dto.js.map" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/dist/modules/auth/dto/register.dto.d.ts" beforeDir="false" afterPath="$PROJECT_DIR$/dist/modules/auth/dto/register.dto.d.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/dist/modules/auth/dto/register.dto.js" beforeDir="false" afterPath="$PROJECT_DIR$/dist/modules/auth/dto/register.dto.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/dist/modules/auth/dto/register.dto.js.map" beforeDir="false" afterPath="$PROJECT_DIR$/dist/modules/auth/dto/register.dto.js.map" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/dist/modules/auth/strategies/jwt.strategy.d.ts" beforeDir="false" afterPath="$PROJECT_DIR$/dist/modules/auth/strategies/jwt.strategy.d.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/dist/modules/auth/strategies/jwt.strategy.js" beforeDir="false" afterPath="$PROJECT_DIR$/dist/modules/auth/strategies/jwt.strategy.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/dist/modules/auth/strategies/jwt.strategy.js.map" beforeDir="false" afterPath="$PROJECT_DIR$/dist/modules/auth/strategies/jwt.strategy.js.map" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/dist/modules/employees/entities/employee.entity.d.ts" beforeDir="false" afterPath="$PROJECT_DIR$/dist/modules/employees/entities/employee.entity.d.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/dist/modules/employees/entities/employee.entity.js" beforeDir="false" afterPath="$PROJECT_DIR$/dist/modules/employees/entities/employee.entity.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/dist/modules/employees/entities/employee.entity.js.map" beforeDir="false" afterPath="$PROJECT_DIR$/dist/modules/employees/entities/employee.entity.js.map" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/dist/modules/holidays/entities/holiday.entity.d.ts" beforeDir="false" afterPath="$PROJECT_DIR$/dist/modules/holidays/entities/holiday.entity.d.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/dist/modules/holidays/entities/holiday.entity.js" beforeDir="false" afterPath="$PROJECT_DIR$/dist/modules/holidays/entities/holiday.entity.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/dist/modules/holidays/entities/holiday.entity.js.map" beforeDir="false" afterPath="$PROJECT_DIR$/dist/modules/holidays/entities/holiday.entity.js.map" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/dist/modules/users/entities/user.entity.d.ts" beforeDir="false" afterPath="$PROJECT_DIR$/dist/modules/users/entities/user.entity.d.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/dist/modules/users/entities/user.entity.js" beforeDir="false" afterPath="$PROJECT_DIR$/dist/modules/users/entities/user.entity.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/dist/modules/users/entities/user.entity.js.map" beforeDir="false" afterPath="$PROJECT_DIR$/dist/modules/users/entities/user.entity.js.map" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/dist/tsconfig.build.tsbuildinfo" beforeDir="false" afterPath="$PROJECT_DIR$/dist/tsconfig.build.tsbuildinfo" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/app.module.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/app.module.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/common/guards/roles.guard.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/common/guards/roles.guard.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/database/seeds/admin-user.seed.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/database/seeds/admin-user.seed.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/modules/auth/auth.controller.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/modules/auth/auth.controller.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/modules/auth/auth.module.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/modules/auth/auth.module.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/modules/auth/auth.service.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/modules/auth/auth.service.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/modules/auth/dto/login.dto.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/modules/auth/dto/login.dto.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/modules/auth/dto/register.dto.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/modules/auth/dto/register.dto.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/modules/auth/strategies/jwt.strategy.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/modules/auth/strategies/jwt.strategy.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/modules/company/company.controller.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/modules/company/company.controller.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/modules/company/company.module.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/modules/company/company.module.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/modules/company/company.service.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/modules/company/company.service.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/modules/company/dto/create-company.dto.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/modules/company/dto/create-company.dto.ts" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/modules/company/entities/company.entity.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/modules/company/entities/company.entity.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/modules/department/department.controller.spec.ts" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/modules/department/department.controller.ts" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/modules/department/department.module.ts" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/modules/department/department.service.spec.ts" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/modules/department/department.service.ts" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/modules/department/dto/create-department.dto.ts" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/modules/department/dto/update-department.dto.ts" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/modules/department/entities/department.entity.ts" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/modules/employees/entities/employee.entity.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/modules/employees/entities/employee.entity.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/modules/holidays/entities/holiday.entity.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/modules/holidays/entities/holiday.entity.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/modules/users/entities/user.entity.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/modules/users/entities/user.entity.ts" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -76,7 +136,7 @@
       <workItem from="1758731812279" duration="2513000" />
       <workItem from="1758782229851" duration="2891000" />
       <workItem from="1759388820786" duration="5070000" />
-      <workItem from="1759423899642" duration="840000" />
+      <workItem from="1759423899642" duration="6498000" />
     </task>
     <servers />
   </component>

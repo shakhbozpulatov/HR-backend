@@ -6,6 +6,14 @@ export declare class JwtStrategy extends JwtStrategy_base {
     private configService;
     private authService;
     constructor(configService: ConfigService, authService: AuthService);
-    validate(payload: any): Promise<import("../../users/entities/user.entity").User>;
+    validate(payload: any): Promise<{
+        user_id: string;
+        email: string;
+        role: import("../../users/entities/user.entity").UserRole;
+        company_id: string;
+        employee_id: string;
+        employee: import("../../employees/entities/employee.entity").Employee;
+        company: import("../../company/entities/company.entity").Company;
+    }>;
 }
 export {};

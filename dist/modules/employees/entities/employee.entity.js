@@ -16,6 +16,8 @@ const attendance_record_entity_1 = require("../../attendance/entities/attendance
 const employee_schedule_assignment_entity_1 = require("../../schedules/entities/employee-schedule-assignment.entity");
 const payroll_item_entity_1 = require("../../payroll/entities/payroll-item.entity");
 const work_volume_entry_entity_1 = require("../../payroll/entities/work-volume-entry.entity");
+const company_entity_1 = require("../../company/entities/company.entity");
+const department_entity_1 = require("../../company/entities/department.entity");
 var TariffType;
 (function (TariffType) {
     TariffType["HOURLY"] = "HOURLY";
@@ -33,6 +35,10 @@ __decorate([
     (0, typeorm_1.PrimaryGeneratedColumn)('uuid'),
     __metadata("design:type", String)
 ], Employee.prototype, "employee_id", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ type: 'uuid', nullable: true }),
+    __metadata("design:type", String)
+], Employee.prototype, "company_id", void 0);
 __decorate([
     (0, typeorm_1.Column)({ unique: true }),
     __metadata("design:type", String)
@@ -69,6 +75,10 @@ __decorate([
     (0, typeorm_1.Column)({ nullable: true }),
     __metadata("design:type", String)
 ], Employee.prototype, "phone", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ type: 'uuid', nullable: true }),
+    __metadata("design:type", String)
+], Employee.prototype, "department_id", void 0);
 __decorate([
     (0, typeorm_1.Column)({ nullable: true }),
     __metadata("design:type", String)
@@ -122,7 +132,20 @@ __decorate([
     __metadata("design:type", Date)
 ], Employee.prototype, "updated_at", void 0);
 __decorate([
+    (0, typeorm_1.ManyToOne)(() => company_entity_1.Company, (company) => company.employees),
+    (0, typeorm_1.JoinColumn)({ name: 'company_id' }),
+    __metadata("design:type", company_entity_1.Company)
+], Employee.prototype, "company", void 0);
+__decorate([
+    (0, typeorm_1.ManyToOne)(() => department_entity_1.Department, (department) => department.employees, {
+        nullable: true,
+    }),
+    (0, typeorm_1.JoinColumn)({ name: 'department_id' }),
+    __metadata("design:type", department_entity_1.Department)
+], Employee.prototype, "department_entity", void 0);
+__decorate([
     (0, typeorm_1.ManyToOne)(() => Employee, { nullable: true }),
+    (0, typeorm_1.JoinColumn)({ name: 'manager_id' }),
     __metadata("design:type", Employee)
 ], Employee.prototype, "manager", void 0);
 __decorate([

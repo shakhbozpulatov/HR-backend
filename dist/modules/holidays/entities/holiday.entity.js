@@ -11,6 +11,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Holiday = void 0;
 const typeorm_1 = require("typeorm");
+const company_entity_1 = require("../../company/entities/company.entity");
 let Holiday = class Holiday {
 };
 exports.Holiday = Holiday;
@@ -18,6 +19,10 @@ __decorate([
     (0, typeorm_1.PrimaryGeneratedColumn)('uuid'),
     __metadata("design:type", String)
 ], Holiday.prototype, "holiday_id", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ type: 'uuid', nullable: true }),
+    __metadata("design:type", String)
+], Holiday.prototype, "company_id", void 0);
 __decorate([
     (0, typeorm_1.Column)(),
     __metadata("design:type", String)
@@ -42,8 +47,14 @@ __decorate([
     (0, typeorm_1.UpdateDateColumn)(),
     __metadata("design:type", Date)
 ], Holiday.prototype, "updated_at", void 0);
+__decorate([
+    (0, typeorm_1.ManyToOne)(() => company_entity_1.Company, (company) => company.holidays, { nullable: true }),
+    (0, typeorm_1.JoinColumn)({ name: 'company_id' }),
+    __metadata("design:type", company_entity_1.Company)
+], Holiday.prototype, "company", void 0);
 exports.Holiday = Holiday = __decorate([
     (0, typeorm_1.Entity)('holidays'),
-    (0, typeorm_1.Index)(['date', 'location_scope'])
+    (0, typeorm_1.Index)(['date', 'location_scope']),
+    (0, typeorm_1.Index)(['company_id', 'date'])
 ], Holiday);
 //# sourceMappingURL=holiday.entity.js.map

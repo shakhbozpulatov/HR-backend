@@ -7,12 +7,15 @@ import {
   OneToMany,
   ManyToOne,
   Index,
+  JoinColumn,
 } from 'typeorm';
 import { AttendanceEvent } from '@/modules/attendance/entities/attendance-event.entity';
 import { AttendanceRecord } from '@/modules/attendance/entities/attendance-record.entity';
 import { EmployeeScheduleAssignment } from '@/modules/schedules/entities/employee-schedule-assignment.entity';
 import { PayrollItem } from '@/modules/payroll/entities/payroll-item.entity';
 import { WorkVolumeEntry } from '@/modules/payroll/entities/work-volume-entry.entity';
+import { Company } from '@/modules/company/entities/company.entity';
+import { Department } from '@/modules/company/entities/department.entity';
 
 export enum TariffType {
   HOURLY = 'HOURLY',
@@ -30,6 +33,9 @@ export enum EmployeeStatus {
 export class Employee {
   @PrimaryGeneratedColumn('uuid')
   employee_id: string;
+
+  @Column({ type: 'uuid', nullable: true })
+  company_id?: string; // ← QO'SHILDI
 
   @Column({ unique: true })
   code: string;
@@ -58,6 +64,10 @@ export class Employee {
 
   @Column({ nullable: true })
   phone?: string;
+
+  // Organization
+  @Column({ type: 'uuid', nullable: true })
+  department_id?: string; // ← Department entity'ga bog'lanadi
 
   @Column({ nullable: true })
   department?: string;
@@ -99,7 +109,18 @@ export class Employee {
   updated_at: Date;
 
   // Relations
+  @ManyToOne(() => Company, (company) => company.employees)
+  @JoinColumn({ name: 'company_id' })
+  company: Company; // ← QO'SHILDI
+
+  @ManyToOne(() => Department, (department) => department.employees, {
+    nullable: true,
+  })
+  @JoinColumn({ name: 'department_id' })
+  department_entity?: Department; // ← QO'SHILDI
+
   @ManyToOne(() => Employee, { nullable: true })
+  @JoinColumn({ name: 'manager_id' })
   manager: Employee;
 
   @OneToMany(() => AttendanceEvent, (event) => event.employee)

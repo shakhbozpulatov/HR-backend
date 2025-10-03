@@ -1,6 +1,8 @@
 import {
   Column,
   CreateDateColumn,
+  Entity,
+  Index,
   OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
@@ -8,6 +10,7 @@ import {
 import { Employee } from '@/modules/employees/entities/employee.entity';
 import { User } from '@/modules/users/entities/user.entity';
 import { Holiday } from '@/modules/holidays/entities/holiday.entity';
+import { Department } from './department.entity';
 
 export enum CompanyStatus {
   ACTIVE = 'ACTIVE',
@@ -22,9 +25,15 @@ export enum SubscriptionPlan {
   ENTERPRISE = 'ENTERPRISE',
 }
 
+@Entity('companies')
+@Index(['code'], { unique: true })
+@Index(['tax_id'], { unique: true, where: 'tax_id IS NOT NULL' })
 export class Company {
   @PrimaryGeneratedColumn('uuid')
   company_id: string;
+
+  @Column({ unique: true })
+  code: string; // COM001, COM002
 
   @Column()
   name: string;
@@ -108,6 +117,6 @@ export class Company {
   @OneToMany(() => Holiday, (holiday) => holiday.company)
   holidays: Holiday[];
 
-  // @OneToMany(() => Department, (department) => department.company)
-  // departments: Department[];
+  @OneToMany(() => Department, (department) => department.company)
+  departments: Department[];
 }

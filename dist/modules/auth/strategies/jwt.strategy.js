@@ -20,13 +20,27 @@ let JwtStrategy = class JwtStrategy extends (0, passport_1.PassportStrategy)(pas
         super({
             jwtFromRequest: passport_jwt_1.ExtractJwt.fromAuthHeaderAsBearerToken(),
             ignoreExpiration: false,
-            secretOrKey: configService.get('JWT_SECRET'),
+            secretOrKey: configService.get('JWT_SECRET', 'default-secret-change-in-production'),
         });
         this.configService = configService;
         this.authService = authService;
     }
     async validate(payload) {
-        return await this.authService.validateUser(payload);
+        try {
+            const user = await this.authService.validateUser(payload);
+            return {
+                user_id: user.user_id,
+                email: user.email,
+                role: user.role,
+                company_id: user.company_id,
+                employee_id: user.employee_id,
+                employee: user.employee,
+                company: user.company,
+            };
+        }
+        catch (error) {
+            throw new common_1.UnauthorizedException('Invalid token or user not found');
+        }
     }
 };
 exports.JwtStrategy = JwtStrategy;

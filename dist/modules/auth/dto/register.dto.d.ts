@@ -1,4 +1,3 @@
-import { UserRole } from '@/modules/users/entities/user.entity';
 export declare class RegisterDto {
     email: string;
     password: string;
@@ -8,9 +7,8 @@ export declare class RegisterDto {
     phone?: string;
     department?: string;
     position?: string;
+    create_company?: boolean;
+    company_name?: string;
+    company_code?: string;
     employee_code?: string;
-}
-export declare class AdminRegisterDto extends RegisterDto {
-    role: UserRole;
-    employee_id?: string;
 }

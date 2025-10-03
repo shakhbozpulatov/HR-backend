@@ -9,64 +9,86 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.AdminRegisterDto = exports.RegisterDto = void 0;
+exports.RegisterDto = void 0;
 const class_validator_1 = require("class-validator");
-const user_entity_1 = require("../../users/entities/user.entity");
 class RegisterDto {
 }
 exports.RegisterDto = RegisterDto;
 __decorate([
-    (0, class_validator_1.IsEmail)(),
+    (0, class_validator_1.IsEmail)({}, { message: 'Please provide a valid email address' }),
     __metadata("design:type", String)
 ], RegisterDto.prototype, "email", void 0);
 __decorate([
     (0, class_validator_1.IsString)(),
     (0, class_validator_1.MinLength)(6),
+    (0, class_validator_1.MaxLength)(25),
     __metadata("design:type", String)
 ], RegisterDto.prototype, "password", void 0);
 __decorate([
     (0, class_validator_1.IsString)(),
+    (0, class_validator_1.MinLength)(2),
+    (0, class_validator_1.MaxLength)(50),
     __metadata("design:type", String)
 ], RegisterDto.prototype, "first_name", void 0);
 __decorate([
     (0, class_validator_1.IsString)(),
+    (0, class_validator_1.MinLength)(2),
+    (0, class_validator_1.MaxLength)(50),
     __metadata("design:type", String)
 ], RegisterDto.prototype, "last_name", void 0);
 __decorate([
     (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsString)(),
+    (0, class_validator_1.MaxLength)(50),
     __metadata("design:type", String)
 ], RegisterDto.prototype, "middle_name", void 0);
 __decorate([
     (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsString)(),
+    (0, class_validator_1.MaxLength)(20),
+    (0, class_validator_1.Matches)(/^\+?[1-9]\d{1,14}$/, {
+        message: 'Please provide a valid phone number',
+    }),
     __metadata("design:type", String)
 ], RegisterDto.prototype, "phone", void 0);
 __decorate([
     (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsString)(),
+    (0, class_validator_1.MaxLength)(100),
     __metadata("design:type", String)
 ], RegisterDto.prototype, "department", void 0);
 __decorate([
     (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsString)(),
+    (0, class_validator_1.MaxLength)(100),
     __metadata("design:type", String)
 ], RegisterDto.prototype, "position", void 0);
 __decorate([
     (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.IsString)(),
-    __metadata("design:type", String)
-], RegisterDto.prototype, "employee_code", void 0);
-class AdminRegisterDto extends RegisterDto {
-}
-exports.AdminRegisterDto = AdminRegisterDto;
-__decorate([
-    (0, class_validator_1.IsEnum)(user_entity_1.UserRole),
-    __metadata("design:type", String)
-], AdminRegisterDto.prototype, "role", void 0);
+    (0, class_validator_1.IsBoolean)(),
+    __metadata("design:type", Boolean)
+], RegisterDto.prototype, "create_company", void 0);
 __decorate([
     (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsString)(),
+    (0, class_validator_1.MinLength)(3),
+    (0, class_validator_1.MaxLength)(200),
     __metadata("design:type", String)
-], AdminRegisterDto.prototype, "employee_id", void 0);
+], RegisterDto.prototype, "company_name", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.Matches)(/^COM\d{3,}$/, {
+        message: 'Invalid company code format (expected: COM001)',
+    }),
+    __metadata("design:type", String)
+], RegisterDto.prototype, "company_code", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.Matches)(/^EMP\d{3,}$/, {
+        message: 'Invalid employee code format (expected: EMP001)',
+    }),
+    __metadata("design:type", String)
+], RegisterDto.prototype, "employee_code", void 0);
 //# sourceMappingURL=register.dto.js.map
