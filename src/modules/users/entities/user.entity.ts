@@ -25,7 +25,7 @@ export enum UserRole {
 @Index(['company_id', 'email'], { unique: true })
 export class User {
   @PrimaryGeneratedColumn('uuid')
-  user_id: string;
+  id: string;
 
   @Column({ type: 'uuid', nullable: true })
   company_id?: string; // ← QO'SHILDI (SUPER_ADMIN uchun null bo'lishi mumkin)

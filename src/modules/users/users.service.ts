@@ -4,8 +4,8 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { User } from './entities/user.entity';
+import { In, Not, Repository } from 'typeorm';
+import { User, UserRole } from './entities/user.entity';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { CryptoUtils } from '@/common/utils/crypto.utils';
@@ -41,16 +41,19 @@ export class UsersService {
 
   async findAll(): Promise<User[]> {
     return await this.userRepository.find({
+      where: {
+        role: Not(In([UserRole.SUPER_ADMIN, UserRole.COMPANY_OWNER])),
+      },
       relations: ['employee'],
-      select: ['user_id', 'email', 'role', 'active', 'created_at', 'employee'],
+      select: ['id', 'email', 'role', 'active', 'created_at', 'employee'],
     });
   }
 
   async findOne(id: string): Promise<User> {
     const user = await this.userRepository.findOne({
-      where: { user_id: id },
+      where: { id: id },
       relations: ['employee'],
-      select: ['user_id', 'email', 'role', 'active', 'created_at', 'employee'],
+      select: ['id', 'email', 'role', 'active', 'created_at', 'employee'],
     });
 
     if (!user) {

@@ -29,7 +29,7 @@ let JwtStrategy = class JwtStrategy extends (0, passport_1.PassportStrategy)(pas
         try {
             const user = await this.authService.validateUser(payload);
             return {
-                user_id: user.user_id,
+                user_id: user.id,
                 email: user.email,
                 role: user.role,
                 company_id: user.company_id,

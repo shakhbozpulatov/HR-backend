@@ -54,7 +54,7 @@ let PayrollProcessorService = class PayrollProcessorService {
     async processEmployeePayroll(employee, period) {
         const attendanceRecords = await this.attendanceRepository.find({
             where: {
-                employee_id: employee.employee_id,
+                employee_id: employee.id,
                 date: (0, typeorm_2.Between)(period.start_date, period.end_date),
             },
         });
@@ -76,7 +76,7 @@ let PayrollProcessorService = class PayrollProcessorService {
         }, 0);
         if (totalWorkedHours > 0 && employee.hourly_rate) {
             await this.createPayrollItem({
-                employee_id: employee.employee_id,
+                employee_id: employee.id,
                 period_id: period.period_id,
                 type: payroll_item_entity_1.PayrollItemType.EARNING,
                 code: payroll_item_entity_1.PayrollItemCode.BASE_HOURLY,
@@ -117,7 +117,7 @@ let PayrollProcessorService = class PayrollProcessorService {
             baseSalary = baseSalary * prorationRatio;
         }
         await this.createPayrollItem({
-            employee_id: employee.employee_id,
+            employee_id: employee.id,
             period_id: period.period_id,
             type: payroll_item_entity_1.PayrollItemType.EARNING,
             code: payroll_item_entity_1.PayrollItemCode.BASE_MONTHLY,
@@ -139,7 +139,7 @@ let PayrollProcessorService = class PayrollProcessorService {
                 : this.calculateHourlyRateFromMonthlySalary(Number(employee.monthly_salary));
             const overtimeRate = baseRate * this.overtimeMultiplier;
             await this.createPayrollItem({
-                employee_id: employee.employee_id,
+                employee_id: employee.id,
                 period_id: period.period_id,
                 type: payroll_item_entity_1.PayrollItemType.EARNING,
                 code: payroll_item_entity_1.PayrollItemCode.OVERTIME,
@@ -162,7 +162,7 @@ let PayrollProcessorService = class PayrollProcessorService {
             const holidayMultiplier = this.configService.get('HOLIDAY_MULTIPLIER', 2.0);
             const holidayRate = baseRate * holidayMultiplier;
             await this.createPayrollItem({
-                employee_id: employee.employee_id,
+                employee_id: employee.id,
                 period_id: period.period_id,
                 type: payroll_item_entity_1.PayrollItemType.EARNING,
                 code: payroll_item_entity_1.PayrollItemCode.HOLIDAY_PREMIUM,
@@ -176,7 +176,7 @@ let PayrollProcessorService = class PayrollProcessorService {
     async processPiecework(employee, period) {
         const volumeEntries = await this.volumeRepository.find({
             where: {
-                employee_id: employee.employee_id,
+                employee_id: employee.id,
                 date: (0, typeorm_2.Between)(period.start_date, period.end_date),
                 approved: true,
             },
@@ -186,7 +186,7 @@ let PayrollProcessorService = class PayrollProcessorService {
         }, 0);
         if (totalAmount > 0) {
             await this.createPayrollItem({
-                employee_id: employee.employee_id,
+                employee_id: employee.id,
                 period_id: period.period_id,
                 type: payroll_item_entity_1.PayrollItemType.EARNING,
                 code: payroll_item_entity_1.PayrollItemCode.PIECEWORK,

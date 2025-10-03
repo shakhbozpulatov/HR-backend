@@ -14,15 +14,14 @@ export declare enum EmployeeStatus {
     INACTIVE = "inactive"
 }
 export declare class Employee {
-    employee_id: string;
+    id: string;
     company_id?: string;
-    code: string;
     status: EmployeeStatus;
     first_name: string;
     last_name: string;
     middle_name?: string;
     dob?: Date;
-    email?: string;
+    email: string;
     phone?: string;
     department_id?: string;
     department?: string;

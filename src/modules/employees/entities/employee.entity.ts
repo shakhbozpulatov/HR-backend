@@ -28,17 +28,13 @@ export enum EmployeeStatus {
 }
 
 @Entity('employees')
-@Index(['code'], { unique: true })
 @Index(['email'], { unique: true, where: 'email IS NOT NULL' })
 export class Employee {
   @PrimaryGeneratedColumn('uuid')
-  employee_id: string;
+  id: string;
 
   @Column({ type: 'uuid', nullable: true })
   company_id?: string; // ← QO'SHILDI
-
-  @Column({ unique: true })
-  code: string;
 
   @Column({
     type: 'enum',
@@ -59,8 +55,8 @@ export class Employee {
   @Column({ type: 'date', nullable: true })
   dob?: Date;
 
-  @Column({ nullable: true })
-  email?: string;
+  @Column({ unique: true })
+  email: string;
 
   @Column({ nullable: true })
   phone?: string;

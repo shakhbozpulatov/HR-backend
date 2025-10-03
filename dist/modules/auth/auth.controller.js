@@ -24,6 +24,7 @@ const auth_guard_1 = require("../../common/guards/auth.guard");
 const roles_guard_1 = require("../../common/guards/roles.guard");
 const roles_decorator_1 = require("../../common/decorators/roles.decorator");
 const user_entity_1 = require("../users/entities/user.entity");
+const update_profile_dto_1 = require("./dto/update-profile.dto");
 let AuthController = class AuthController {
     constructor(authService) {
         this.authService = authService;
@@ -35,11 +36,12 @@ let AuthController = class AuthController {
         return await this.authService.register(registerDto);
     }
     async createUserByAdmin(createUserDto, req) {
-        const result = await this.authService.createUserByAdmin(createUserDto, req.user.user_id);
+        console.log('emplId', req.user.employee_id);
+        const result = await this.authService.createUserByAdmin(createUserDto, req.user.employee_id);
         return {
             message: 'User created successfully',
             user: {
-                user_id: result.user.user_id,
+                user_id: result.user.id,
                 email: result.user.email,
                 role: result.user.role,
                 company_id: result.user.company_id,
@@ -60,15 +62,45 @@ let AuthController = class AuthController {
         };
     }
     async getProfile(req) {
+        const profile = await this.authService.getProfile(req.user.employee_id);
         return {
-            user: {
+            success: true,
+            data: profile,
+            message: 'Profile retrieved successfully',
+        };
+    }
+    async getQuickProfile(req) {
+        return {
+            success: true,
+            data: {
                 user_id: req.user.user_id,
                 email: req.user.email,
                 role: req.user.role,
                 company_id: req.user.company_id,
-                employee: req.user.employee,
-                company: req.user.company,
+                employee_id: req.user.employee_id,
+                employee: req.user.employee
+                    ? {
+                        code: req.user.employee.code,
+                        full_name: `${req.user.employee.first_name} ${req.user.employee.last_name}`,
+                        position: req.user.employee.position,
+                    }
+                    : null,
+                company: req.user.company
+                    ? {
+                        code: req.user.company.code,
+                        name: req.user.company.name,
+                    }
+                    : null,
             },
+            message: 'Quick profile retrieved successfully',
+        };
+    }
+    async updateProfile(updateProfileDto, req) {
+        const updatedProfile = await this.authService.updateProfile(req.user.user_id, updateProfileDto);
+        return {
+            success: true,
+            data: updatedProfile,
+            message: 'Profile updated successfully',
         };
     }
     async logout() {
@@ -134,6 +166,23 @@ __decorate([
     __metadata("design:paramtypes", [Object]),
     __metadata("design:returntype", Promise)
 ], AuthController.prototype, "getProfile", null);
+__decorate([
+    (0, common_1.Get)('profile/quick'),
+    (0, common_1.UseGuards)(auth_guard_1.AuthGuard),
+    __param(0, (0, common_1.Req)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", Promise)
+], AuthController.prototype, "getQuickProfile", null);
+__decorate([
+    (0, common_1.Patch)('profile'),
+    (0, common_1.UseGuards)(auth_guard_1.AuthGuard),
+    __param(0, (0, common_1.Body)()),
+    __param(1, (0, common_1.Req)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [update_profile_dto_1.UpdateProfileDto, Object]),
+    __metadata("design:returntype", Promise)
+], AuthController.prototype, "updateProfile", null);
 __decorate([
     (0, common_1.Post)('logout'),
     (0, common_1.UseGuards)(auth_guard_1.AuthGuard),

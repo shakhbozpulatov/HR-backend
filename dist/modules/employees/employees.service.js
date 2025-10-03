@@ -17,25 +17,36 @@ const common_1 = require("@nestjs/common");
 const typeorm_1 = require("@nestjs/typeorm");
 const typeorm_2 = require("typeorm");
 const employee_entity_1 = require("./entities/employee.entity");
+const user_entity_1 = require("../users/entities/user.entity");
 let EmployeesService = class EmployeesService {
     constructor(employeeRepository) {
         this.employeeRepository = employeeRepository;
     }
-    async create(createEmployeeDto) {
+    async create(createEmployeeDto, companyId) {
         const existingEmployee = await this.employeeRepository.findOne({
-            where: { code: createEmployeeDto.code },
+            where: {
+                email: createEmployeeDto.email,
+                company_id: companyId,
+            },
         });
         if (existingEmployee) {
-            throw new common_1.BadRequestException('Employee code already exists');
+            throw new common_1.BadRequestException('Employee email already exists in this company');
         }
-        const employee = this.employeeRepository.create(createEmployeeDto);
+        const employee = this.employeeRepository.create({
+            ...createEmployeeDto,
+            company_id: companyId,
+        });
         return await this.employeeRepository.save(employee);
     }
-    async findAll(filterDto) {
+    async findAll(filterDto, companyId, userRole) {
         const { page = 1, limit = 10, status, department, location, search, } = filterDto;
         const queryBuilder = this.employeeRepository
             .createQueryBuilder('employee')
-            .leftJoinAndSelect('employee.manager', 'manager');
+            .leftJoinAndSelect('employee.manager', 'manager')
+            .leftJoinAndSelect('employee.company', 'company');
+        if (userRole !== user_entity_1.UserRole.SUPER_ADMIN) {
+            queryBuilder.andWhere('employee.company_id = :companyId', { companyId });
+        }
         if (status) {
             queryBuilder.andWhere('employee.status = :status', { status });
         }
@@ -58,7 +69,7 @@ let EmployeesService = class EmployeesService {
     }
     async findOne(id) {
         const employee = await this.employeeRepository.findOne({
-            where: { employee_id: id },
+            where: { id },
             relations: ['manager'],
         });
         if (!employee) {

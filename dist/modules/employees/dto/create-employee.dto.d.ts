@@ -1,11 +1,10 @@
 import { TariffType } from '../entities/employee.entity';
 export declare class CreateEmployeeDto {
-    code: string;
     first_name: string;
     last_name: string;
     middle_name?: string;
+    email: string;
     dob?: string;
-    email?: string;
     phone?: string;
     department?: string;
     location?: string;

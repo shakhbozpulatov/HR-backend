@@ -1,11 +1,11 @@
 import {
-  Controller,
-  Get,
-  Post,
   Body,
-  Patch,
-  Param,
+  Controller,
   Delete,
+  Get,
+  Param,
+  Patch,
+  Post,
   UseGuards,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
@@ -22,13 +22,18 @@ export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
   @Post()
-  @Roles(UserRole.ADMIN)
+  @Roles(UserRole.SUPER_ADMIN, UserRole.COMPANY_OWNER, UserRole.ADMIN)
   async create(@Body() createUserDto: CreateUserDto) {
     return await this.usersService.create(createUserDto);
   }
 
   @Get()
-  @Roles(UserRole.ADMIN, UserRole.HR_MANAGER)
+  @Roles(
+    UserRole.SUPER_ADMIN,
+    UserRole.COMPANY_OWNER,
+    UserRole.ADMIN,
+    UserRole.HR_MANAGER,
+  )
   async findAll() {
     return await this.usersService.findAll();
   }

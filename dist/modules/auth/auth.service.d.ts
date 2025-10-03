@@ -8,6 +8,7 @@ import { RegisterDto } from './dto/register.dto';
 import { AdminCreateUserDto } from './dto/admin-create-user.dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
 import { CryptoUtils } from '@/common/utils/crypto.utils';
+import { UpdateProfileDto } from '@/modules/auth/dto/update-profile.dto';
 export declare class AuthService {
     private userRepository;
     private employeeRepository;
@@ -27,6 +28,8 @@ export declare class AuthService {
         user: User;
         temporary_password: string;
     }>;
+    getProfile(userId: string): Promise<any>;
+    updateProfile(userId: string, updateProfileDto: UpdateProfileDto): Promise<any>;
     changePassword(userId: string, changePasswordDto: ChangePasswordDto): Promise<{
         message: string;
     }>;
@@ -36,6 +39,8 @@ export declare class AuthService {
     validateUser(payload: any): Promise<User>;
     private validateUserCreationPermissions;
     private generateCompanyCode;
-    private generateEmployeeCode;
     private generateTemporaryPassword;
+    private getCompanyStatistics;
+    private getEmployeeStatistics;
+    private getUserPermissions;
 }

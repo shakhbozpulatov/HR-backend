@@ -9,23 +9,38 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.AdminCreateUserDto = void 0;
+exports.UpdateProfileDto = void 0;
 const class_validator_1 = require("class-validator");
-const user_entity_1 = require("../../users/entities/user.entity");
-class AdminCreateUserDto {
+class UpdateProfileDto {
 }
-exports.AdminCreateUserDto = AdminCreateUserDto;
-__decorate([
-    (0, class_validator_1.IsEnum)(user_entity_1.UserRole, { message: 'Invalid user role' }),
-    __metadata("design:type", String)
-], AdminCreateUserDto.prototype, "role", void 0);
+exports.UpdateProfileDto = UpdateProfileDto;
 __decorate([
     (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.IsUUID)('4', { message: 'Invalid company ID format' }),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.MaxLength)(50),
     __metadata("design:type", String)
-], AdminCreateUserDto.prototype, "company_id", void 0);
+], UpdateProfileDto.prototype, "first_name", void 0);
 __decorate([
-    (0, class_validator_1.IsUUID)('4', { message: 'Invalid employee ID format' }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.MaxLength)(50),
     __metadata("design:type", String)
-], AdminCreateUserDto.prototype, "employee_id", void 0);
-//# sourceMappingURL=admin-create-user.dto.js.map
+], UpdateProfileDto.prototype, "last_name", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.MaxLength)(50),
+    __metadata("design:type", String)
+], UpdateProfileDto.prototype, "middle_name", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsEmail)(),
+    __metadata("design:type", String)
+], UpdateProfileDto.prototype, "email", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.Matches)(/^\+?[1-9]\d{1,14}$/),
+    __metadata("design:type", String)
+], UpdateProfileDto.prototype, "phone", void 0);
+//# sourceMappingURL=update-profile.dto.js.map

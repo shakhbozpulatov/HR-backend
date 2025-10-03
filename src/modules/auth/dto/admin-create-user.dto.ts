@@ -1,10 +1,7 @@
-import { IsEmail, IsEnum, IsOptional, IsUUID } from 'class-validator';
+import { IsEnum, IsOptional, IsUUID } from 'class-validator';
 import { UserRole } from '@/modules/users/entities/user.entity';
 
 export class AdminCreateUserDto {
-  @IsEmail({}, { message: 'Please provide a valid email address' })
-  email: string;
-
   @IsEnum(UserRole, { message: 'Invalid user role' })
   role: UserRole;
 
@@ -12,7 +9,6 @@ export class AdminCreateUserDto {
   @IsUUID('4', { message: 'Invalid company ID format' })
   company_id?: string;
 
-  @IsOptional()
   @IsUUID('4', { message: 'Invalid employee ID format' })
-  employee_id?: string;
+  employee_id: string;
 }

@@ -5,8 +5,8 @@ import { EmployeeFilterDto } from './dto/employee-filter.dto';
 export declare class EmployeesController {
     private readonly employeesService;
     constructor(employeesService: EmployeesService);
-    create(createEmployeeDto: CreateEmployeeDto): Promise<import("./entities/employee.entity").Employee>;
-    findAll(filterDto: EmployeeFilterDto): Promise<{
+    create(createEmployeeDto: CreateEmployeeDto, user: any): Promise<import("./entities/employee.entity").Employee>;
+    findAll(filterDto: EmployeeFilterDto, user: any): Promise<{
         data: import("./entities/employee.entity").Employee[];
         total: number;
     }>;

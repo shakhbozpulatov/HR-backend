@@ -104,14 +104,14 @@ let TerminalIntegrationService = TerminalIntegrationService_1 = class TerminalIn
                     if (!employee.terminal_user_id) {
                         const terminalUserId = await this.createTerminalUser({
                             display_name: `${employee.first_name} ${employee.last_name}`,
-                            terminal_user_external_id: employee.employee_id,
+                            terminal_user_external_id: employee.id,
                         });
                         employee.terminal_user_id = terminalUserId;
                         await this.employeeRepository.save(employee);
                         syncResults.created++;
                     }
                     else {
-                        const vendorUser = vendorUserMap.get(employee.employee_id);
+                        const vendorUser = vendorUserMap.get(employee.id);
                         if (!vendorUser) {
                             this.logger.warn(`Terminal user not found in vendor system: ${employee.terminal_user_id}`);
                             syncResults.missing++;
@@ -122,7 +122,7 @@ let TerminalIntegrationService = TerminalIntegrationService_1 = class TerminalIn
                     }
                 }
                 catch (error) {
-                    this.logger.error(`Failed to sync employee ${employee.employee_id}: ${error.message}`);
+                    this.logger.error(`Failed to sync employee ${employee.id}: ${error.message}`);
                     syncResults.errors++;
                 }
             }
@@ -171,14 +171,14 @@ let TerminalIntegrationService = TerminalIntegrationService_1 = class TerminalIn
             try {
                 const terminalUserId = await this.createTerminalUser({
                     display_name: `${employee.first_name} ${employee.last_name}`,
-                    terminal_user_external_id: employee.employee_id,
+                    terminal_user_external_id: employee.id,
                 });
                 employee.terminal_user_id = terminalUserId;
                 await this.employeeRepository.save(employee);
-                this.logger.log(`Successfully created terminal user for employee ${employee.employee_id}`);
+                this.logger.log(`Successfully created terminal user for employee ${employee.id}`);
             }
             catch (error) {
-                this.logger.error(`Retry failed for employee ${employee.employee_id}: ${error.message}`);
+                this.logger.error(`Retry failed for employee ${employee.id}: ${error.message}`);
             }
         }
     }

@@ -10,7 +10,7 @@ export declare enum UserRole {
     EMPLOYEE = "EMPLOYEE"
 }
 export declare class User {
-    user_id: string;
+    id: string;
     company_id?: string;
     role: UserRole;
     email: string;

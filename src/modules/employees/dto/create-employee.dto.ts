@@ -12,9 +12,6 @@ import { TariffType } from '../entities/employee.entity';
 
 export class CreateEmployeeDto {
   @IsString()
-  code: string;
-
-  @IsString()
   first_name: string;
 
   @IsString()
@@ -24,13 +21,12 @@ export class CreateEmployeeDto {
   @IsString()
   middle_name?: string;
 
+  @IsEmail()
+  email: string;
+
   @IsOptional()
   @IsDateString()
   dob?: string;
-
-  @IsOptional()
-  @IsEmail()
-  email?: string;
 
   @IsOptional()
   @IsString()

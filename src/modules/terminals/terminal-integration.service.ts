@@ -139,7 +139,7 @@ export class TerminalIntegrationService {
             // Employee doesn't have terminal user - create one
             const terminalUserId = await this.createTerminalUser({
               display_name: `${employee.first_name} ${employee.last_name}`,
-              terminal_user_external_id: employee.employee_id,
+              terminal_user_external_id: employee.id,
             });
 
             employee.terminal_user_id = terminalUserId;
@@ -147,7 +147,7 @@ export class TerminalIntegrationService {
             syncResults.created++;
           } else {
             // Check if terminal user exists in vendor system
-            const vendorUser = vendorUserMap.get(employee.employee_id);
+            const vendorUser = vendorUserMap.get(employee.id);
             if (!vendorUser) {
               this.logger.warn(
                 `Terminal user not found in vendor system: ${employee.terminal_user_id}`,
@@ -160,7 +160,7 @@ export class TerminalIntegrationService {
           }
         } catch (error) {
           this.logger.error(
-            `Failed to sync employee ${employee.employee_id}: ${error.message}`,
+            `Failed to sync employee ${employee.id}: ${error.message}`,
           );
           syncResults.errors++;
         }
@@ -223,18 +223,18 @@ export class TerminalIntegrationService {
       try {
         const terminalUserId = await this.createTerminalUser({
           display_name: `${employee.first_name} ${employee.last_name}`,
-          terminal_user_external_id: employee.employee_id,
+          terminal_user_external_id: employee.id,
         });
 
         employee.terminal_user_id = terminalUserId;
         await this.employeeRepository.save(employee);
 
         this.logger.log(
-          `Successfully created terminal user for employee ${employee.employee_id}`,
+          `Successfully created terminal user for employee ${employee.id}`,
         );
       } catch (error) {
         this.logger.error(
-          `Retry failed for employee ${employee.employee_id}: ${error.message}`,
+          `Retry failed for employee ${employee.id}: ${error.message}`,
         );
       }
     }

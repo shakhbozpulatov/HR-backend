@@ -18,10 +18,6 @@ exports.CreateEmployeeDto = CreateEmployeeDto;
 __decorate([
     (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
-], CreateEmployeeDto.prototype, "code", void 0);
-__decorate([
-    (0, class_validator_1.IsString)(),
-    __metadata("design:type", String)
 ], CreateEmployeeDto.prototype, "first_name", void 0);
 __decorate([
     (0, class_validator_1.IsString)(),
@@ -33,15 +29,14 @@ __decorate([
     __metadata("design:type", String)
 ], CreateEmployeeDto.prototype, "middle_name", void 0);
 __decorate([
+    (0, class_validator_1.IsEmail)(),
+    __metadata("design:type", String)
+], CreateEmployeeDto.prototype, "email", void 0);
+__decorate([
     (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsDateString)(),
     __metadata("design:type", String)
 ], CreateEmployeeDto.prototype, "dob", void 0);
-__decorate([
-    (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.IsEmail)(),
-    __metadata("design:type", String)
-], CreateEmployeeDto.prototype, "email", void 0);
 __decorate([
     (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsString)(),

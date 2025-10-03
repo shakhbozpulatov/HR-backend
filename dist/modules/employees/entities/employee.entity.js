@@ -34,15 +34,11 @@ exports.Employee = Employee;
 __decorate([
     (0, typeorm_1.PrimaryGeneratedColumn)('uuid'),
     __metadata("design:type", String)
-], Employee.prototype, "employee_id", void 0);
+], Employee.prototype, "id", void 0);
 __decorate([
     (0, typeorm_1.Column)({ type: 'uuid', nullable: true }),
     __metadata("design:type", String)
 ], Employee.prototype, "company_id", void 0);
-__decorate([
-    (0, typeorm_1.Column)({ unique: true }),
-    __metadata("design:type", String)
-], Employee.prototype, "code", void 0);
 __decorate([
     (0, typeorm_1.Column)({
         type: 'enum',
@@ -68,7 +64,7 @@ __decorate([
     __metadata("design:type", Date)
 ], Employee.prototype, "dob", void 0);
 __decorate([
-    (0, typeorm_1.Column)({ nullable: true }),
+    (0, typeorm_1.Column)({ unique: true }),
     __metadata("design:type", String)
 ], Employee.prototype, "email", void 0);
 __decorate([
@@ -170,7 +166,6 @@ __decorate([
 ], Employee.prototype, "work_volume_entries", void 0);
 exports.Employee = Employee = __decorate([
     (0, typeorm_1.Entity)('employees'),
-    (0, typeorm_1.Index)(['code'], { unique: true }),
     (0, typeorm_1.Index)(['email'], { unique: true, where: 'email IS NOT NULL' })
 ], Employee);
 //# sourceMappingURL=employee.entity.js.map

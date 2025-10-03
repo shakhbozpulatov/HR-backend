@@ -9,6 +9,7 @@ import { Employee, EmployeeStatus } from './entities/employee.entity';
 import { CreateEmployeeDto } from './dto/create-employee.dto';
 import { UpdateEmployeeDto } from './dto/update-employee.dto';
 import { EmployeeFilterDto } from './dto/employee-filter.dto';
+import { UserRole } from '@/modules/users/entities/user.entity';
 
 @Injectable()
 export class EmployeesService {
@@ -17,21 +18,34 @@ export class EmployeesService {
     private employeeRepository: Repository<Employee>,
   ) {}
 
-  async create(createEmployeeDto: CreateEmployeeDto): Promise<Employee> {
+  async create(
+    createEmployeeDto: CreateEmployeeDto,
+    companyId: string,
+  ): Promise<Employee> {
     const existingEmployee = await this.employeeRepository.findOne({
-      where: { code: createEmployeeDto.code },
+      where: {
+        email: createEmployeeDto.email,
+        company_id: companyId,
+      },
     });
 
     if (existingEmployee) {
-      throw new BadRequestException('Employee code already exists');
+      throw new BadRequestException(
+        'Employee email already exists in this company',
+      );
     }
 
-    const employee = this.employeeRepository.create(createEmployeeDto);
+    const employee = this.employeeRepository.create({
+      ...createEmployeeDto,
+      company_id: companyId,
+    });
     return await this.employeeRepository.save(employee);
   }
 
   async findAll(
     filterDto: EmployeeFilterDto,
+    companyId: string,
+    userRole: UserRole,
   ): Promise<{ data: Employee[]; total: number }> {
     const {
       page = 1,
@@ -44,7 +58,13 @@ export class EmployeesService {
 
     const queryBuilder = this.employeeRepository
       .createQueryBuilder('employee')
-      .leftJoinAndSelect('employee.manager', 'manager');
+      .leftJoinAndSelect('employee.manager', 'manager')
+      .leftJoinAndSelect('employee.company', 'company');
+
+    // SUPER_ADMIN can see all companies, others only their company
+    if (userRole !== UserRole.SUPER_ADMIN) {
+      queryBuilder.andWhere('employee.company_id = :companyId', { companyId });
+    }
 
     if (status) {
       queryBuilder.andWhere('employee.status = :status', { status });
@@ -77,7 +97,7 @@ export class EmployeesService {
 
   async findOne(id: string): Promise<Employee> {
     const employee = await this.employeeRepository.findOne({
-      where: { employee_id: id },
+      where: { id },
       relations: ['manager'],
     });
 

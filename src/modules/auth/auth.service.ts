@@ -1,9 +1,9 @@
 import {
-  Injectable,
-  UnauthorizedException,
   BadRequestException,
   ConflictException,
+  Injectable,
   NotFoundException,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -24,6 +24,7 @@ import { RegisterDto } from './dto/register.dto';
 import { AdminCreateUserDto } from './dto/admin-create-user.dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
 import { CryptoUtils } from '@/common/utils/crypto.utils';
+import { UpdateProfileDto } from '@/modules/auth/dto/update-profile.dto';
 
 @Injectable()
 export class AuthService {
@@ -78,7 +79,7 @@ export class AuthService {
 
     // Generate JWT token
     const payload = {
-      sub: user.user_id,
+      sub: user.id,
       email: user.email,
       role: user.role,
       employee_id: user.employee_id,
@@ -90,7 +91,7 @@ export class AuthService {
     return {
       access_token,
       user: {
-        user_id: user.user_id,
+        user_id: user.id,
         email: user.email,
         role: user.role,
         company_id: user.company_id,
@@ -224,7 +225,7 @@ export class AuthService {
       employee = await this.employeeRepository.findOne({
         where: {
           company_id: companyId,
-          code: registerDto.employee_code.toUpperCase(),
+          email: registerDto.email,
           status: EmployeeStatus.ACTIVE,
         },
       });
@@ -237,7 +238,7 @@ export class AuthService {
 
       // Check if employee already has user account
       const existingUserForEmployee = await this.userRepository.findOne({
-        where: { employee_id: employee.employee_id },
+        where: { id: employee.id },
       });
 
       if (existingUserForEmployee) {
@@ -251,15 +252,14 @@ export class AuthService {
         await this.employeeRepository.save(employee);
       }
 
-      console.log(`✅ Linked to existing employee: ${employee.code}`);
+      console.log(`✅ Linked to existing employee: ${employee.email}`);
     }
     // Option B: Create new employee record
     else {
-      const employeeCode = await this.generateEmployeeCode(companyId);
+      // const employeeCode = await this.generateEmployeeCode(companyId);
 
       employee = this.employeeRepository.create({
         company_id: companyId,
-        code: employeeCode,
         first_name: registerDto.first_name.trim(),
         last_name: registerDto.last_name.trim(),
         middle_name: registerDto.middle_name?.trim(),
@@ -274,7 +274,7 @@ export class AuthService {
       });
 
       employee = await this.employeeRepository.save(employee);
-      console.log(`✅ New employee created: ${employee.code}`);
+      console.log(`✅ New employee created: ${employee.email}`);
     }
 
     // Create user account
@@ -285,7 +285,7 @@ export class AuthService {
       email: registerDto.email,
       password_hash: hashedPassword,
       role: userRole,
-      employee_id: employee.employee_id,
+      id: employee.id,
       active: true,
     });
 
@@ -293,10 +293,9 @@ export class AuthService {
 
     // Generate JWT
     const payload = {
-      sub: savedUser.user_id,
       email: savedUser.email,
       role: savedUser.role,
-      employee_id: savedUser.employee_id,
+      id: savedUser.id,
       company_id: savedUser.company_id,
     };
 
@@ -305,7 +304,7 @@ export class AuthService {
     return {
       access_token,
       user: {
-        user_id: savedUser.user_id,
+        user_id: savedUser.id,
         email: savedUser.email,
         role: savedUser.role,
         company_id: savedUser.company_id,
@@ -326,7 +325,7 @@ export class AuthService {
   ): Promise<{ user: User; temporary_password: string }> {
     // Get actor user with relations
     const actor = await this.userRepository.findOne({
-      where: { user_id: actorUserId, active: true },
+      where: { id: actorUserId, active: true },
       relations: ['company'],
     });
 
@@ -336,15 +335,6 @@ export class AuthService {
 
     // Validate actor has permission to create this role
     this.validateUserCreationPermissions(actor.role, createUserDto.role);
-
-    // Check if email already exists
-    const existingUser = await this.userRepository.findOne({
-      where: { email: createUserDto.email },
-    });
-
-    if (existingUser) {
-      throw new ConflictException('Email already exists');
-    }
 
     // Determine target company_id
     let targetCompanyId: string;
@@ -376,30 +366,33 @@ export class AuthService {
     }
 
     // Handle employee linking (optional)
-    let employeeId: string | undefined;
+    const employee = await this.employeeRepository.findOne({
+      where: {
+        id: createUserDto.employee_id,
+        company_id: targetCompanyId,
+      },
+    });
 
-    if (createUserDto.employee_id) {
-      const employee = await this.employeeRepository.findOne({
-        where: {
-          employee_id: createUserDto.employee_id,
-          company_id: targetCompanyId,
-        },
-      });
+    if (!employee) {
+      throw new BadRequestException('Employee not found in target company');
+    }
 
-      if (!employee) {
-        throw new BadRequestException('Employee not found in target company');
-      }
+    // Check if employee already has user
+    const existingEmployeeUser = await this.userRepository.findOne({
+      where: { employee_id: createUserDto.employee_id },
+    });
 
-      // Check if employee already has user
-      const existingEmployeeUser = await this.userRepository.findOne({
-        where: { employee_id: createUserDto.employee_id },
-      });
+    if (existingEmployeeUser) {
+      throw new ConflictException('This employee already has a user account');
+    }
 
-      if (existingEmployeeUser) {
-        throw new ConflictException('This employee already has a user account');
-      }
+    // Check if email already exists
+    const existingUser = await this.userRepository.findOne({
+      where: { email: employee.email },
+    });
 
-      employeeId = employee.employee_id;
+    if (existingUser) {
+      throw new ConflictException('Email already exists');
     }
 
     // Generate secure temporary password
@@ -409,10 +402,10 @@ export class AuthService {
     // Create user
     const newUser = this.userRepository.create({
       company_id: targetCompanyId,
-      email: createUserDto.email,
+      email: employee.email,
       password_hash: hashedPassword,
       role: createUserDto.role,
-      employee_id: employeeId,
+      employee_id: employee.id,
       active: true,
     });
 
@@ -432,6 +425,175 @@ export class AuthService {
   }
 
   /**
+   * GET USER PROFILE - Complete user information
+   * Returns full profile with company, employee, and statistics
+   */
+  async getProfile(userId: string): Promise<any> {
+    console.log('getProfile', userId);
+    // Get user with all relations
+    const user = await this.userRepository.findOne({
+      where: { employee_id: userId, active: true },
+      relations: [
+        'employee',
+        'employee.manager',
+        'employee.department_entity',
+        'company',
+        'company.departments',
+      ],
+    });
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    // Build base profile
+    const profile: any = {
+      user_id: user.id,
+      email: user.email,
+      role: user.role,
+      active: user.active,
+      mfa_enabled: user.mfa_enabled,
+      created_at: user.created_at,
+    };
+
+    // Add company information
+    if (user.company) {
+      profile.company = {
+        company_id: user.company.company_id,
+        code: user.company.code,
+        name: user.company.name,
+        legal_name: user.company.legal_name,
+        email: user.company.email,
+        phone: user.company.phone,
+        address: user.company.address,
+        city: user.company.city,
+        status: user.company.status,
+        subscription_plan: user.company.subscription_plan,
+        subscription_end_date: user.company.subscription_end_date,
+        max_employees: user.company.max_employees,
+        settings: user.company.settings,
+        created_at: user.company.created_at,
+      };
+
+      // Get company statistics
+      profile.company.statistics = await this.getCompanyStatistics(
+        user.company.company_id,
+      );
+    }
+
+    // Add employee information
+    if (user.employee) {
+      profile.employee = {
+        employee_id: user.employee.id,
+        first_name: user.employee.first_name,
+        last_name: user.employee.last_name,
+        middle_name: user.employee.middle_name,
+        full_name: `${user.employee.first_name} ${user.employee.last_name}`,
+        email: user.employee.email,
+        phone: user.employee.phone,
+        dob: user.employee.dob,
+        position: user.employee.position,
+        department: user.employee.department,
+        location: user.employee.location,
+        start_date: user.employee.start_date,
+        status: user.employee.status,
+        tariff_type: user.employee.tariff_type,
+        hourly_rate: user.employee.hourly_rate,
+        monthly_salary: user.employee.monthly_salary,
+        terminal_user_id: user.employee.terminal_user_id,
+      };
+
+      // Add department details if exists
+      if (user.employee.department_entity) {
+        profile.employee.department_details = {
+          department_id: user.employee.department_entity.department_id,
+          code: user.employee.department_entity.code,
+          name: user.employee.department_entity.name,
+          description: user.employee.department_entity.description,
+        };
+      }
+
+      // Add manager details if exists
+      if (user.employee.manager) {
+        profile.employee.manager = {
+          employee_id: user.employee.manager.id,
+          full_name: `${user.employee.manager.first_name} ${user.employee.manager.last_name}`,
+          email: user.employee.manager.email,
+          position: user.employee.manager.position,
+        };
+      }
+
+      // Get employee statistics
+      profile.employee.statistics = await this.getEmployeeStatistics(
+        user.employee.id,
+      );
+    }
+
+    // Add permissions based on role
+    profile.permissions = this.getUserPermissions(user.role);
+
+    return profile;
+  }
+
+  /**
+   * UPDATE USER PROFILE
+   * Allows users to update their own profile information
+   */
+  async updateProfile(
+    userId: string,
+    updateProfileDto: UpdateProfileDto,
+  ): Promise<any> {
+    const user = await this.userRepository.findOne({
+      where: { id: userId },
+      relations: ['employee'],
+    });
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    // Update user email if provided
+    if (updateProfileDto.email && updateProfileDto.email !== user.email) {
+      // Check if email is already taken
+      const existingUser = await this.userRepository.findOne({
+        where: { email: updateProfileDto.email },
+      });
+
+      if (existingUser && existingUser.id !== userId) {
+        throw new ConflictException('Email already in use');
+      }
+
+      user.email = updateProfileDto.email;
+    }
+
+    await this.userRepository.save(user);
+
+    // Update employee information if exists
+    if (user.employee) {
+      if (updateProfileDto.first_name) {
+        user.employee.first_name = updateProfileDto.first_name;
+      }
+      if (updateProfileDto.last_name) {
+        user.employee.last_name = updateProfileDto.last_name;
+      }
+      if (updateProfileDto.middle_name !== undefined) {
+        user.employee.middle_name = updateProfileDto.middle_name;
+      }
+      if (updateProfileDto.email) {
+        user.employee.email = updateProfileDto.email;
+      }
+      if (updateProfileDto.phone) {
+        user.employee.phone = updateProfileDto.phone;
+      }
+
+      await this.employeeRepository.save(user.employee);
+    }
+
+    // Return updated profile
+    return await this.getProfile(userId);
+  }
+
+  /**
    * CHANGE PASSWORD - User changes their own password
    */
   async changePassword(
@@ -439,7 +601,7 @@ export class AuthService {
     changePasswordDto: ChangePasswordDto,
   ): Promise<{ message: string }> {
     const user = await this.userRepository.findOne({
-      where: { user_id: userId, active: true },
+      where: { id: userId, active: true },
     });
 
     if (!user) {
@@ -483,7 +645,7 @@ export class AuthService {
   ): Promise<{ temporary_password: string }> {
     // Get admin user
     const admin = await this.userRepository.findOne({
-      where: { user_id: adminUserId, active: true },
+      where: { id: adminUserId, active: true },
     });
 
     if (!admin) {
@@ -503,7 +665,7 @@ export class AuthService {
 
     // Get target user
     const targetUser = await this.userRepository.findOne({
-      where: { user_id: targetUserId, active: true },
+      where: { id: targetUserId, active: true },
     });
 
     if (!targetUser) {
@@ -540,7 +702,7 @@ export class AuthService {
    */
   async validateUser(payload: any): Promise<User> {
     const user = await this.userRepository.findOne({
-      where: { user_id: payload.sub, active: true },
+      where: { id: payload.sub, active: true },
       relations: ['employee', 'company'],
     });
 
@@ -632,27 +794,27 @@ export class AuthService {
   /**
    * HELPER: Generate unique employee code within company
    */
-  private async generateEmployeeCode(companyId: string): Promise<string> {
-    const lastEmployee = await this.employeeRepository
-      .createQueryBuilder('employee')
-      .where('employee.company_id = :companyId', { companyId })
-      .andWhere('employee.code LIKE :prefix', { prefix: 'EMP%' })
-      .orderBy('employee.code', 'DESC')
-      .getOne();
-
-    if (!lastEmployee) {
-      return 'EMP001';
-    }
-
-    const match = lastEmployee.code.match(/EMP(\d+)/);
-    if (!match) {
-      return 'EMP001';
-    }
-
-    const lastNumber = parseInt(match[1], 10);
-    const newNumber = lastNumber + 1;
-    return `EMP${newNumber.toString().padStart(3, '0')}`;
-  }
+  // private async generateEmployeeCode(companyId: string): Promise<string> {
+  //   const lastEmployee = await this.employeeRepository
+  //     .createQueryBuilder('employee')
+  //     .where('employee.company_id = :companyId', { companyId })
+  //     .andWhere('employee.code LIKE :prefix', { prefix: 'EMP%' })
+  //     .orderBy('employee.code', 'DESC')
+  //     .getOne();
+  //
+  //   if (!lastEmployee) {
+  //     return 'EMP001';
+  //   }
+  //
+  //   const match = lastEmployee.code.match(/EMP(\d+)/);
+  //   if (!match) {
+  //     return 'EMP001';
+  //   }
+  //
+  //   const lastNumber = parseInt(match[1], 10);
+  //   const newNumber = lastNumber + 1;
+  //   return `EMP${newNumber.toString().padStart(3, '0')}`;
+  // }
 
   /**
    * HELPER: Generate secure temporary password
@@ -679,5 +841,166 @@ export class AuthService {
       .split('')
       .sort(() => Math.random() - 0.5)
       .join('');
+  }
+
+  /**
+   * Get company statistics
+   */
+  private async getCompanyStatistics(companyId: string): Promise<any> {
+    // Total employees
+    const totalEmployees = await this.employeeRepository.count({
+      where: { company_id: companyId },
+    });
+
+    // Active employees
+    const activeEmployees = await this.employeeRepository.count({
+      where: { company_id: companyId, status: EmployeeStatus.ACTIVE },
+    });
+
+    // Total users
+    const totalUsers = await this.userRepository.count({
+      where: { company_id: companyId },
+    });
+
+    // Active users
+    const activeUsers = await this.userRepository.count({
+      where: { company_id: companyId, active: true },
+    });
+
+    return {
+      total_employees: totalEmployees,
+      active_employees: activeEmployees,
+      inactive_employees: totalEmployees - activeEmployees,
+      total_users: totalUsers,
+      active_users: activeUsers,
+      employees_remaining: 0, // Will be calculated with company data
+    };
+  }
+
+  /**
+   * Get employee statistics
+   */
+  private async getEmployeeStatistics(employeeId: string): Promise<any> {
+    const currentMonth = new Date();
+    const firstDayOfMonth = new Date(
+      currentMonth.getFullYear(),
+      currentMonth.getMonth(),
+      1,
+    );
+
+    try {
+      // This month attendance (if AttendanceRecord exists)
+      const attendanceRecords = await this.employeeRepository.manager
+        .getRepository('AttendanceRecord')
+        .count({
+          where: {
+            employee_id: employeeId,
+            date: { $gte: firstDayOfMonth } as any,
+          },
+        })
+        .catch(() => 0);
+
+      return {
+        attendance_this_month: attendanceRecords,
+        working_days_this_month: attendanceRecords,
+        // Can add more stats like late_days, overtime_hours, etc.
+      };
+    } catch (error) {
+      // Return empty stats if tables don't exist yet
+      return {
+        attendance_this_month: 0,
+        working_days_this_month: 0,
+      };
+    }
+  }
+
+  /**
+   * Get user permissions based on role
+   */
+  private getUserPermissions(role: UserRole): string[] {
+    const permissionMap = {
+      [UserRole.SUPER_ADMIN]: [
+        'view_all_companies',
+        'create_company',
+        'manage_companies',
+        'manage_subscriptions',
+        'view_all_users',
+        'manage_all_users',
+        'view_all_employees',
+        'manage_all_employees',
+        'view_all_payroll',
+        'manage_all_payroll',
+        'view_analytics',
+        'manage_system_settings',
+      ],
+      [UserRole.COMPANY_OWNER]: [
+        'view_company',
+        'manage_company',
+        'manage_subscription',
+        'create_admin',
+        'create_hr_manager',
+        'view_all_employees',
+        'manage_employees',
+        'view_attendance',
+        'manage_attendance',
+        'view_payroll',
+        'manage_payroll',
+        'approve_payroll',
+        'view_analytics',
+        'manage_departments',
+        'manage_terminals',
+      ],
+      [UserRole.ADMIN]: [
+        'view_company',
+        'manage_company_settings',
+        'create_hr_manager',
+        'create_manager',
+        'view_all_employees',
+        'manage_employees',
+        'view_attendance',
+        'manage_attendance',
+        'view_payroll',
+        'manage_payroll',
+        'view_analytics',
+        'manage_departments',
+      ],
+      [UserRole.HR_MANAGER]: [
+        'view_company',
+        'create_employee',
+        'view_all_employees',
+        'manage_employees',
+        'view_attendance',
+        'approve_attendance',
+        'manage_schedules',
+        'view_payroll',
+        'run_payroll',
+        'manage_holidays',
+      ],
+      [UserRole.PAYROLL]: [
+        'view_all_employees',
+        'view_attendance',
+        'view_payroll',
+        'manage_payroll',
+        'export_payroll',
+        'add_bonuses',
+        'add_deductions',
+      ],
+      [UserRole.MANAGER]: [
+        'view_team',
+        'view_team_attendance',
+        'approve_team_attendance',
+        'view_team_schedules',
+        'request_corrections',
+      ],
+      [UserRole.EMPLOYEE]: [
+        'view_own_profile',
+        'view_own_attendance',
+        'view_own_schedule',
+        'view_own_payslip',
+        'update_own_profile',
+      ],
+    };
+
+    return permissionMap[role] || [];
   }
 }

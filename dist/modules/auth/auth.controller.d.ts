@@ -4,6 +4,7 @@ import { RegisterDto } from './dto/register.dto';
 import { AdminCreateUserDto } from './dto/admin-create-user.dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
 import { UserRole } from '@/modules/users/entities/user.entity';
+import { UpdateProfileDto } from '@/modules/auth/dto/update-profile.dto';
 export declare class AuthController {
     private readonly authService;
     constructor(authService: AuthService);
@@ -35,14 +36,34 @@ export declare class AuthController {
         note: string;
     }>;
     getProfile(req: any): Promise<{
-        user: {
+        success: boolean;
+        data: any;
+        message: string;
+    }>;
+    getQuickProfile(req: any): Promise<{
+        success: boolean;
+        data: {
             user_id: any;
             email: any;
             role: any;
             company_id: any;
-            employee: any;
-            company: any;
+            employee_id: any;
+            employee: {
+                code: any;
+                full_name: string;
+                position: any;
+            };
+            company: {
+                code: any;
+                name: any;
+            };
         };
+        message: string;
+    }>;
+    updateProfile(updateProfileDto: UpdateProfileDto, req: any): Promise<{
+        success: boolean;
+        data: any;
+        message: string;
     }>;
     logout(): Promise<{
         message: string;

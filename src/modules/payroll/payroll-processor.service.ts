@@ -73,7 +73,7 @@ export class PayrollProcessorService {
     // Get attendance records for the period
     const attendanceRecords = await this.attendanceRepository.find({
       where: {
-        employee_id: employee.employee_id,
+        employee_id: employee.id,
         date: Between(period.start_date, period.end_date),
       },
     });
@@ -112,7 +112,7 @@ export class PayrollProcessorService {
 
     if (totalWorkedHours > 0 && employee.hourly_rate) {
       await this.createPayrollItem({
-        employee_id: employee.employee_id,
+        employee_id: employee.id,
         period_id: period.period_id,
         type: PayrollItemType.EARNING,
         code: PayrollItemCode.BASE_HOURLY,
@@ -171,7 +171,7 @@ export class PayrollProcessorService {
     }
 
     await this.createPayrollItem({
-      employee_id: employee.employee_id,
+      employee_id: employee.id,
       period_id: period.period_id,
       type: PayrollItemType.EARNING,
       code: PayrollItemCode.BASE_MONTHLY,
@@ -208,7 +208,7 @@ export class PayrollProcessorService {
       const overtimeRate = baseRate * this.overtimeMultiplier;
 
       await this.createPayrollItem({
-        employee_id: employee.employee_id,
+        employee_id: employee.id,
         period_id: period.period_id,
         type: PayrollItemType.EARNING,
         code: PayrollItemCode.OVERTIME,
@@ -249,7 +249,7 @@ export class PayrollProcessorService {
       const holidayRate = baseRate * holidayMultiplier;
 
       await this.createPayrollItem({
-        employee_id: employee.employee_id,
+        employee_id: employee.id,
         period_id: period.period_id,
         type: PayrollItemType.EARNING,
         code: PayrollItemCode.HOLIDAY_PREMIUM,
@@ -267,7 +267,7 @@ export class PayrollProcessorService {
   ): Promise<void> {
     const volumeEntries = await this.volumeRepository.find({
       where: {
-        employee_id: employee.employee_id,
+        employee_id: employee.id,
         date: Between(period.start_date, period.end_date),
         approved: true,
       },
@@ -279,7 +279,7 @@ export class PayrollProcessorService {
 
     if (totalAmount > 0) {
       await this.createPayrollItem({
-        employee_id: employee.employee_id,
+        employee_id: employee.id,
         period_id: period.period_id,
         type: PayrollItemType.EARNING,
         code: PayrollItemCode.PIECEWORK,
