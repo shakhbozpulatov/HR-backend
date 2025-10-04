@@ -62,6 +62,7 @@ let AuthController = class AuthController {
         };
     }
     async getProfile(req) {
+        console.log('emplId', req.user);
         const profile = await this.authService.getProfile(req.user.user_id);
         return {
             success: true,

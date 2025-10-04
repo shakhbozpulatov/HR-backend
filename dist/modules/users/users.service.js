@@ -37,9 +37,13 @@ let UsersService = class UsersService {
         });
         return await this.userRepository.save(user);
     }
-    async findAll() {
+    async findAll(role, company_id) {
+        if (role === user_entity_1.UserRole.SUPER_ADMIN) {
+            return await this.userRepository.find();
+        }
         return await this.userRepository.find({
             where: {
+                company_id,
                 role: (0, typeorm_2.Not)((0, typeorm_2.In)([user_entity_1.UserRole.SUPER_ADMIN, user_entity_1.UserRole.COMPANY_OWNER])),
             },
         });

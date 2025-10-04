@@ -6,6 +6,7 @@ import {
   Param,
   Patch,
   Post,
+  Req,
   UseGuards,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
@@ -34,8 +35,9 @@ export class UsersController {
     UserRole.ADMIN,
     UserRole.HR_MANAGER,
   )
-  async findAll() {
-    return await this.usersService.findAll();
+  async findAll(@Req() req) {
+    const { role, company_id } = req.user;
+    return await this.usersService.findAll(role, company_id);
   }
 
   @Get(':id')

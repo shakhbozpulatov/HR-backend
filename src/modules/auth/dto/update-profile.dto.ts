@@ -5,6 +5,7 @@ import {
   MaxLength,
   Matches,
   IsDateString,
+  IsDate,
 } from 'class-validator';
 import { Transform } from 'class-transformer';
 
@@ -36,9 +37,8 @@ export class UpdateProfileDto {
   @IsOptional()
   @Transform(({ value }) => {
     if (!value) return null;
-    // Convert string to Date object
     return new Date(value);
   })
-  @IsDateString()
-  dob?: Date; // Changed from string to Date
+  @IsDate()
+  dob?: Date;
 }

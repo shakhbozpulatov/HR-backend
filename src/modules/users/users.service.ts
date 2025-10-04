@@ -1,7 +1,7 @@
 import {
+  BadRequestException,
   Injectable,
   NotFoundException,
-  BadRequestException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { In, Not, Repository } from 'typeorm';
@@ -39,9 +39,13 @@ export class UsersService {
     return await this.userRepository.save(user);
   }
 
-  async findAll(): Promise<User[]> {
+  async findAll(role: UserRole, company_id: string): Promise<User[]> {
+    if (role === UserRole.SUPER_ADMIN) {
+      return await this.userRepository.find();
+    }
     return await this.userRepository.find({
       where: {
+        company_id,
         role: Not(In([UserRole.SUPER_ADMIN, UserRole.COMPANY_OWNER])),
       },
     });

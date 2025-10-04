@@ -76,7 +76,7 @@ export class AuthService {
 
     // Generate JWT token
     const payload = {
-      sub: user.id,
+      user_id: user.id,
       email: user.email,
       role: user.role,
       company_id: user.company_id,
@@ -240,7 +240,7 @@ export class AuthService {
 
     // Generate JWT
     const payload = {
-      sub: savedUser.id,
+      user_id: savedUser.id,
       email: savedUser.email,
       role: savedUser.role,
       company_id: savedUser.company_id,

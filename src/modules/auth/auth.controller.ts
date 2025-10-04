@@ -125,6 +125,7 @@ export class AuthController {
   @Get('profile')
   @UseGuards(AuthGuard)
   async getProfile(@Req() req) {
+    console.log('emplId', req.user);
     const profile = await this.authService.getProfile(req.user.user_id);
 
     return {

@@ -22,10 +22,7 @@ __decorate([
 __decorate([
     (0, class_validator_1.IsString)(),
     (0, class_validator_1.MinLength)(6, { message: 'New password must be at least 6 characters long' }),
-    (0, class_validator_1.MaxLength)(50),
-    (0, class_validator_1.Matches)(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/, {
-        message: 'New password must contain at least one uppercase letter, one lowercase letter, and one number',
-    }),
+    (0, class_validator_1.MaxLength)(25),
     __metadata("design:type", String)
 ], ChangePasswordDto.prototype, "new_password", void 0);
 //# sourceMappingURL=change-password.dto.js.map

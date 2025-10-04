@@ -51,7 +51,7 @@ __decorate([
             return null;
         return new Date(value);
     }),
-    (0, class_validator_1.IsDateString)(),
+    (0, class_validator_1.IsDate)(),
     __metadata("design:type", Date)
 ], UpdateProfileDto.prototype, "dob", void 0);
 //# sourceMappingURL=update-profile.dto.js.map

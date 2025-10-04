@@ -28,8 +28,9 @@ let UsersController = class UsersController {
     async create(createUserDto) {
         return await this.usersService.create(createUserDto);
     }
-    async findAll() {
-        return await this.usersService.findAll();
+    async findAll(req) {
+        const { role, company_id } = req.user;
+        return await this.usersService.findAll(role, company_id);
     }
     async findOne(id) {
         return await this.usersService.findOne(id);
@@ -54,8 +55,9 @@ __decorate([
 __decorate([
     (0, common_1.Get)(),
     (0, roles_decorator_1.Roles)(user_entity_1.UserRole.SUPER_ADMIN, user_entity_1.UserRole.COMPANY_OWNER, user_entity_1.UserRole.ADMIN, user_entity_1.UserRole.HR_MANAGER),
+    __param(0, (0, common_1.Req)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", []),
+    __metadata("design:paramtypes", [Object]),
     __metadata("design:returntype", Promise)
 ], UsersController.prototype, "findAll", null);
 __decorate([

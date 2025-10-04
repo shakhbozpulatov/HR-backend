@@ -49,7 +49,7 @@ let AuthService = class AuthService {
             }
         }
         const payload = {
-            sub: user.id,
+            user_id: user.id,
             email: user.email,
             role: user.role,
             company_id: user.company_id,
@@ -161,7 +161,7 @@ let AuthService = class AuthService {
         const savedUser = await this.userRepository.save(user);
         console.log(`✅ New user created: ${savedUser.email}`);
         const payload = {
-            sub: savedUser.id,
+            user_id: savedUser.id,
             email: savedUser.email,
             role: savedUser.role,
             company_id: savedUser.company_id,
