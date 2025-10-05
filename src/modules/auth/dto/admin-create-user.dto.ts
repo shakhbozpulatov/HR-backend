@@ -7,7 +7,6 @@ import {
   IsPositive,
   IsString,
   IsUUID,
-  MinLength,
   ValidateIf,
 } from 'class-validator';
 import { TariffType, UserRole } from '@/modules/users/entities/user.entity';
@@ -42,8 +41,8 @@ export class AdminCreateUserDto {
   phone?: string;
 
   @IsOptional()
-  @IsString()
-  department?: string;
+  @IsUUID('4', { message: 'Invalid department ID format' })
+  department_id?: string;
 
   @IsOptional()
   @IsString()

@@ -33,7 +33,7 @@ exports.Company = Company;
 __decorate([
     (0, typeorm_1.PrimaryGeneratedColumn)('uuid'),
     __metadata("design:type", String)
-], Company.prototype, "company_id", void 0);
+], Company.prototype, "id", void 0);
 __decorate([
     (0, typeorm_1.Column)({ unique: true }),
     __metadata("design:type", String)

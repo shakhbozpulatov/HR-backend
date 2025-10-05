@@ -1,7 +1,7 @@
 import { Company } from '@/modules/company/entities/company.entity';
 import { User } from '@/modules/users/entities/user.entity';
 export declare class Department {
-    department_id: string;
+    id: string;
     company_id: string;
     code: string;
     name: string;

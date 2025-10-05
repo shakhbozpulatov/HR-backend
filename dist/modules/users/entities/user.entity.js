@@ -116,10 +116,6 @@ __decorate([
 __decorate([
     (0, typeorm_1.Column)({ nullable: true }),
     __metadata("design:type", String)
-], User.prototype, "department", void 0);
-__decorate([
-    (0, typeorm_1.Column)({ nullable: true }),
-    __metadata("design:type", String)
 ], User.prototype, "location", void 0);
 __decorate([
     (0, typeorm_1.Column)({ type: 'uuid', nullable: true }),
@@ -168,7 +164,7 @@ __decorate([
     }),
     (0, typeorm_1.JoinColumn)({ name: 'department_id' }),
     __metadata("design:type", department_entity_1.Department)
-], User.prototype, "department_entity", void 0);
+], User.prototype, "department", void 0);
 __decorate([
     (0, typeorm_1.ManyToOne)(() => User, { nullable: true }),
     (0, typeorm_1.JoinColumn)({ name: 'manager_id' }),

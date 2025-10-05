@@ -53,9 +53,9 @@ __decorate([
 ], AdminCreateUserDto.prototype, "phone", void 0);
 __decorate([
     (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsUUID)('4', { message: 'Invalid department ID format' }),
     __metadata("design:type", String)
-], AdminCreateUserDto.prototype, "department", void 0);
+], AdminCreateUserDto.prototype, "department_id", void 0);
 __decorate([
     (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsString)(),

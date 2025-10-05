@@ -12,8 +12,7 @@ export declare class CompaniesService {
     findAll(status?: CompanyStatus): Promise<Company[]>;
     findOne(id: string): Promise<Company>;
     update(id: string, updateCompanyDto: UpdateCompanyDto): Promise<Company>;
-    suspend(id: string): Promise<Company>;
-    activate(id: string): Promise<Company>;
+    updateStatus(id: string, status: CompanyStatus): Promise<Company>;
     updateSubscription(id: string, plan: SubscriptionPlan, startDate: Date, endDate: Date): Promise<Company>;
     getCompanyStats(companyId: string): Promise<any>;
     private createDefaultDepartments;

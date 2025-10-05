@@ -33,6 +33,12 @@ let CompaniesController = class CompaniesController {
     async findAll(status) {
         return await this.companiesService.findAll(status);
     }
+    async getDepartments(req) {
+        const companyId = req.user.role === user_entity_1.UserRole.SUPER_ADMIN
+            ? req.query.company_id || req.user.company_id
+            : req.user.company_id;
+        return await this.companiesService.getDepartments(companyId);
+    }
     async findOne(id, req) {
         if (req.user.role !== user_entity_1.UserRole.SUPER_ADMIN && req.user.company_id !== id) {
             throw new common_1.ForbiddenException('Access denied');
@@ -45,11 +51,8 @@ let CompaniesController = class CompaniesController {
         }
         return await this.companiesService.update(id, updateCompanyDto);
     }
-    async suspend(id) {
-        return await this.companiesService.suspend(id);
-    }
-    async activate(id) {
-        return await this.companiesService.activate(id);
+    async updateStatus(id, status) {
+        return await this.companiesService.updateStatus(id, status);
     }
     async updateSubscription(id, subscriptionDto) {
         return await this.companiesService.updateSubscription(id, subscriptionDto.plan, new Date(subscriptionDto.start_date), new Date(subscriptionDto.end_date));
@@ -60,19 +63,11 @@ let CompaniesController = class CompaniesController {
         }
         return await this.companiesService.getCompanyStats(id);
     }
-    async createDepartment(companyId, createDepartmentDto, req) {
-        if (req.user.role !== user_entity_1.UserRole.SUPER_ADMIN &&
-            req.user.company_id !== companyId) {
-            throw new common_1.ForbiddenException('Access denied');
-        }
+    async createDepartment(createDepartmentDto, req) {
+        const companyId = req.user.role === user_entity_1.UserRole.SUPER_ADMIN
+            ? createDepartmentDto.company_id
+            : req.user.company_id;
         return await this.companiesService.createDepartment(companyId, createDepartmentDto);
-    }
-    async getDepartments(companyId, req) {
-        if (req.user.role !== user_entity_1.UserRole.SUPER_ADMIN &&
-            req.user.company_id !== companyId) {
-            throw new common_1.ForbiddenException('Access denied');
-        }
-        return await this.companiesService.getDepartments(companyId);
     }
 };
 exports.CompaniesController = CompaniesController;
@@ -93,6 +88,14 @@ __decorate([
     __metadata("design:returntype", Promise)
 ], CompaniesController.prototype, "findAll", null);
 __decorate([
+    (0, common_1.Get)('departments'),
+    (0, roles_decorator_1.Roles)(user_entity_1.UserRole.SUPER_ADMIN, user_entity_1.UserRole.COMPANY_OWNER, user_entity_1.UserRole.ADMIN, user_entity_1.UserRole.HR_MANAGER, user_entity_1.UserRole.MANAGER),
+    __param(0, (0, common_1.Req)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", Promise)
+], CompaniesController.prototype, "getDepartments", null);
+__decorate([
     (0, common_1.Get)(':id'),
     (0, roles_decorator_1.Roles)(user_entity_1.UserRole.SUPER_ADMIN, user_entity_1.UserRole.COMPANY_OWNER, user_entity_1.UserRole.ADMIN),
     __param(0, (0, common_1.Param)('id')),
@@ -112,23 +115,16 @@ __decorate([
     __metadata("design:returntype", Promise)
 ], CompaniesController.prototype, "update", null);
 __decorate([
-    (0, common_1.Post)(':id/suspend'),
+    (0, common_1.Post)('status/:id'),
     (0, roles_decorator_1.Roles)(user_entity_1.UserRole.SUPER_ADMIN),
     __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, common_1.Body)('status')),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String]),
+    __metadata("design:paramtypes", [String, String]),
     __metadata("design:returntype", Promise)
-], CompaniesController.prototype, "suspend", null);
+], CompaniesController.prototype, "updateStatus", null);
 __decorate([
-    (0, common_1.Post)(':id/activate'),
-    (0, roles_decorator_1.Roles)(user_entity_1.UserRole.SUPER_ADMIN),
-    __param(0, (0, common_1.Param)('id')),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String]),
-    __metadata("design:returntype", Promise)
-], CompaniesController.prototype, "activate", null);
-__decorate([
-    (0, common_1.Post)(':id/subscription'),
+    (0, common_1.Post)('subscription/:id'),
     (0, roles_decorator_1.Roles)(user_entity_1.UserRole.SUPER_ADMIN),
     __param(0, (0, common_1.Param)('id')),
     __param(1, (0, common_1.Body)()),
@@ -137,7 +133,7 @@ __decorate([
     __metadata("design:returntype", Promise)
 ], CompaniesController.prototype, "updateSubscription", null);
 __decorate([
-    (0, common_1.Get)(':id/stats'),
+    (0, common_1.Get)('stats/:id'),
     (0, roles_decorator_1.Roles)(user_entity_1.UserRole.SUPER_ADMIN, user_entity_1.UserRole.COMPANY_OWNER, user_entity_1.UserRole.ADMIN),
     __param(0, (0, common_1.Param)('id')),
     __param(1, (0, common_1.Req)()),
@@ -146,24 +142,14 @@ __decorate([
     __metadata("design:returntype", Promise)
 ], CompaniesController.prototype, "getStats", null);
 __decorate([
-    (0, common_1.Post)(':id/departments'),
+    (0, common_1.Post)('department'),
     (0, roles_decorator_1.Roles)(user_entity_1.UserRole.SUPER_ADMIN, user_entity_1.UserRole.COMPANY_OWNER, user_entity_1.UserRole.ADMIN, user_entity_1.UserRole.HR_MANAGER),
-    __param(0, (0, common_1.Param)('id')),
-    __param(1, (0, common_1.Body)()),
-    __param(2, (0, common_1.Req)()),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, create_company_dto_2.CreateDepartmentDto, Object]),
-    __metadata("design:returntype", Promise)
-], CompaniesController.prototype, "createDepartment", null);
-__decorate([
-    (0, common_1.Get)(':id/departments'),
-    (0, roles_decorator_1.Roles)(user_entity_1.UserRole.SUPER_ADMIN, user_entity_1.UserRole.COMPANY_OWNER, user_entity_1.UserRole.ADMIN, user_entity_1.UserRole.HR_MANAGER, user_entity_1.UserRole.MANAGER),
-    __param(0, (0, common_1.Param)('id')),
+    __param(0, (0, common_1.Body)()),
     __param(1, (0, common_1.Req)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, Object]),
+    __metadata("design:paramtypes", [create_company_dto_2.CreateDepartmentDto, Object]),
     __metadata("design:returntype", Promise)
-], CompaniesController.prototype, "getDepartments", null);
+], CompaniesController.prototype, "createDepartment", null);
 exports.CompaniesController = CompaniesController = __decorate([
     (0, common_1.Controller)('companies'),
     (0, common_1.UseGuards)(auth_guard_1.AuthGuard, roles_guard_1.RolesGuard),

@@ -115,7 +115,7 @@ let AuthService = class AuthService {
                 },
             });
             company = await this.companyRepository.save(company);
-            companyId = company.company_id;
+            companyId = company.id;
             userRole = user_entity_1.UserRole.COMPANY_OWNER;
             console.log(`✅ New company created: ${company.name} (${company.code})`);
         }
@@ -131,14 +131,14 @@ let AuthService = class AuthService {
             }
             const userCount = await this.userRepository.count({
                 where: {
-                    company_id: company.company_id,
+                    company_id: company.id,
                     status: user_entity_1.UserStatus.ACTIVE,
                 },
             });
             if (userCount >= company.max_employees) {
                 throw new common_1.BadRequestException(`Company has reached maximum employee limit (${company.max_employees}). Please contact company admin.`);
             }
-            companyId = company.company_id;
+            companyId = company.id;
             userRole = user_entity_1.UserRole.EMPLOYEE;
             console.log(`✅ User joining company: ${company.name} (${company.code})`);
         }
@@ -152,7 +152,7 @@ let AuthService = class AuthService {
             last_name: registerDto.last_name.trim(),
             middle_name: registerDto.middle_name?.trim(),
             phone: registerDto.phone,
-            department: registerDto.department?.trim(),
+            department_id: registerDto.department?.trim(),
             position: registerDto.position?.trim(),
             start_date: new Date(),
             status: user_entity_1.UserStatus.ACTIVE,
@@ -201,7 +201,7 @@ let AuthService = class AuthService {
                 throw new common_1.BadRequestException('company_id is required when SUPER_ADMIN creates users');
             }
             const targetCompany = await this.companyRepository.findOne({
-                where: { company_id: createUserDto.company_id },
+                where: { id: createUserDto.company_id },
             });
             if (!targetCompany) {
                 throw new common_1.NotFoundException('Target company not found');
@@ -256,7 +256,7 @@ let AuthService = class AuthService {
         };
         if (user.company) {
             profile.company = {
-                company_id: user.company.company_id,
+                company_id: user.company.id,
                 code: user.company.code,
                 name: user.company.name,
                 legal_name: user.company.legal_name,
@@ -271,7 +271,7 @@ let AuthService = class AuthService {
                 settings: user.company.settings,
                 created_at: user.company.created_at,
             };
-            profile.company.statistics = await this.getCompanyStatistics(user.company.company_id);
+            profile.company.statistics = await this.getCompanyStatistics(user.company.id);
         }
         profile.permissions = this.getUserPermissions(user.role);
         return profile;

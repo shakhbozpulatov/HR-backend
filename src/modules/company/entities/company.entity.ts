@@ -29,7 +29,7 @@ export enum SubscriptionPlan {
 @Index(['tax_id'], { unique: true, where: 'tax_id IS NOT NULL' })
 export class Company {
   @PrimaryGeneratedColumn('uuid')
-  company_id: string;
+  id: string;
 
   @Column({ unique: true })
   code: string; // COM001, COM002

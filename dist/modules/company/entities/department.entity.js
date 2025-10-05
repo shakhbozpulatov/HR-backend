@@ -19,7 +19,7 @@ exports.Department = Department;
 __decorate([
     (0, typeorm_1.PrimaryGeneratedColumn)('uuid'),
     __metadata("design:type", String)
-], Department.prototype, "department_id", void 0);
+], Department.prototype, "id", void 0);
 __decorate([
     (0, typeorm_1.Column)({ type: 'uuid' }),
     __metadata("design:type", String)

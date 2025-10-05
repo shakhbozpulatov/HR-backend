@@ -8,6 +8,8 @@ import {
   ValidateIf,
   IsNumber,
   IsPositive,
+  IsBoolean,
+  IsUUID,
 } from 'class-validator';
 import { TariffType, UserRole } from '../entities/user.entity';
 
@@ -23,8 +25,8 @@ export class CreateUserDto {
   role: UserRole;
 
   @IsOptional()
-  @IsString()
-  employee_id?: string;
+  @IsBoolean()
+  active?: boolean = true;
 
   @IsString()
   first_name: string;
@@ -45,15 +47,15 @@ export class CreateUserDto {
   phone?: string;
 
   @IsOptional()
-  @IsString()
-  department?: string;
+  @IsUUID()
+  department_id?: string; // ✅ shu yerda string emas, UUID
 
   @IsOptional()
   @IsString()
   location?: string;
 
   @IsOptional()
-  @IsString()
+  @IsUUID()
   manager_id?: string;
 
   @IsOptional()

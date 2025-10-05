@@ -13,7 +13,7 @@ export declare enum SubscriptionPlan {
     ENTERPRISE = "ENTERPRISE"
 }
 export declare class Company {
-    company_id: string;
+    id: string;
     code: string;
     name: string;
     legal_name?: string;

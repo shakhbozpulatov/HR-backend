@@ -8,7 +8,7 @@ export declare class AdminCreateUserDto {
     middle_name?: string;
     dob?: string;
     phone?: string;
-    department?: string;
+    department_id?: string;
     location?: string;
     manager_id?: string;
     position?: string;

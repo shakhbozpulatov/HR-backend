@@ -25,10 +25,7 @@ let CompaniesService = class CompaniesService {
     }
     async create(createCompanyDto) {
         const existingCompany = await this.companyRepository.findOne({
-            where: [
-                { code: createCompanyDto.code },
-                { tax_id: createCompanyDto.tax_id },
-            ],
+            where: [{ tax_id: createCompanyDto.tax_id }],
         });
         if (existingCompany) {
             throw new common_1.BadRequestException('Company code or tax ID already exists');
@@ -53,7 +50,7 @@ let CompaniesService = class CompaniesService {
             },
         });
         const savedCompany = await this.companyRepository.save(company);
-        await this.createDefaultDepartments(savedCompany.company_id);
+        await this.createDefaultDepartments(savedCompany.id);
         return savedCompany;
     }
     async findAll(status) {
@@ -68,8 +65,8 @@ let CompaniesService = class CompaniesService {
     }
     async findOne(id) {
         const company = await this.companyRepository.findOne({
-            where: { company_id: id },
-            relations: ['departments', 'employees', 'users'],
+            where: { id: id },
+            relations: ['departments', 'users'],
         });
         if (!company) {
             throw new common_1.NotFoundException('Company not found');
@@ -81,14 +78,12 @@ let CompaniesService = class CompaniesService {
         Object.assign(company, updateCompanyDto);
         return await this.companyRepository.save(company);
     }
-    async suspend(id) {
+    async updateStatus(id, status) {
         const company = await this.findOne(id);
-        company.status = company_entity_1.CompanyStatus.SUSPENDED;
-        return await this.companyRepository.save(company);
-    }
-    async activate(id) {
-        const company = await this.findOne(id);
-        company.status = company_entity_1.CompanyStatus.ACTIVE;
+        if (!Object.values(company_entity_1.CompanyStatus).includes(status)) {
+            throw new common_1.BadRequestException('Invalid status');
+        }
+        company.status = status;
         return await this.companyRepository.save(company);
     }
     async updateSubscription(id, plan, startDate, endDate) {
@@ -116,32 +111,28 @@ let CompaniesService = class CompaniesService {
         const company = await this.findOne(companyId);
         const stats = await this.companyRepository
             .createQueryBuilder('company')
-            .leftJoin('company.employees', 'employee')
             .leftJoin('company.users', 'user')
             .leftJoin('company.departments', 'department')
             .select([
-            'COUNT(DISTINCT employee.user_id) as total_users',
-            'COUNT(DISTINCT CASE WHEN user.status = :active THEN user.id END) as active_users',
-            'COUNT(DISTINCT user.user_id) as total_users',
-            'COUNT(DISTINCT department.department_id) as total_departments',
+            'COUNT(DISTINCT user.id) AS total_users',
+            'COUNT(DISTINCT CASE WHEN user.active = true THEN user.id END) AS active_users',
+            'COUNT(DISTINCT department.id) AS total_departments',
         ])
-            .where('company.company_id = :companyId', { companyId })
-            .setParameter('active', 'active')
+            .where('company.id = :companyId', { companyId })
             .getRawOne();
         return {
             company: {
-                id: company.company_id,
+                id: company.id,
                 name: company.name,
                 status: company.status,
                 subscription_plan: company.subscription_plan,
                 max_employees: company.max_employees,
             },
             stats: {
-                total_employees: parseInt(stats.total_employees) || 0,
-                active_employees: parseInt(stats.active_employees) || 0,
                 total_users: parseInt(stats.total_users) || 0,
+                active_users: parseInt(stats.active_users) || 0,
                 total_departments: parseInt(stats.total_departments) || 0,
-                employees_remaining: company.max_employees - (parseInt(stats.total_employees) || 0),
+                employees_remaining: company.max_employees - (parseInt(stats.total_users) || 0),
             },
         };
     }
@@ -162,7 +153,7 @@ let CompaniesService = class CompaniesService {
         }
     }
     async createDepartment(companyId, createDepartmentDto) {
-        const company = await this.findOne(companyId);
+        await this.findOne(companyId);
         const department = this.departmentRepository.create({
             ...createDepartmentDto,
             company_id: companyId,
@@ -172,13 +163,13 @@ let CompaniesService = class CompaniesService {
     async getDepartments(companyId) {
         return await this.departmentRepository.find({
             where: { company_id: companyId, active: true },
-            relations: ['parent_department', 'sub_departments', 'employees'],
+            relations: ['users'],
             order: { name: 'ASC' },
         });
     }
     async updateDepartment(departmentId, updateDto) {
         const department = await this.departmentRepository.findOne({
-            where: { department_id: departmentId },
+            where: { id: departmentId },
         });
         if (!department) {
             throw new common_1.NotFoundException('Department not found');

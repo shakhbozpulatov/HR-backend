@@ -18,9 +18,9 @@ import { PayrollItem } from '@/modules/payroll/entities/payroll-item.entity';
 import { WorkVolumeEntry } from '@/modules/payroll/entities/work-volume-entry.entity';
 
 export enum UserRole {
-  SUPER_ADMIN = 'SUPER_ADMIN', // Platform admin (barcha companylarni ko'radi)
-  COMPANY_OWNER = 'COMPANY_OWNER', // Company owner
-  ADMIN = 'ADMIN', // Company admin
+  SUPER_ADMIN = 'SUPER_ADMIN',
+  COMPANY_OWNER = 'COMPANY_OWNER',
+  ADMIN = 'ADMIN',
   HR_MANAGER = 'HR_MANAGER',
   PAYROLL = 'PAYROLL',
   MANAGER = 'MANAGER',
@@ -44,7 +44,7 @@ export class User {
   id: string;
 
   @Column({ type: 'uuid', nullable: true })
-  company_id?: string; // ← QO'SHILDI (SUPER_ADMIN uchun null bo'lishi mumkin)
+  company_id?: string; // SUPER_ADMIN uchun null bo'lishi mumkin
 
   @Column({ type: 'enum', enum: UserRole })
   role: UserRole;
@@ -94,10 +94,7 @@ export class User {
 
   // Organization
   @Column({ type: 'uuid', nullable: true })
-  department_id?: string; // ← Department entity'ga bog'lanadi
-
-  @Column({ nullable: true })
-  department?: string;
+  department_id?: string; // Foreign key → departments.id
 
   @Column({ nullable: true })
   location?: string;
@@ -129,20 +126,16 @@ export class User {
   @Column({ type: 'json', nullable: true })
   external_ids?: Record<string, string>;
 
-  // Relations
+  // 🔗 Relations
   @ManyToOne(() => Company, (company) => company.users, { nullable: true })
   @JoinColumn({ name: 'company_id' })
-  company?: Company; // ← QO'SHILDI
-
-  // @ManyToOne(() => Employee, { nullable: true })
-  // @JoinColumn({ name: 'employee_id' })
-  // employee?: Employee;
+  company?: Company;
 
   @ManyToOne(() => Department, (department) => department.users, {
     nullable: true,
   })
   @JoinColumn({ name: 'department_id' })
-  department_entity?: Department; // ← QO'SHILDI
+  department?: Department;
 
   @ManyToOne(() => User, { nullable: true })
   @JoinColumn({ name: 'manager_id' })

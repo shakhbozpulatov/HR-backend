@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  ForbiddenException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
@@ -27,15 +28,18 @@ export class UsersService {
       throw new BadRequestException('Email already exists');
     }
 
+    // Hash password
     const hashedPassword = this.cryptoUtils.hashPassword(
       createUserDto.password,
     );
 
+    // Create new entity
     const user = this.userRepository.create({
       ...createUserDto,
       password_hash: hashedPassword,
     });
 
+    // Save and return single User
     return await this.userRepository.save(user);
   }
 
@@ -51,21 +55,35 @@ export class UsersService {
     });
   }
 
-  async findOne(id: string): Promise<User> {
-    const user = await this.userRepository.findOne({
-      where: { id: id },
-      select: ['id', 'email', 'role', 'active', 'created_at'],
+  async findOne(id: string, user: any): Promise<User> {
+    const targetUser = await this.userRepository.findOne({
+      where: { id },
+      select: ['id', 'email', 'role', 'active', 'created_at', 'company_id'],
     });
 
-    if (!user) {
+    if (!targetUser) {
       throw new NotFoundException('User not found');
     }
 
-    return user;
+    // 🔒 Agar SUPER_ADMIN bo‘lmasa — faqat o‘z kompaniyasini ko‘ra oladi
+    if (
+      user.role !== UserRole.SUPER_ADMIN &&
+      targetUser.company_id !== user.company_id
+    ) {
+      throw new ForbiddenException(
+        'Access denied: user belongs to another company',
+      );
+    }
+
+    return targetUser;
   }
 
-  async update(id: string, updateUserDto: UpdateUserDto): Promise<User> {
-    const user = await this.findOne(id);
+  async update(
+    id: string,
+    updateUserDto: UpdateUserDto,
+    company: any,
+  ): Promise<User> {
+    const user = await this.findOne(id, company);
 
     if (updateUserDto.password) {
       updateUserDto.password = this.cryptoUtils.hashPassword(
@@ -77,8 +95,8 @@ export class UsersService {
     return await this.userRepository.save(user);
   }
 
-  async remove(id: string): Promise<void> {
-    const user = await this.findOne(id);
+  async remove(id: string, company: string): Promise<void> {
+    const user = await this.findOne(id, company);
     user.active = false;
     await this.userRepository.save(user);
   }

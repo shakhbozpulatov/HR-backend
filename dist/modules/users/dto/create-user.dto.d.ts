@@ -3,13 +3,13 @@ export declare class CreateUserDto {
     email: string;
     password: string;
     role: UserRole;
-    employee_id?: string;
+    active?: boolean;
     first_name: string;
     last_name: string;
     middle_name?: string;
     dob?: string;
     phone?: string;
-    department?: string;
+    department_id?: string;
     location?: string;
     manager_id?: string;
     position?: string;

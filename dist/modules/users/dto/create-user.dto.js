@@ -13,6 +13,9 @@ exports.CreateUserDto = void 0;
 const class_validator_1 = require("class-validator");
 const user_entity_1 = require("../entities/user.entity");
 class CreateUserDto {
+    constructor() {
+        this.active = true;
+    }
 }
 exports.CreateUserDto = CreateUserDto;
 __decorate([
@@ -30,9 +33,9 @@ __decorate([
 ], CreateUserDto.prototype, "role", void 0);
 __decorate([
     (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.IsString)(),
-    __metadata("design:type", String)
-], CreateUserDto.prototype, "employee_id", void 0);
+    (0, class_validator_1.IsBoolean)(),
+    __metadata("design:type", Boolean)
+], CreateUserDto.prototype, "active", void 0);
 __decorate([
     (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
@@ -58,9 +61,9 @@ __decorate([
 ], CreateUserDto.prototype, "phone", void 0);
 __decorate([
     (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsUUID)(),
     __metadata("design:type", String)
-], CreateUserDto.prototype, "department", void 0);
+], CreateUserDto.prototype, "department_id", void 0);
 __decorate([
     (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsString)(),
@@ -68,7 +71,7 @@ __decorate([
 ], CreateUserDto.prototype, "location", void 0);
 __decorate([
     (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsUUID)(),
     __metadata("design:type", String)
 ], CreateUserDto.prototype, "manager_id", void 0);
 __decorate([

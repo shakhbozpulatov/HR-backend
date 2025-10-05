@@ -78,6 +78,10 @@ export class CreateDepartmentDto {
 
   @IsOptional()
   @IsString()
+  company_id?: string;
+
+  @IsOptional()
+  @IsString()
   description?: string;
 
   @IsOptional()

@@ -41,21 +41,30 @@ export class UsersController {
   }
 
   @Get(':id')
-  @Roles(UserRole.ADMIN, UserRole.HR_MANAGER)
-  async findOne(@Param('id') id: string) {
-    return await this.usersService.findOne(id);
+  @Roles(
+    UserRole.SUPER_ADMIN,
+    UserRole.COMPANY_OWNER,
+    UserRole.ADMIN,
+    UserRole.HR_MANAGER,
+  )
+  async findOne(@Param('id') id: string, @Req() req) {
+    return await this.usersService.findOne(id, req.user);
   }
 
   @Patch(':id')
-  @Roles(UserRole.ADMIN)
-  async update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
-    return await this.usersService.update(id, updateUserDto);
+  @Roles(UserRole.SUPER_ADMIN, UserRole.COMPANY_OWNER, UserRole.ADMIN)
+  async update(
+    @Param('id') id: string,
+    @Body() updateUserDto: UpdateUserDto,
+    @Req() req,
+  ) {
+    return await this.usersService.update(id, updateUserDto, req.user);
   }
 
   @Delete(':id')
-  @Roles(UserRole.ADMIN)
-  async remove(@Param('id') id: string) {
-    await this.usersService.remove(id);
+  @Roles(UserRole.SUPER_ADMIN, UserRole.COMPANY_OWNER, UserRole.ADMIN)
+  async remove(@Param('id') id: string, @Req() req) {
+    await this.usersService.remove(id, req.user);
     return { message: 'User deactivated successfully' };
   }
 }

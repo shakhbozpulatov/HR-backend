@@ -48,26 +48,30 @@ let UsersService = class UsersService {
             },
         });
     }
-    async findOne(id) {
-        const user = await this.userRepository.findOne({
-            where: { id: id },
-            select: ['id', 'email', 'role', 'active', 'created_at'],
+    async findOne(id, user) {
+        const targetUser = await this.userRepository.findOne({
+            where: { id },
+            select: ['id', 'email', 'role', 'active', 'created_at', 'company_id'],
         });
-        if (!user) {
+        if (!targetUser) {
             throw new common_1.NotFoundException('User not found');
         }
-        return user;
+        if (user.role !== user_entity_1.UserRole.SUPER_ADMIN &&
+            targetUser.company_id !== user.company_id) {
+            throw new common_1.ForbiddenException('Access denied: user belongs to another company');
+        }
+        return targetUser;
     }
-    async update(id, updateUserDto) {
-        const user = await this.findOne(id);
+    async update(id, updateUserDto, company) {
+        const user = await this.findOne(id, company);
         if (updateUserDto.password) {
             updateUserDto.password = this.cryptoUtils.hashPassword(updateUserDto.password);
         }
         Object.assign(user, updateUserDto);
         return await this.userRepository.save(user);
     }
-    async remove(id) {
-        const user = await this.findOne(id);
+    async remove(id, company) {
+        const user = await this.findOne(id, company);
         user.active = false;
         await this.userRepository.save(user);
     }

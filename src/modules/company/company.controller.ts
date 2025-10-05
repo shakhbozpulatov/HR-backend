@@ -37,6 +37,24 @@ export class CompaniesController {
     return await this.companiesService.findAll(status);
   }
 
+  @Get('departments')
+  @Roles(
+    UserRole.SUPER_ADMIN,
+    UserRole.COMPANY_OWNER,
+    UserRole.ADMIN,
+    UserRole.HR_MANAGER,
+    UserRole.MANAGER,
+  )
+  async getDepartments(@Req() req) {
+    // Agar super admin bo‘lsa, query orqali boshqa company_id yuborish imkoniyati qoldiramiz
+    const companyId =
+      req.user.role === UserRole.SUPER_ADMIN
+        ? req.query.company_id || req.user.company_id
+        : req.user.company_id;
+
+    return await this.companiesService.getDepartments(companyId);
+  }
+
   @Get(':id')
   @Roles(UserRole.SUPER_ADMIN, UserRole.COMPANY_OWNER, UserRole.ADMIN)
   async findOne(@Param('id') id: string, @Req() req) {
@@ -60,19 +78,16 @@ export class CompaniesController {
     return await this.companiesService.update(id, updateCompanyDto);
   }
 
-  @Post(':id/suspend')
+  @Post('status/:id')
   @Roles(UserRole.SUPER_ADMIN)
-  async suspend(@Param('id') id: string) {
-    return await this.companiesService.suspend(id);
+  async updateStatus(
+    @Param('id') id: string,
+    @Body('status') status: CompanyStatus,
+  ) {
+    return await this.companiesService.updateStatus(id, status);
   }
 
-  @Post(':id/activate')
-  @Roles(UserRole.SUPER_ADMIN)
-  async activate(@Param('id') id: string) {
-    return await this.companiesService.activate(id);
-  }
-
-  @Post(':id/subscription')
+  @Post('subscription/:id')
   @Roles(UserRole.SUPER_ADMIN)
   async updateSubscription(
     @Param('id') id: string,
@@ -91,7 +106,7 @@ export class CompaniesController {
     );
   }
 
-  @Get(':id/stats')
+  @Get('stats/:id')
   @Roles(UserRole.SUPER_ADMIN, UserRole.COMPANY_OWNER, UserRole.ADMIN)
   async getStats(@Param('id') id: string, @Req() req) {
     if (req.user.role !== UserRole.SUPER_ADMIN && req.user.company_id !== id) {
@@ -101,7 +116,7 @@ export class CompaniesController {
   }
 
   // Department endpoints
-  @Post(':id/departments')
+  @Post('department')
   @Roles(
     UserRole.SUPER_ADMIN,
     UserRole.COMPANY_OWNER,
@@ -109,37 +124,17 @@ export class CompaniesController {
     UserRole.HR_MANAGER,
   )
   async createDepartment(
-    @Param('id') companyId: string,
     @Body() createDepartmentDto: CreateDepartmentDto,
     @Req() req,
   ) {
-    if (
-      req.user.role !== UserRole.SUPER_ADMIN &&
-      req.user.company_id !== companyId
-    ) {
-      throw new ForbiddenException('Access denied');
-    }
+    const companyId =
+      req.user.role === UserRole.SUPER_ADMIN
+        ? createDepartmentDto.company_id // super admin xohlasa boshqa company uchun ham yaratadi
+        : req.user.company_id; // boshqalar faqat o'z company’si uchun
+
     return await this.companiesService.createDepartment(
       companyId,
       createDepartmentDto,
     );
-  }
-
-  @Get(':id/departments')
-  @Roles(
-    UserRole.SUPER_ADMIN,
-    UserRole.COMPANY_OWNER,
-    UserRole.ADMIN,
-    UserRole.HR_MANAGER,
-    UserRole.MANAGER,
-  )
-  async getDepartments(@Param('id') companyId: string, @Req() req) {
-    if (
-      req.user.role !== UserRole.SUPER_ADMIN &&
-      req.user.company_id !== companyId
-    ) {
-      throw new ForbiddenException('Access denied');
-    }
-    return await this.companiesService.getDepartments(companyId);
   }
 }

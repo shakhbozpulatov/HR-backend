@@ -9,7 +9,7 @@ export declare class UsersService {
     constructor(userRepository: Repository<User>, cryptoUtils: CryptoUtils);
     create(createUserDto: CreateUserDto): Promise<User>;
     findAll(role: UserRole, company_id: string): Promise<User[]>;
-    findOne(id: string): Promise<User>;
-    update(id: string, updateUserDto: UpdateUserDto): Promise<User>;
-    remove(id: string): Promise<void>;
+    findOne(id: string, user: any): Promise<User>;
+    update(id: string, updateUserDto: UpdateUserDto, company: any): Promise<User>;
+    remove(id: string, company: string): Promise<void>;
 }

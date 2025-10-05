@@ -40,7 +40,6 @@ export declare class User {
     dob?: Date;
     phone?: string;
     department_id?: string;
-    department?: string;
     location?: string;
     manager_id?: string;
     position?: string;
@@ -52,7 +51,7 @@ export declare class User {
     terminal_user_id?: string;
     external_ids?: Record<string, string>;
     company?: Company;
-    department_entity?: Department;
+    department?: Department;
     manager: User;
     attendance_events: AttendanceEvent[];
     attendance_records: AttendanceRecord[];

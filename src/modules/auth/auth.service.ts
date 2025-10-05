@@ -173,7 +173,7 @@ export class AuthService {
       });
 
       company = await this.companyRepository.save(company);
-      companyId = company.company_id;
+      companyId = company.id;
       userRole = UserRole.COMPANY_OWNER;
 
       console.log(`✅ New company created: ${company.name} (${company.code})`);
@@ -197,7 +197,7 @@ export class AuthService {
       // Check employee limit
       const userCount = await this.userRepository.count({
         where: {
-          company_id: company.company_id,
+          company_id: company.id,
           status: UserStatus.ACTIVE,
         },
       });
@@ -208,7 +208,7 @@ export class AuthService {
         );
       }
 
-      companyId = company.company_id;
+      companyId = company.id;
       userRole = UserRole.EMPLOYEE;
 
       console.log(`✅ User joining company: ${company.name} (${company.code})`);
@@ -227,7 +227,7 @@ export class AuthService {
       last_name: registerDto.last_name.trim(),
       middle_name: registerDto.middle_name?.trim(),
       phone: registerDto.phone,
-      department: registerDto.department?.trim(),
+      department_id: registerDto.department?.trim(),
       position: registerDto.position?.trim(),
       start_date: new Date(),
       status: UserStatus.ACTIVE,
@@ -306,7 +306,7 @@ export class AuthService {
 
       // Verify company exists
       const targetCompany = await this.companyRepository.findOne({
-        where: { company_id: createUserDto.company_id },
+        where: { id: createUserDto.company_id },
       });
 
       if (!targetCompany) {
@@ -386,7 +386,7 @@ export class AuthService {
     // Add company information
     if (user.company) {
       profile.company = {
-        company_id: user.company.company_id,
+        company_id: user.company.id,
         code: user.company.code,
         name: user.company.name,
         legal_name: user.company.legal_name,
@@ -404,7 +404,7 @@ export class AuthService {
 
       // Get company statistics
       profile.company.statistics = await this.getCompanyStatistics(
-        user.company.company_id,
+        user.company.id,
       );
     }
 

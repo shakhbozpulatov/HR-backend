@@ -19,6 +19,7 @@ export declare class CreateCompanyDto {
 export declare class CreateDepartmentDto {
     code: string;
     name: string;
+    company_id?: string;
     description?: string;
     manager_id?: string;
     parent_department_id?: string;
