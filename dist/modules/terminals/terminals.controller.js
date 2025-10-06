@@ -18,55 +18,66 @@ const terminals_service_1 = require("./terminals.service");
 const auth_guard_1 = require("../../common/guards/auth.guard");
 const roles_guard_1 = require("../../common/guards/roles.guard");
 const roles_decorator_1 = require("../../common/decorators/roles.decorator");
+const current_user_decorator_1 = require("../../common/decorators/current-user.decorator");
 const user_entity_1 = require("../users/entities/user.entity");
+const create_terminal_dto_1 = require("./dto/create-terminal.dto");
+const update_terminal_status_dto_1 = require("./dto/update-terminal-status.dto");
 let TerminalsController = class TerminalsController {
     constructor(terminalsService) {
         this.terminalsService = terminalsService;
     }
-    async getAllDevices() {
-        return await this.terminalsService.findAll();
+    async getAllDevices(user) {
+        const companyId = user.role === user_entity_1.UserRole.SUPER_ADMIN ? undefined : user.company_id;
+        return await this.terminalsService.findAll(companyId);
     }
-    async getDevice(id) {
-        return await this.terminalsService.findOne(id);
+    async getDevice(id, user) {
+        const companyId = user.role === user_entity_1.UserRole.SUPER_ADMIN ? undefined : user.company_id;
+        return await this.terminalsService.findOne(id, companyId);
     }
-    async createDevice(deviceData) {
-        return await this.terminalsService.create(deviceData);
+    async createDevice(deviceData, user) {
+        const companyId = deviceData.company_id || user.company_id;
+        return await this.terminalsService.create(deviceData, companyId);
     }
-    async updateDeviceStatus(id, statusData) {
-        return await this.terminalsService.updateStatus(id, statusData.status);
+    async updateDeviceStatus(id, statusData, user) {
+        const companyId = user.role === user_entity_1.UserRole.SUPER_ADMIN ? undefined : user.company_id;
+        return await this.terminalsService.updateStatus(id, statusData.status, companyId);
     }
 };
 exports.TerminalsController = TerminalsController;
 __decorate([
-    (0, common_1.Get)('devices'),
-    (0, roles_decorator_1.Roles)(user_entity_1.UserRole.ADMIN, user_entity_1.UserRole.HR_MANAGER),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", []),
-    __metadata("design:returntype", Promise)
-], TerminalsController.prototype, "getAllDevices", null);
-__decorate([
-    (0, common_1.Get)('devices/:id'),
-    (0, roles_decorator_1.Roles)(user_entity_1.UserRole.ADMIN, user_entity_1.UserRole.HR_MANAGER),
-    __param(0, (0, common_1.Param)('id')),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String]),
-    __metadata("design:returntype", Promise)
-], TerminalsController.prototype, "getDevice", null);
-__decorate([
-    (0, common_1.Post)('devices'),
-    (0, roles_decorator_1.Roles)(user_entity_1.UserRole.ADMIN),
-    __param(0, (0, common_1.Body)()),
+    (0, common_1.Get)(),
+    (0, roles_decorator_1.Roles)(user_entity_1.UserRole.SUPER_ADMIN, user_entity_1.UserRole.COMPANY_OWNER, user_entity_1.UserRole.ADMIN, user_entity_1.UserRole.HR_MANAGER),
+    __param(0, (0, current_user_decorator_1.CurrentUser)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Object]),
     __metadata("design:returntype", Promise)
-], TerminalsController.prototype, "createDevice", null);
+], TerminalsController.prototype, "getAllDevices", null);
 __decorate([
-    (0, common_1.Patch)('devices/:id/status'),
-    (0, roles_decorator_1.Roles)(user_entity_1.UserRole.ADMIN, user_entity_1.UserRole.HR_MANAGER),
+    (0, common_1.Get)(':id'),
+    (0, roles_decorator_1.Roles)(user_entity_1.UserRole.SUPER_ADMIN, user_entity_1.UserRole.COMPANY_OWNER, user_entity_1.UserRole.ADMIN, user_entity_1.UserRole.HR_MANAGER),
     __param(0, (0, common_1.Param)('id')),
-    __param(1, (0, common_1.Body)()),
+    __param(1, (0, current_user_decorator_1.CurrentUser)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String, Object]),
+    __metadata("design:returntype", Promise)
+], TerminalsController.prototype, "getDevice", null);
+__decorate([
+    (0, common_1.Post)(''),
+    (0, roles_decorator_1.Roles)(user_entity_1.UserRole.SUPER_ADMIN, user_entity_1.UserRole.COMPANY_OWNER, user_entity_1.UserRole.ADMIN),
+    __param(0, (0, common_1.Body)()),
+    __param(1, (0, current_user_decorator_1.CurrentUser)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [create_terminal_dto_1.CreateTerminalDto, Object]),
+    __metadata("design:returntype", Promise)
+], TerminalsController.prototype, "createDevice", null);
+__decorate([
+    (0, common_1.Patch)(':id/status'),
+    (0, roles_decorator_1.Roles)(user_entity_1.UserRole.SUPER_ADMIN, user_entity_1.UserRole.COMPANY_OWNER, user_entity_1.UserRole.ADMIN, user_entity_1.UserRole.HR_MANAGER),
+    __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, common_1.Body)()),
+    __param(2, (0, current_user_decorator_1.CurrentUser)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, update_terminal_status_dto_1.UpdateTerminalStatusDto, Object]),
     __metadata("design:returntype", Promise)
 ], TerminalsController.prototype, "updateDeviceStatus", null);
 exports.TerminalsController = TerminalsController = __decorate([

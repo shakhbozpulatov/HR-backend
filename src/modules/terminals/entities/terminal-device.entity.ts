@@ -5,8 +5,11 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
   OneToMany,
+  ManyToOne,
+  JoinColumn,
 } from 'typeorm';
 import { AttendanceEvent } from '@/modules/attendance/entities/attendance-event.entity';
+import { Company } from '@/modules/company/entities/company.entity';
 
 export enum DeviceStatus {
   ONLINE = 'ONLINE',
@@ -18,6 +21,9 @@ export enum DeviceStatus {
 export class TerminalDevice {
   @PrimaryGeneratedColumn('uuid')
   id: string;
+
+  @Column({ type: 'uuid' })
+  company_id: string;
 
   @Column()
   name: string;
@@ -31,7 +37,7 @@ export class TerminalDevice {
   @Column({ type: 'timestamptz', nullable: true })
   last_seen_at?: Date;
 
-  @Column()
+  @Column({ nullable: true })
   vendor: string;
 
   @Column({ type: 'json', nullable: true })
@@ -42,6 +48,10 @@ export class TerminalDevice {
 
   @UpdateDateColumn()
   updated_at: Date;
+
+  @ManyToOne(() => Company)
+  @JoinColumn({ name: 'company_id' })
+  company: Company;
 
   @OneToMany(() => AttendanceEvent, (event) => event.device)
   events: AttendanceEvent[];

@@ -21,26 +21,33 @@ let TerminalsService = class TerminalsService {
     constructor(deviceRepository) {
         this.deviceRepository = deviceRepository;
     }
-    async findAll() {
+    async findAll(companyId) {
+        const where = companyId ? { company_id: companyId } : {};
         return await this.deviceRepository.find({
+            where,
             order: { name: 'ASC' },
         });
     }
-    async findOne(id) {
-        const device = await this.deviceRepository.findOne({
-            where: { id: id },
-        });
+    async findOne(id, companyId) {
+        const where = { id };
+        if (companyId) {
+            where.company_id = companyId;
+        }
+        const device = await this.deviceRepository.findOne({ where });
         if (!device) {
             throw new common_1.NotFoundException('Terminal device not found');
         }
         return device;
     }
-    async create(deviceData) {
-        const device = this.deviceRepository.create(deviceData);
+    async create(deviceData, companyId) {
+        const device = this.deviceRepository.create({
+            ...deviceData,
+            company_id: companyId,
+        });
         return await this.deviceRepository.save(device);
     }
-    async updateStatus(deviceId, status) {
-        const device = await this.findOne(deviceId);
+    async updateStatus(deviceId, status, companyId) {
+        const device = await this.findOne(deviceId, companyId);
         device.status = status;
         device.last_seen_at = new Date();
         return await this.deviceRepository.save(device);

@@ -12,6 +12,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.TerminalDevice = exports.DeviceStatus = void 0;
 const typeorm_1 = require("typeorm");
 const attendance_event_entity_1 = require("../../attendance/entities/attendance-event.entity");
+const company_entity_1 = require("../../company/entities/company.entity");
 var DeviceStatus;
 (function (DeviceStatus) {
     DeviceStatus["ONLINE"] = "ONLINE";
@@ -25,6 +26,10 @@ __decorate([
     (0, typeorm_1.PrimaryGeneratedColumn)('uuid'),
     __metadata("design:type", String)
 ], TerminalDevice.prototype, "id", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ type: 'uuid' }),
+    __metadata("design:type", String)
+], TerminalDevice.prototype, "company_id", void 0);
 __decorate([
     (0, typeorm_1.Column)(),
     __metadata("design:type", String)
@@ -42,7 +47,7 @@ __decorate([
     __metadata("design:type", Date)
 ], TerminalDevice.prototype, "last_seen_at", void 0);
 __decorate([
-    (0, typeorm_1.Column)(),
+    (0, typeorm_1.Column)({ nullable: true }),
     __metadata("design:type", String)
 ], TerminalDevice.prototype, "vendor", void 0);
 __decorate([
@@ -57,6 +62,11 @@ __decorate([
     (0, typeorm_1.UpdateDateColumn)(),
     __metadata("design:type", Date)
 ], TerminalDevice.prototype, "updated_at", void 0);
+__decorate([
+    (0, typeorm_1.ManyToOne)(() => company_entity_1.Company),
+    (0, typeorm_1.JoinColumn)({ name: 'company_id' }),
+    __metadata("design:type", company_entity_1.Company)
+], TerminalDevice.prototype, "company", void 0);
 __decorate([
     (0, typeorm_1.OneToMany)(() => attendance_event_entity_1.AttendanceEvent, (event) => event.device),
     __metadata("design:type", Array)
