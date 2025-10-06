@@ -5,12 +5,21 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
   OneToMany,
+  ManyToOne,
+  JoinColumn,
 } from 'typeorm';
 import { UserScheduleAssignment } from './employee-schedule-assignment.entity';
+import { IsBoolean, IsString } from 'class-validator';
+import { Company } from '@/modules/company/entities/company.entity';
 
-export interface BreakTime {
+export class BreakTime {
+  @IsString()
   start_time: string;
+
+  @IsString()
   end_time: string;
+
+  @IsBoolean()
   paid: boolean;
 }
 
@@ -18,6 +27,9 @@ export interface BreakTime {
 export class ScheduleTemplate {
   @PrimaryGeneratedColumn('uuid')
   template_id: string;
+
+  @Column({ type: 'uuid', nullable: true })
+  company_id: string;
 
   @Column()
   name: string;
@@ -31,7 +43,7 @@ export class ScheduleTemplate {
   @Column({ type: 'time' })
   end_time: string;
 
-  @Column({ type: 'json', nullable: true })
+  @Column({ type: 'jsonb', nullable: true })
   breaks?: BreakTime[];
 
   @Column({ type: 'integer', default: 5 })
@@ -54,4 +66,10 @@ export class ScheduleTemplate {
     (assignment) => assignment.default_template,
   )
   assignments: UserScheduleAssignment[];
+
+  @ManyToOne(() => Company, (company) => company.schedule_templates, {
+    onDelete: 'CASCADE',
+  })
+  @JoinColumn({ name: 'company_id' })
+  company: Company;
 }

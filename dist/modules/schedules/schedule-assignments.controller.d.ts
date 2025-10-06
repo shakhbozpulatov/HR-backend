@@ -3,7 +3,7 @@ import { CreateAssignmentDto } from './dto/create-assignment.dto';
 export declare class ScheduleAssignmentsController {
     private readonly assignmentsService;
     constructor(assignmentsService: ScheduleAssignmentsService);
-    createAssignment(createAssignmentDto: CreateAssignmentDto): Promise<import("./entities/employee-schedule-assignment.entity").UserScheduleAssignment>;
-    getEmployeeAssignments(employeeId: string): Promise<import("./entities/employee-schedule-assignment.entity").UserScheduleAssignment[]>;
-    addException(assignmentId: string, exception: any): Promise<import("./entities/employee-schedule-assignment.entity").UserScheduleAssignment>;
+    createAssignment(createAssignmentDto: CreateAssignmentDto, req: any): Promise<import("./entities/employee-schedule-assignment.entity").UserScheduleAssignment>;
+    getEmployeeAssignments(userId: string, req: any): Promise<import("./entities/employee-schedule-assignment.entity").UserScheduleAssignment[]>;
+    addException(assignmentId: string, exception: any, req: any): Promise<import("./entities/employee-schedule-assignment.entity").UserScheduleAssignment>;
 }

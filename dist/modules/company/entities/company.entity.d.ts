@@ -1,6 +1,7 @@
 import { User } from '@/modules/users/entities/user.entity';
 import { Holiday } from '@/modules/holidays/entities/holiday.entity';
 import { Department } from './department.entity';
+import { ScheduleTemplate } from '@/modules/schedules/entities/schedule-template.entity';
 export declare enum CompanyStatus {
     ACTIVE = "ACTIVE",
     INACTIVE = "INACTIVE",
@@ -50,4 +51,5 @@ export declare class Company {
     users: User[];
     holidays: Holiday[];
     departments: Department[];
+    schedule_templates: ScheduleTemplate[];
 }

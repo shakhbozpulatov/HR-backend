@@ -35,17 +35,17 @@ let AttendanceProcessorService = class AttendanceProcessorService {
         this.roundingMinutes = this.configService.get('ROUNDING_MINUTES', 5);
         this.overtimeThreshold = this.configService.get('OVERTIME_THRESHOLD_MINUTES', 15);
     }
-    async processEmployeeDay(employeeId, date) {
+    async processEmployeeDay(userId, date) {
         const dateStr = moment(date).format('YYYY-MM-DD');
-        const schedule = await this.scheduleService.getEffectiveSchedule(employeeId, date);
+        const schedule = await this.scheduleService.getEffectiveSchedule(userId, date);
         const isHoliday = await this.holidaysService.isHoliday(date, 'global');
-        const events = await this.getEventsForDay(employeeId, date);
+        const events = await this.getEventsForDay(userId, date);
         let record = await this.recordRepository.findOne({
-            where: { user_id: employeeId, date: dateStr },
+            where: { user_id: userId, date: dateStr },
         });
         if (!record) {
             record = this.recordRepository.create({
-                user_id: employeeId,
+                user_id: userId,
                 date: dateStr,
             });
         }

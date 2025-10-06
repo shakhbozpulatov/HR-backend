@@ -1,11 +1,12 @@
 import {
-  Controller,
-  Get,
-  Post,
   Body,
-  Patch,
-  Param,
+  Controller,
   Delete,
+  Get,
+  Param,
+  Patch,
+  Post,
+  Req,
   UseGuards,
 } from '@nestjs/common';
 import { ScheduleTemplatesService } from './schedule-templates.service';
@@ -21,36 +22,67 @@ export class ScheduleTemplatesController {
   constructor(private readonly templatesService: ScheduleTemplatesService) {}
 
   @Post()
-  @Roles(UserRole.ADMIN, UserRole.HR_MANAGER)
-  async create(@Body() createTemplateDto: CreateScheduleTemplateDto) {
-    return await this.templatesService.create(createTemplateDto);
+  @Roles(
+    UserRole.SUPER_ADMIN,
+    UserRole.COMPANY_OWNER,
+    UserRole.ADMIN,
+    UserRole.HR_MANAGER,
+  )
+  async create(
+    @Body() createTemplateDto: CreateScheduleTemplateDto,
+    @Req() req,
+  ) {
+    return await this.templatesService.create(createTemplateDto, req.user);
   }
 
   @Get()
-  @Roles(UserRole.ADMIN, UserRole.HR_MANAGER, UserRole.MANAGER)
-  async findAll() {
-    return await this.templatesService.findAll();
+  @Roles(
+    UserRole.SUPER_ADMIN,
+    UserRole.COMPANY_OWNER,
+    UserRole.ADMIN,
+    UserRole.HR_MANAGER,
+    UserRole.MANAGER,
+  )
+  async findAll(@Req() req) {
+    return await this.templatesService.findAll(req.user);
   }
 
   @Get(':id')
-  @Roles(UserRole.ADMIN, UserRole.HR_MANAGER, UserRole.MANAGER)
-  async findOne(@Param('id') id: string) {
-    return await this.templatesService.findOne(id);
+  @Roles(
+    UserRole.SUPER_ADMIN,
+    UserRole.COMPANY_OWNER,
+    UserRole.ADMIN,
+    UserRole.HR_MANAGER,
+    UserRole.MANAGER,
+  )
+  async findOne(@Param('id') id: string, @Req() req) {
+    return await this.templatesService.findOne(id, req.user);
   }
 
   @Patch(':id')
-  @Roles(UserRole.ADMIN, UserRole.HR_MANAGER)
+  @Roles(
+    UserRole.SUPER_ADMIN,
+    UserRole.COMPANY_OWNER,
+    UserRole.ADMIN,
+    UserRole.HR_MANAGER,
+  )
   async update(
     @Param('id') id: string,
     @Body() updateTemplateDto: Partial<CreateScheduleTemplateDto>,
+    @Req() req,
   ) {
-    return await this.templatesService.update(id, updateTemplateDto);
+    return await this.templatesService.update(id, updateTemplateDto, req.user);
   }
 
   @Delete(':id')
-  @Roles(UserRole.ADMIN, UserRole.HR_MANAGER)
-  async remove(@Param('id') id: string) {
-    await this.templatesService.remove(id);
+  @Roles(
+    UserRole.SUPER_ADMIN,
+    UserRole.COMPANY_OWNER,
+    UserRole.ADMIN,
+    UserRole.HR_MANAGER,
+  )
+  async remove(@Param('id') id: string, @Req() req) {
+    await this.templatesService.remove(id, req.user);
     return { message: 'Template deleted successfully' };
   }
 }

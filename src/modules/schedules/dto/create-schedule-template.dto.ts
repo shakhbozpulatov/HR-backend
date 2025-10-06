@@ -1,5 +1,13 @@
-import { IsString, IsArray, IsOptional, IsNumber, Min } from 'class-validator';
+import {
+  IsString,
+  IsArray,
+  IsOptional,
+  IsNumber,
+  Min,
+  ValidateNested,
+} from 'class-validator';
 import { BreakTime } from '../entities/schedule-template.entity';
+import { Type } from 'class-transformer';
 
 export class CreateScheduleTemplateDto {
   @IsString()
@@ -16,6 +24,8 @@ export class CreateScheduleTemplateDto {
 
   @IsOptional()
   @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => BreakTime) // 👈 shu qatordan keyin breaks ishlaydi
   breaks?: BreakTime[];
 
   @IsOptional()

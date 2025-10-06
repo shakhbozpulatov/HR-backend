@@ -17,35 +17,51 @@ const common_1 = require("@nestjs/common");
 const typeorm_1 = require("@nestjs/typeorm");
 const typeorm_2 = require("typeorm");
 const schedule_template_entity_1 = require("./entities/schedule-template.entity");
+const user_entity_1 = require("../users/entities/user.entity");
 let ScheduleTemplatesService = class ScheduleTemplatesService {
     constructor(templateRepository) {
         this.templateRepository = templateRepository;
     }
-    async create(createTemplateDto) {
-        const template = this.templateRepository.create(createTemplateDto);
+    async create(createTemplateDto, user) {
+        if (!user.company_id && user.role !== user_entity_1.UserRole.SUPER_ADMIN) {
+            throw new common_1.BadRequestException('User is not linked to any company');
+        }
+        const template = this.templateRepository.create({
+            ...createTemplateDto,
+            company_id: user.company_id,
+        });
         return await this.templateRepository.save(template);
     }
-    async findAll() {
+    async findAll(user) {
+        if (user.role === user_entity_1.UserRole.SUPER_ADMIN) {
+            return await this.templateRepository.find({
+                order: { name: 'ASC' },
+            });
+        }
         return await this.templateRepository.find({
+            where: { company_id: user.company_id },
             order: { name: 'ASC' },
         });
     }
-    async findOne(id) {
+    async findOne(id, company) {
+        const whereClause = company.role === user_entity_1.UserRole.SUPER_ADMIN
+            ? { template_id: id }
+            : { template_id: id, company_id: company.company_id };
         const template = await this.templateRepository.findOne({
-            where: { template_id: id },
+            where: whereClause,
         });
         if (!template) {
             throw new common_1.NotFoundException('Schedule template not found');
         }
         return template;
     }
-    async update(id, updateTemplateDto) {
-        const template = await this.findOne(id);
+    async update(id, updateTemplateDto, company) {
+        const template = await this.findOne(id, company);
         Object.assign(template, updateTemplateDto);
         return await this.templateRepository.save(template);
     }
-    async remove(id) {
-        const template = await this.findOne(id);
+    async remove(id, company) {
+        const template = await this.findOne(id, company);
         await this.templateRepository.remove(template);
     }
 };

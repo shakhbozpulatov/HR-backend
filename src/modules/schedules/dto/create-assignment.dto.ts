@@ -1,5 +1,12 @@
-import { IsString, IsDateString, IsOptional, IsArray } from 'class-validator';
+import {
+  IsString,
+  IsDateString,
+  IsOptional,
+  IsArray,
+  IsDate,
+} from 'class-validator';
 import { ScheduleException } from '../entities/employee-schedule-assignment.entity';
+import { Type } from 'class-transformer';
 
 export class CreateAssignmentDto {
   @IsString()
@@ -8,12 +15,14 @@ export class CreateAssignmentDto {
   @IsString()
   default_template_id: string;
 
-  @IsDateString()
-  effective_from: string;
+  @IsDate()
+  @Type(() => Date)
+  effective_from: Date;
 
   @IsOptional()
-  @IsDateString()
-  effective_to?: string;
+  @Type(() => Date)
+  @IsDate()
+  effective_to?: Date;
 
   @IsOptional()
   @IsArray()

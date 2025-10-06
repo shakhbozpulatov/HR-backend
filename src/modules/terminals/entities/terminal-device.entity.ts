@@ -17,7 +17,7 @@ export enum DeviceStatus {
 @Entity('terminal_devices')
 export class TerminalDevice {
   @PrimaryGeneratedColumn('uuid')
-  device_id: string;
+  id: string;
 
   @Column()
   name: string;

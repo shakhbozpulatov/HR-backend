@@ -17,27 +17,84 @@ const common_1 = require("@nestjs/common");
 const typeorm_1 = require("@nestjs/typeorm");
 const typeorm_2 = require("typeorm");
 const employee_schedule_assignment_entity_1 = require("./entities/employee-schedule-assignment.entity");
+const user_entity_1 = require("../users/entities/user.entity");
+const user_entity_2 = require("../users/entities/user.entity");
 let ScheduleAssignmentsService = class ScheduleAssignmentsService {
-    constructor(assignmentRepository) {
+    constructor(assignmentRepository, userRepository) {
         this.assignmentRepository = assignmentRepository;
+        this.userRepository = userRepository;
     }
-    async createAssignment(createAssignmentDto) {
-        const assignment = this.assignmentRepository.create(createAssignmentDto);
+    async createAssignment(createAssignmentDto, actor) {
+        const employee = await this.userRepository.findOne({
+            where: { id: createAssignmentDto.user_id },
+            select: ['id', 'company_id', 'first_name', 'last_name'],
+        });
+        if (!employee) {
+            throw new common_1.NotFoundException('Employee not found');
+        }
+        if (actor.role !== user_entity_2.UserRole.SUPER_ADMIN &&
+            employee.company_id !== actor.company_id) {
+            throw new common_1.ForbiddenException('You can only assign schedules to your own company employees');
+        }
+        const assignment = this.assignmentRepository.create({
+            ...createAssignmentDto,
+        });
         return await this.assignmentRepository.save(assignment);
     }
-    async findEmployeeAssignments(employeeId) {
+    async findEmployeeAssignments(userId, actor) {
+        const employee = await this.userRepository.findOne({
+            where: { id: userId },
+            select: ['id', 'company_id'],
+        });
+        if (!employee) {
+            throw new common_1.NotFoundException('Employee not found');
+        }
+        if (actor.role !== user_entity_2.UserRole.SUPER_ADMIN &&
+            employee.company_id !== actor.company_id) {
+            throw new common_1.ForbiddenException('You can only view your own company employees');
+        }
         return await this.assignmentRepository.find({
-            where: { user_id: employeeId },
+            where: { user_id: userId },
             relations: ['default_template'],
             order: { effective_from: 'DESC' },
         });
     }
-    async getEffectiveSchedule(employeeId, date) {
+    async addException(assignmentId, exception, actor) {
+        const assignment = await this.assignmentRepository.findOne({
+            where: { assignment_id: assignmentId },
+            relations: ['user'],
+        });
+        if (!assignment) {
+            throw new common_1.NotFoundException('Assignment not found');
+        }
+        if (actor.role !== user_entity_2.UserRole.SUPER_ADMIN &&
+            assignment.user?.company_id !== actor.company_id) {
+            throw new common_1.ForbiddenException('You can only edit your own company assignments');
+        }
+        if (!assignment.exceptions) {
+            assignment.exceptions = [];
+        }
+        assignment.exceptions.push(exception);
+        return await this.assignmentRepository.save(assignment);
+    }
+    async getEffectiveSchedule(userId, date, actor) {
+        const employee = await this.userRepository.findOne({
+            where: { id: userId },
+            select: ['id', 'company_id'],
+        });
+        if (!employee) {
+            throw new common_1.NotFoundException('Employee not found');
+        }
+        if (actor &&
+            actor.role !== user_entity_2.UserRole.SUPER_ADMIN &&
+            employee.company_id !== actor.company_id) {
+            throw new common_1.ForbiddenException('You can only view schedules of your own company employees');
+        }
         const assignment = await this.assignmentRepository.findOne({
             where: {
-                user_id: employeeId,
-                effective_from: { $lte: date },
-                effective_to: { $gte: date },
+                user_id: userId,
+                effective_from: (0, typeorm_2.LessThanOrEqual)(date),
+                effective_to: (0, typeorm_2.MoreThanOrEqual)(date),
             },
             relations: ['default_template'],
             order: { effective_from: 'DESC' },
@@ -53,29 +110,36 @@ let ScheduleAssignmentsService = class ScheduleAssignmentsService {
                 dateStr <= exc.end_date));
         if (exception) {
             if (exception.type === 'OFF') {
-                return null;
+                return {
+                    date: dateStr,
+                    status: 'OFF',
+                    message: 'Employee is off on this day',
+                };
+            }
+            if (exception.type === 'ALTERNATE_TEMPLATE' && exception.template_id) {
+                const altTemplate = await this.assignmentRepository.manager
+                    .getRepository('schedule_templates')
+                    .findOne({ where: { template_id: exception.template_id } });
+                return {
+                    date: dateStr,
+                    status: 'ALTERNATE',
+                    template: altTemplate,
+                };
             }
         }
-        return assignment.default_template;
-    }
-    async addException(assignmentId, exception) {
-        const assignment = await this.assignmentRepository.findOne({
-            where: { assignment_id: assignmentId },
-        });
-        if (!assignment) {
-            throw new common_1.NotFoundException('Assignment not found');
-        }
-        if (!assignment.exceptions) {
-            assignment.exceptions = [];
-        }
-        assignment.exceptions.push(exception);
-        return await this.assignmentRepository.save(assignment);
+        return {
+            date: dateStr,
+            status: 'DEFAULT',
+            template: assignment.default_template,
+        };
     }
 };
 exports.ScheduleAssignmentsService = ScheduleAssignmentsService;
 exports.ScheduleAssignmentsService = ScheduleAssignmentsService = __decorate([
     (0, common_1.Injectable)(),
     __param(0, (0, typeorm_1.InjectRepository)(employee_schedule_assignment_entity_1.UserScheduleAssignment)),
-    __metadata("design:paramtypes", [typeorm_2.Repository])
+    __param(1, (0, typeorm_1.InjectRepository)(user_entity_1.User)),
+    __metadata("design:paramtypes", [typeorm_2.Repository,
+        typeorm_2.Repository])
 ], ScheduleAssignmentsService);
 //# sourceMappingURL=schedule-assignments.service.js.map

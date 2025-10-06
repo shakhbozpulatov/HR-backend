@@ -24,40 +24,43 @@ let ScheduleAssignmentsController = class ScheduleAssignmentsController {
     constructor(assignmentsService) {
         this.assignmentsService = assignmentsService;
     }
-    async createAssignment(createAssignmentDto) {
-        return await this.assignmentsService.createAssignment(createAssignmentDto);
+    async createAssignment(createAssignmentDto, req) {
+        return await this.assignmentsService.createAssignment(createAssignmentDto, req.user);
     }
-    async getEmployeeAssignments(employeeId) {
-        return await this.assignmentsService.findEmployeeAssignments(employeeId);
+    async getEmployeeAssignments(userId, req) {
+        return await this.assignmentsService.findEmployeeAssignments(userId, req.user);
     }
-    async addException(assignmentId, exception) {
-        return await this.assignmentsService.addException(assignmentId, exception);
+    async addException(assignmentId, exception, req) {
+        return await this.assignmentsService.addException(assignmentId, exception, req.user);
     }
 };
 exports.ScheduleAssignmentsController = ScheduleAssignmentsController;
 __decorate([
     (0, common_1.Post)(),
-    (0, roles_decorator_1.Roles)(user_entity_1.UserRole.ADMIN, user_entity_1.UserRole.HR_MANAGER),
+    (0, roles_decorator_1.Roles)(user_entity_1.UserRole.SUPER_ADMIN, user_entity_1.UserRole.COMPANY_OWNER, user_entity_1.UserRole.ADMIN, user_entity_1.UserRole.HR_MANAGER),
     __param(0, (0, common_1.Body)()),
+    __param(1, (0, common_1.Req)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [create_assignment_dto_1.CreateAssignmentDto]),
+    __metadata("design:paramtypes", [create_assignment_dto_1.CreateAssignmentDto, Object]),
     __metadata("design:returntype", Promise)
 ], ScheduleAssignmentsController.prototype, "createAssignment", null);
 __decorate([
-    (0, common_1.Get)('employee/:employeeId'),
-    (0, roles_decorator_1.Roles)(user_entity_1.UserRole.ADMIN, user_entity_1.UserRole.HR_MANAGER, user_entity_1.UserRole.MANAGER),
-    __param(0, (0, common_1.Param)('employeeId')),
+    (0, common_1.Get)('user/:userId'),
+    (0, roles_decorator_1.Roles)(user_entity_1.UserRole.SUPER_ADMIN, user_entity_1.UserRole.COMPANY_OWNER, user_entity_1.UserRole.ADMIN, user_entity_1.UserRole.HR_MANAGER, user_entity_1.UserRole.MANAGER),
+    __param(0, (0, common_1.Param)('userId')),
+    __param(1, (0, common_1.Req)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String]),
+    __metadata("design:paramtypes", [String, Object]),
     __metadata("design:returntype", Promise)
 ], ScheduleAssignmentsController.prototype, "getEmployeeAssignments", null);
 __decorate([
     (0, common_1.Post)(':assignmentId/exceptions'),
-    (0, roles_decorator_1.Roles)(user_entity_1.UserRole.ADMIN, user_entity_1.UserRole.HR_MANAGER),
+    (0, roles_decorator_1.Roles)(user_entity_1.UserRole.SUPER_ADMIN, user_entity_1.UserRole.COMPANY_OWNER, user_entity_1.UserRole.ADMIN, user_entity_1.UserRole.HR_MANAGER),
     __param(0, (0, common_1.Param)('assignmentId')),
     __param(1, (0, common_1.Body)()),
+    __param(2, (0, common_1.Req)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, Object]),
+    __metadata("design:paramtypes", [String, Object, Object]),
     __metadata("design:returntype", Promise)
 ], ScheduleAssignmentsController.prototype, "addException", null);
 exports.ScheduleAssignmentsController = ScheduleAssignmentsController = __decorate([

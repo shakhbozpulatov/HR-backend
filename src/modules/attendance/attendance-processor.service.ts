@@ -39,14 +39,14 @@ export class AttendanceProcessorService {
   }
 
   async processEmployeeDay(
-    employeeId: string,
+    userId: string,
     date: Date,
   ): Promise<AttendanceRecord> {
     const dateStr = moment(date).format('YYYY-MM-DD');
 
     // Get effective schedule for the date
     const schedule = await this.scheduleService.getEffectiveSchedule(
-      employeeId,
+      userId,
       date,
     );
 
@@ -54,16 +54,16 @@ export class AttendanceProcessorService {
     const isHoliday = await this.holidaysService.isHoliday(date, 'global'); // TODO: use employee location
 
     // Get events for the day
-    const events = await this.getEventsForDay(employeeId, date);
+    const events = await this.getEventsForDay(userId, date);
 
     // Find or create attendance record
     let record = await this.recordRepository.findOne({
-      where: { user_id: employeeId, date: dateStr as any },
+      where: { user_id: userId, date: dateStr as any },
     });
 
     if (!record) {
       record = this.recordRepository.create({
-        user_id: employeeId,
+        user_id: userId,
         date: dateStr as any,
       });
     }

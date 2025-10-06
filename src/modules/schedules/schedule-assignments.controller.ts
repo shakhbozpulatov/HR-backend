@@ -1,4 +1,12 @@
-import { Controller, Get, Post, Body, Param, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Post,
+  UseGuards,
+  Req,
+} from '@nestjs/common';
 import { ScheduleAssignmentsService } from './schedule-assignments.service';
 import { CreateAssignmentDto } from './dto/create-assignment.dto';
 import { AuthGuard } from '@/common/guards/auth.guard';
@@ -14,23 +22,53 @@ export class ScheduleAssignmentsController {
   ) {}
 
   @Post()
-  @Roles(UserRole.ADMIN, UserRole.HR_MANAGER)
-  async createAssignment(@Body() createAssignmentDto: CreateAssignmentDto) {
-    return await this.assignmentsService.createAssignment(createAssignmentDto);
+  @Roles(
+    UserRole.SUPER_ADMIN,
+    UserRole.COMPANY_OWNER,
+    UserRole.ADMIN,
+    UserRole.HR_MANAGER,
+  )
+  async createAssignment(
+    @Body() createAssignmentDto: CreateAssignmentDto,
+    @Req() req,
+  ) {
+    return await this.assignmentsService.createAssignment(
+      createAssignmentDto,
+      req.user,
+    );
   }
 
-  @Get('employee/:employeeId')
-  @Roles(UserRole.ADMIN, UserRole.HR_MANAGER, UserRole.MANAGER)
-  async getEmployeeAssignments(@Param('employeeId') employeeId: string) {
-    return await this.assignmentsService.findEmployeeAssignments(employeeId);
+  @Get('user/:userId')
+  @Roles(
+    UserRole.SUPER_ADMIN,
+    UserRole.COMPANY_OWNER,
+    UserRole.ADMIN,
+    UserRole.HR_MANAGER,
+    UserRole.MANAGER,
+  )
+  async getEmployeeAssignments(@Param('userId') userId: string, @Req() req) {
+    return await this.assignmentsService.findEmployeeAssignments(
+      userId,
+      req.user,
+    );
   }
 
   @Post(':assignmentId/exceptions')
-  @Roles(UserRole.ADMIN, UserRole.HR_MANAGER)
+  @Roles(
+    UserRole.SUPER_ADMIN,
+    UserRole.COMPANY_OWNER,
+    UserRole.ADMIN,
+    UserRole.HR_MANAGER,
+  )
   async addException(
     @Param('assignmentId') assignmentId: string,
     @Body() exception: any,
+    @Req() req,
   ) {
-    return await this.assignmentsService.addException(assignmentId, exception);
+    return await this.assignmentsService.addException(
+      assignmentId,
+      exception,
+      req.user,
+    );
   }
 }

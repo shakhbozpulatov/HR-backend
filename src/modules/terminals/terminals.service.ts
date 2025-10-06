@@ -21,7 +21,7 @@ export class TerminalsService {
 
   async findOne(id: string): Promise<TerminalDevice> {
     const device = await this.deviceRepository.findOne({
-      where: { device_id: id },
+      where: { id: id },
     });
 
     if (!device) {

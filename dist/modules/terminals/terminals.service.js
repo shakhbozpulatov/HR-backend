@@ -28,7 +28,7 @@ let TerminalsService = class TerminalsService {
     }
     async findOne(id) {
         const device = await this.deviceRepository.findOne({
-            where: { device_id: id },
+            where: { id: id },
         });
         if (!device) {
             throw new common_1.NotFoundException('Terminal device not found');

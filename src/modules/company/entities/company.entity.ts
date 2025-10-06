@@ -10,6 +10,7 @@ import {
 import { User } from '@/modules/users/entities/user.entity';
 import { Holiday } from '@/modules/holidays/entities/holiday.entity';
 import { Department } from './department.entity';
+import { ScheduleTemplate } from '@/modules/schedules/entities/schedule-template.entity';
 
 export enum CompanyStatus {
   ACTIVE = 'ACTIVE',
@@ -115,4 +116,7 @@ export class Company {
 
   @OneToMany(() => Department, (department) => department.company)
   departments: Department[];
+
+  @OneToMany(() => ScheduleTemplate, (template) => template.company)
+  schedule_templates: ScheduleTemplate[];
 }

@@ -16,7 +16,7 @@ export declare class AttendanceProcessorService {
     private readonly roundingMinutes;
     private readonly overtimeThreshold;
     constructor(eventRepository: Repository<AttendanceEvent>, recordRepository: Repository<AttendanceRecord>, scheduleService: ScheduleAssignmentsService, holidaysService: HolidaysService, configService: ConfigService);
-    processEmployeeDay(employeeId: string, date: Date): Promise<AttendanceRecord>;
+    processEmployeeDay(userId: string, date: Date): Promise<AttendanceRecord>;
     private getEventsForDay;
     private pairEvents;
     private calculateWorkTime;

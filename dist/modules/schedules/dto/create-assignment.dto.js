@@ -11,6 +11,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.CreateAssignmentDto = void 0;
 const class_validator_1 = require("class-validator");
+const class_transformer_1 = require("class-transformer");
 class CreateAssignmentDto {
 }
 exports.CreateAssignmentDto = CreateAssignmentDto;
@@ -23,13 +24,15 @@ __decorate([
     __metadata("design:type", String)
 ], CreateAssignmentDto.prototype, "default_template_id", void 0);
 __decorate([
-    (0, class_validator_1.IsDateString)(),
-    __metadata("design:type", String)
+    (0, class_validator_1.IsDate)(),
+    (0, class_transformer_1.Type)(() => Date),
+    __metadata("design:type", Date)
 ], CreateAssignmentDto.prototype, "effective_from", void 0);
 __decorate([
     (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.IsDateString)(),
-    __metadata("design:type", String)
+    (0, class_transformer_1.Type)(() => Date),
+    (0, class_validator_1.IsDate)(),
+    __metadata("design:type", Date)
 ], CreateAssignmentDto.prototype, "effective_to", void 0);
 __decorate([
     (0, class_validator_1.IsOptional)(),

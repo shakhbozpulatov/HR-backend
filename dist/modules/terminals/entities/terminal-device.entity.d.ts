@@ -5,7 +5,7 @@ export declare enum DeviceStatus {
     MAINTENANCE = "MAINTENANCE"
 }
 export declare class TerminalDevice {
-    device_id: string;
+    id: string;
     name: string;
     location?: string;
     status: DeviceStatus;

@@ -14,6 +14,7 @@ const typeorm_1 = require("typeorm");
 const user_entity_1 = require("../../users/entities/user.entity");
 const holiday_entity_1 = require("../../holidays/entities/holiday.entity");
 const department_entity_1 = require("./department.entity");
+const schedule_template_entity_1 = require("../../schedules/entities/schedule-template.entity");
 var CompanyStatus;
 (function (CompanyStatus) {
     CompanyStatus["ACTIVE"] = "ACTIVE";
@@ -126,6 +127,10 @@ __decorate([
     (0, typeorm_1.OneToMany)(() => department_entity_1.Department, (department) => department.company),
     __metadata("design:type", Array)
 ], Company.prototype, "departments", void 0);
+__decorate([
+    (0, typeorm_1.OneToMany)(() => schedule_template_entity_1.ScheduleTemplate, (template) => template.company),
+    __metadata("design:type", Array)
+], Company.prototype, "schedule_templates", void 0);
 exports.Company = Company = __decorate([
     (0, typeorm_1.Entity)('companies'),
     (0, typeorm_1.Index)(['code'], { unique: true }),
