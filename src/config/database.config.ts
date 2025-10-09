@@ -13,7 +13,7 @@ export class DatabaseConfig implements TypeOrmOptionsFactory {
       host: this.configService.get('DB_HOST', 'localhost'),
       port: this.configService.get('DB_PORT', 5432),
       username: this.configService.get('DB_USERNAME', 'postgres'),
-      password: this.configService.get('DB_PASSWORD', 'password'),
+      password: this.configService.get('DB_PASSWORD', 'sh1207200'),
       database: this.configService.get('DB_NAME', 'hr_backend'),
       entities: [__dirname + '/../**/*.entity{.ts,.js}'],
       migrations: [__dirname + '/../database/migrations/*{.ts,.js}'],
