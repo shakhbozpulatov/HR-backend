@@ -11,9 +11,6 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 var AttendanceRecordsService_1;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.AttendanceRecordsService = void 0;
@@ -21,7 +18,7 @@ const common_1 = require("@nestjs/common");
 const typeorm_1 = require("@nestjs/typeorm");
 const typeorm_2 = require("typeorm");
 const bull_1 = require("@nestjs/bull");
-const moment_timezone_1 = __importDefault(require("moment-timezone"));
+const moment_timezone_1 = require("moment-timezone");
 const uuid_1 = require("uuid");
 const attendance_1 = require("..");
 let AttendanceRecordsService = AttendanceRecordsService_1 = class AttendanceRecordsService {

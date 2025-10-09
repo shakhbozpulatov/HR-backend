@@ -11,9 +11,6 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 var AttendanceProcessorService_1;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.AttendanceProcessorService = void 0;
@@ -21,7 +18,7 @@ const common_1 = require("@nestjs/common");
 const typeorm_1 = require("@nestjs/typeorm");
 const typeorm_2 = require("typeorm");
 const config_1 = require("@nestjs/config");
-const moment_timezone_1 = __importDefault(require("moment-timezone"));
+const moment_timezone_1 = require("moment-timezone");
 const attendance_1 = require("..");
 const schedule_assignments_service_1 = require("../../schedules/schedule-assignments.service");
 const holidays_service_1 = require("../../holidays/holidays.service");

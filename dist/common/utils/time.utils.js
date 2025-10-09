@@ -5,13 +5,10 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
     else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
     return c > 3 && r && Object.defineProperty(target, key, r), r;
 };
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.TimeUtils = void 0;
 const common_1 = require("@nestjs/common");
-const moment_timezone_1 = __importDefault(require("moment-timezone"));
+const moment_timezone_1 = require("moment-timezone");
 let TimeUtils = class TimeUtils {
     parseTimeString(timeStr, timezone = 'Asia/Tashkent') {
         return moment_timezone_1.default.tz(timeStr, 'HH:mm', timezone);
