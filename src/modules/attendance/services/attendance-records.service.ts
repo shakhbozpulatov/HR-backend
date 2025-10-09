@@ -8,7 +8,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, Between, In } from 'typeorm';
 import { InjectQueue } from '@nestjs/bull';
 import { Queue } from 'bull';
-import * as moment from 'moment-timezone';
+import moment from 'moment-timezone';
 import { v4 as uuidv4 } from 'uuid';
 import {
   Approval,

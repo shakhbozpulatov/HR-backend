@@ -1,6 +1,5 @@
 {
   "name": "hr-backend",
-  "type": "module",
   "version": "1.0.0",
   "description": "HR Back-Office System Backend",
   "author": "HR Team",

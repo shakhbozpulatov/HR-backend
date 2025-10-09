@@ -2,7 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, Between, DataSource } from 'typeorm';
 import { ConfigService } from '@nestjs/config';
-import * as moment from 'moment-timezone';
+import moment from 'moment-timezone';
 import {
   AttendanceEvent,
   AttendanceProcessingLog,

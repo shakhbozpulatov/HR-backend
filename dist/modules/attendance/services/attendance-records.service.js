@@ -11,6 +11,9 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 var AttendanceRecordsService_1;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.AttendanceRecordsService = void 0;
@@ -18,7 +21,7 @@ const common_1 = require("@nestjs/common");
 const typeorm_1 = require("@nestjs/typeorm");
 const typeorm_2 = require("typeorm");
 const bull_1 = require("@nestjs/bull");
-const moment = require("moment-timezone");
+const moment_timezone_1 = __importDefault(require("moment-timezone"));
 const uuid_1 = require("uuid");
 const attendance_1 = require("..");
 let AttendanceRecordsService = AttendanceRecordsService_1 = class AttendanceRecordsService {
@@ -76,7 +79,7 @@ let AttendanceRecordsService = AttendanceRecordsService_1 = class AttendanceReco
         };
     }
     async findOne(userId, date) {
-        const dateStr = moment(date).format('YYYY-MM-DD');
+        const dateStr = (0, moment_timezone_1.default)(date).format('YYYY-MM-DD');
         const record = await this.recordRepository.findOne({
             where: { user_id: userId, date: dateStr },
             relations: ['user'],
@@ -107,7 +110,7 @@ let AttendanceRecordsService = AttendanceRecordsService_1 = class AttendanceReco
         record.manual_adjustments.push(adjustment);
         record.requires_approval = true;
         const saved = await this.recordRepository.save(record);
-        this.logger.log(`Manual adjustment created for user ${userId} on ${moment(date).format('YYYY-MM-DD')} by ${actorId}`);
+        this.logger.log(`Manual adjustment created for user ${userId} on ${(0, moment_timezone_1.default)(date).format('YYYY-MM-DD')} by ${actorId}`);
         return saved;
     }
     captureBeforeValue(record, adjustmentDto) {
@@ -147,13 +150,13 @@ let AttendanceRecordsService = AttendanceRecordsService_1 = class AttendanceReco
         switch (adjustmentDto.type) {
             case 'CLOCK_TIME_EDIT':
                 if (adjustmentDto.clock_in_time) {
-                    record.first_clock_in = moment(adjustmentDto.clock_in_time).format('HH:mm:ss');
+                    record.first_clock_in = (0, moment_timezone_1.default)(adjustmentDto.clock_in_time).format('HH:mm:ss');
                 }
                 if (adjustmentDto.clock_out_time) {
-                    record.last_clock_out = moment(adjustmentDto.clock_out_time).format('HH:mm:ss');
+                    record.last_clock_out = (0, moment_timezone_1.default)(adjustmentDto.clock_out_time).format('HH:mm:ss');
                 }
                 if (adjustmentDto.clock_in_time && adjustmentDto.clock_out_time) {
-                    const minutes = moment(adjustmentDto.clock_out_time).diff(moment(adjustmentDto.clock_in_time), 'minutes');
+                    const minutes = (0, moment_timezone_1.default)(adjustmentDto.clock_out_time).diff((0, moment_timezone_1.default)(adjustmentDto.clock_in_time), 'minutes');
                     record.worked_minutes = Math.max(0, minutes);
                 }
                 break;
@@ -200,7 +203,7 @@ let AttendanceRecordsService = AttendanceRecordsService_1 = class AttendanceReco
         }
         record.requires_approval = false;
         const saved = await this.recordRepository.save(record);
-        this.logger.log(`Record approved for user ${userId} on ${moment(date).format('YYYY-MM-DD')} by ${actorId}`);
+        this.logger.log(`Record approved for user ${userId} on ${(0, moment_timezone_1.default)(date).format('YYYY-MM-DD')} by ${actorId}`);
         return saved;
     }
     async unlockRecord(userId, date, actorId) {
@@ -210,7 +213,7 @@ let AttendanceRecordsService = AttendanceRecordsService_1 = class AttendanceReco
         }
         record.is_locked = false;
         const saved = await this.recordRepository.save(record);
-        this.logger.log(`Record unlocked for user ${userId} on ${moment(date).format('YYYY-MM-DD')} by ${actorId}`);
+        this.logger.log(`Record unlocked for user ${userId} on ${(0, moment_timezone_1.default)(date).format('YYYY-MM-DD')} by ${actorId}`);
         return saved;
     }
     async reprocessRecord(userId, date) {
@@ -218,7 +221,7 @@ let AttendanceRecordsService = AttendanceRecordsService_1 = class AttendanceReco
         if (record.is_locked) {
             throw new common_1.BadRequestException('Cannot reprocess locked record');
         }
-        const dateStr = moment(date).format('YYYY-MM-DD');
+        const dateStr = (0, moment_timezone_1.default)(date).format('YYYY-MM-DD');
         await this.attendanceQueue.add('process-employee-day', {
             employeeId: userId,
             date: dateStr,
@@ -234,8 +237,8 @@ let AttendanceRecordsService = AttendanceRecordsService_1 = class AttendanceReco
         if (!from || !to) {
             throw new common_1.BadRequestException('Date range is required for timesheet');
         }
-        const startDate = moment(from);
-        const endDate = moment(to);
+        const startDate = (0, moment_timezone_1.default)(from);
+        const endDate = (0, moment_timezone_1.default)(to);
         const dates = [];
         const current = startDate.clone();
         while (current.isSameOrBefore(endDate)) {
@@ -257,7 +260,7 @@ let AttendanceRecordsService = AttendanceRecordsService_1 = class AttendanceReco
             if (!recordsMap.has(record.user_id)) {
                 recordsMap.set(record.user_id, new Map());
             }
-            const dateStr = moment(record.date).format('YYYY-MM-DD');
+            const dateStr = (0, moment_timezone_1.default)(record.date).format('YYYY-MM-DD');
             recordsMap.get(record.user_id).set(dateStr, record);
         }
         const users = Array.from(usersSet).map((userId) => {

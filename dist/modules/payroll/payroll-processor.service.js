@@ -11,6 +11,9 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.PayrollProcessorService = void 0;
 const common_1 = require("@nestjs/common");
@@ -21,7 +24,7 @@ const payroll_period_entity_1 = require("./entities/payroll-period.entity");
 const payroll_item_entity_1 = require("./entities/payroll-item.entity");
 const work_volume_entry_entity_1 = require("./entities/work-volume-entry.entity");
 const attendance_record_entity_1 = require("../attendance/entities/attendance-record.entity");
-const moment = require("moment");
+const moment_1 = __importDefault(require("moment"));
 const user_entity_1 = require("../users/entities/user.entity");
 let PayrollProcessorService = class PayrollProcessorService {
     constructor(periodRepository, itemRepository, attendanceRepository, volumeRepository, userRepository, configService) {
@@ -92,8 +95,8 @@ let PayrollProcessorService = class PayrollProcessorService {
             return;
         const scheduledRecords = records.filter((r) => r.scheduled_start && r.scheduled_end);
         const totalScheduledMinutes = scheduledRecords.reduce((sum, record) => {
-            const start = moment(record.scheduled_start, 'HH:mm');
-            const end = moment(record.scheduled_end, 'HH:mm');
+            const start = (0, moment_1.default)(record.scheduled_start, 'HH:mm');
+            const end = (0, moment_1.default)(record.scheduled_end, 'HH:mm');
             if (end.isBefore(start))
                 end.add(1, 'day');
             return sum + end.diff(start, 'minutes');
@@ -105,8 +108,8 @@ let PayrollProcessorService = class PayrollProcessorService {
             if (record.manual_adjustments?.some((adj) => adj.type === 'MARK_ABSENT_PAID')) {
                 return sum;
             }
-            const start = moment(record.scheduled_start, 'HH:mm');
-            const end = moment(record.scheduled_end, 'HH:mm');
+            const start = (0, moment_1.default)(record.scheduled_start, 'HH:mm');
+            const end = (0, moment_1.default)(record.scheduled_end, 'HH:mm');
             if (end.isBefore(start))
                 end.add(1, 'day');
             return sum + end.diff(start, 'minutes');

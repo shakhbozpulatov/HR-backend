@@ -1,15 +1,51 @@
 "use strict";
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
     if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
     else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
     return c > 3 && r && Object.defineProperty(target, key, r), r;
 };
+var __importStar = (this && this.__importStar) || (function () {
+    var ownKeys = function(o) {
+        ownKeys = Object.getOwnPropertyNames || function (o) {
+            var ar = [];
+            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
+            return ar;
+        };
+        return ownKeys(o);
+    };
+    return function (mod) {
+        if (mod && mod.__esModule) return mod;
+        var result = {};
+        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
+        __setModuleDefault(result, mod);
+        return result;
+    };
+})();
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
+};
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 var AttendanceEventsService_1;
 Object.defineProperty(exports, "__esModule", { value: true });
@@ -19,8 +55,8 @@ const typeorm_1 = require("@nestjs/typeorm");
 const typeorm_2 = require("typeorm");
 const config_1 = require("@nestjs/config");
 const bull_1 = require("@nestjs/bull");
-const crypto = require("crypto");
-const moment = require("moment-timezone");
+const crypto = __importStar(require("crypto"));
+const moment_timezone_1 = __importDefault(require("moment-timezone"));
 const attendance_1 = require("..");
 let AttendanceEventsService = AttendanceEventsService_1 = class AttendanceEventsService {
     constructor(eventRepository, mappingRepository, attendanceQueue, configService, dataSource) {
@@ -65,8 +101,8 @@ let AttendanceEventsService = AttendanceEventsService_1 = class AttendanceEvents
         }
         const timezone = eventData.timezone ||
             this.configService.get('DEFAULT_TIMEZONE', 'Asia/Tashkent');
-        const tsUtc = moment.utc(eventData.timestamp).toDate();
-        const tsLocal = moment.tz(eventData.timestamp, timezone).toDate();
+        const tsUtc = moment_timezone_1.default.utc(eventData.timestamp).toDate();
+        const tsLocal = moment_timezone_1.default.tz(eventData.timestamp, timezone).toDate();
         const queryRunner = this.dataSource.createQueryRunner();
         await queryRunner.connect();
         await queryRunner.startTransaction();
@@ -206,8 +242,8 @@ let AttendanceEventsService = AttendanceEventsService_1 = class AttendanceEvents
         })
             .orderBy('event.ts_local', 'ASC');
         if (date) {
-            const startOfDay = moment(date).startOf('day').toDate();
-            const endOfDay = moment(date).endOf('day').toDate();
+            const startOfDay = (0, moment_timezone_1.default)(date).startOf('day').toDate();
+            const endOfDay = (0, moment_timezone_1.default)(date).endOf('day').toDate();
             queryBuilder.andWhere('event.ts_local BETWEEN :start AND :end', {
                 start: startOfDay,
                 end: endOfDay,
@@ -220,7 +256,7 @@ let AttendanceEventsService = AttendanceEventsService_1 = class AttendanceEvents
                 where: {
                     user_id: userId,
                     event_type: attendance_1.EventType.CLOCK_OUT,
-                    ts_local: (0, typeorm_2.Between)(clockIn.ts_local, moment(clockIn.ts_local).add(24, 'hours').toDate()),
+                    ts_local: (0, typeorm_2.Between)(clockIn.ts_local, (0, moment_timezone_1.default)(clockIn.ts_local).add(24, 'hours').toDate()),
                 },
                 order: { ts_local: 'ASC' },
             });
@@ -242,7 +278,7 @@ let AttendanceEventsService = AttendanceEventsService_1 = class AttendanceEvents
         return crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(expectedSignature));
     }
     async queueEventProcessing(event) {
-        const dateStr = moment(event.ts_local).format('YYYY-MM-DD');
+        const dateStr = (0, moment_timezone_1.default)(event.ts_local).format('YYYY-MM-DD');
         await this.attendanceQueue.add('process-employee-day', {
             employeeId: event.user_id,
             date: dateStr,
@@ -307,7 +343,7 @@ let AttendanceEventsService = AttendanceEventsService_1 = class AttendanceEvents
                 }
             }
             if (resolveDto.reprocess_record) {
-                const dateStr = moment(event.ts_local).format('YYYY-MM-DD');
+                const dateStr = (0, moment_timezone_1.default)(event.ts_local).format('YYYY-MM-DD');
                 await this.attendanceQueue.add('process-employee-day', {
                     employeeId: resolveDto.user_id,
                     date: dateStr,

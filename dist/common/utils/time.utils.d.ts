@@ -1,4 +1,4 @@
-import * as moment from 'moment-timezone';
+import moment from 'moment-timezone';
 export declare class TimeUtils {
     parseTimeString(timeStr: string, timezone?: string): moment.Moment;
     convertToTimezone(date: Date, timezone?: string): moment.Moment;

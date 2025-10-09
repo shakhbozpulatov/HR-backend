@@ -11,6 +11,9 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 var AttendanceProcessorService_1;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.AttendanceProcessorService = void 0;
@@ -18,7 +21,7 @@ const common_1 = require("@nestjs/common");
 const typeorm_1 = require("@nestjs/typeorm");
 const typeorm_2 = require("typeorm");
 const config_1 = require("@nestjs/config");
-const moment = require("moment-timezone");
+const moment_timezone_1 = __importDefault(require("moment-timezone"));
 const attendance_1 = require("..");
 const schedule_assignments_service_1 = require("../../schedules/schedule-assignments.service");
 const holidays_service_1 = require("../../holidays/holidays.service");
@@ -42,7 +45,7 @@ let AttendanceProcessorService = AttendanceProcessorService_1 = class Attendance
     }
     async processEmployeeDay(userId, date, triggeredBy) {
         const startTime = Date.now();
-        const dateStr = moment(date).format('YYYY-MM-DD');
+        const dateStr = (0, moment_timezone_1.default)(date).format('YYYY-MM-DD');
         this.logger.log(`Processing attendance for user ${userId} on ${dateStr}`);
         const queryRunner = this.dataSource.createQueryRunner();
         await queryRunner.connect();
@@ -50,7 +53,7 @@ let AttendanceProcessorService = AttendanceProcessorService_1 = class Attendance
         try {
             const schedule = await this.scheduleService.getEffectiveSchedule(userId, date);
             const isHoliday = await this.holidaysService.isHoliday(date, 'global');
-            const dayOfWeek = moment(date).day();
+            const dayOfWeek = (0, moment_timezone_1.default)(date).day();
             const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
             const events = await this.getEventsForDay(userId, date);
             let record = await queryRunner.manager.findOne(attendance_1.AttendanceRecord, {
@@ -200,8 +203,8 @@ let AttendanceProcessorService = AttendanceProcessorService_1 = class Attendance
         }
     }
     async getEventsForDay(userId, date) {
-        const startOfDay = moment.tz(date, this.timezone).startOf('day').toDate();
-        const endOfDay = moment.tz(date, this.timezone).endOf('day').toDate();
+        const startOfDay = moment_timezone_1.default.tz(date, this.timezone).startOf('day').toDate();
+        const endOfDay = moment_timezone_1.default.tz(date, this.timezone).endOf('day').toDate();
         return await this.eventRepository.find({
             where: {
                 user_id: userId,
@@ -238,7 +241,7 @@ let AttendanceProcessorService = AttendanceProcessorService_1 = class Attendance
         let lastClockOut = null;
         for (const session of sessions) {
             if (session.clockOut) {
-                const sessionMinutes = moment(session.clockOut.ts_local).diff(moment(session.clockIn.ts_local), 'minutes');
+                const sessionMinutes = (0, moment_timezone_1.default)(session.clockOut.ts_local).diff((0, moment_timezone_1.default)(session.clockIn.ts_local), 'minutes');
                 totalWorkedMinutes += sessionMinutes;
                 const nightMins = this.calculateNightMinutes(session.clockIn.ts_local, session.clockOut.ts_local);
                 totalNightMinutes += nightMins;
@@ -261,14 +264,14 @@ let AttendanceProcessorService = AttendanceProcessorService_1 = class Attendance
             if (scheduledEndTime.isBefore(scheduledStartTime)) {
                 scheduledEndTime.add(1, 'day');
             }
-            const actualStartTime = moment(firstClockIn);
+            const actualStartTime = (0, moment_timezone_1.default)(firstClockIn);
             const graceStartTime = scheduledStartTime
                 .clone()
                 .add(this.graceInMinutes, 'minutes');
             if (actualStartTime.isAfter(graceStartTime)) {
                 lateMinutes = actualStartTime.diff(scheduledStartTime, 'minutes');
             }
-            const actualEndTime = moment(lastClockOut);
+            const actualEndTime = (0, moment_timezone_1.default)(lastClockOut);
             const graceEndTime = scheduledEndTime
                 .clone()
                 .subtract(this.graceOutMinutes, 'minutes');
@@ -292,8 +295,8 @@ let AttendanceProcessorService = AttendanceProcessorService_1 = class Attendance
     }
     calculateNightMinutes(startTime, endTime) {
         let nightMinutes = 0;
-        const current = moment(startTime);
-        const end = moment(endTime);
+        const current = (0, moment_timezone_1.default)(startTime);
+        const end = (0, moment_timezone_1.default)(endTime);
         while (current.isBefore(end)) {
             const hour = current.hour();
             if (hour >= this.nightShiftStart || hour < this.nightShiftEnd) {
@@ -309,7 +312,7 @@ let AttendanceProcessorService = AttendanceProcessorService_1 = class Attendance
     }
     parseTimeToMoment(timeStr, referenceDate) {
         const [hours, minutes] = timeStr.split(':').map(Number);
-        return moment(referenceDate)
+        return (0, moment_timezone_1.default)(referenceDate)
             .startOf('day')
             .add(hours, 'hours')
             .add(minutes, 'minutes');
@@ -326,7 +329,7 @@ let AttendanceProcessorService = AttendanceProcessorService_1 = class Attendance
     formatTime(date) {
         if (!date)
             return undefined;
-        return moment(date).format('HH:mm:ss');
+        return (0, moment_timezone_1.default)(date).format('HH:mm:ss');
     }
     sessionToJson(session, index) {
         return {
@@ -336,7 +339,7 @@ let AttendanceProcessorService = AttendanceProcessorService_1 = class Attendance
             clock_in_time: session.clockIn.ts_local,
             clock_out_time: session.clockOut?.ts_local,
             worked_minutes: session.clockOut
-                ? moment(session.clockOut.ts_local).diff(moment(session.clockIn.ts_local), 'minutes')
+                ? (0, moment_timezone_1.default)(session.clockOut.ts_local).diff((0, moment_timezone_1.default)(session.clockIn.ts_local), 'minutes')
                 : undefined,
             is_complete: !!session.clockOut,
         };
@@ -380,8 +383,8 @@ let AttendanceProcessorService = AttendanceProcessorService_1 = class Attendance
     }
     async reprocessDateRange(employeeId, startDate, endDate, triggeredBy) {
         const records = [];
-        const current = moment(startDate);
-        const end = moment(endDate);
+        const current = (0, moment_timezone_1.default)(startDate);
+        const end = (0, moment_timezone_1.default)(endDate);
         this.logger.log(`Reprocessing date range for ${employeeId} from ${current.format('YYYY-MM-DD')} to ${end.format('YYYY-MM-DD')}`);
         while (current.isSameOrBefore(end)) {
             try {
@@ -397,7 +400,7 @@ let AttendanceProcessorService = AttendanceProcessorService_1 = class Attendance
     }
     async batchProcessDate(date, userIds, triggeredBy) {
         const startTime = Date.now();
-        const dateStr = moment(date).format('YYYY-MM-DD');
+        const dateStr = (0, moment_timezone_1.default)(date).format('YYYY-MM-DD');
         this.logger.log(`Starting batch processing for ${dateStr}`);
         const targetUserIds = userIds;
         if (!targetUserIds || targetUserIds.length === 0) {

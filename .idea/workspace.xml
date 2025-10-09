@@ -6,7 +6,34 @@
   <component name="ChangeListManager">
     <list default="true" id="f223feb0-6502-4a9b-9c03-44f93ba47b8c" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/dist/common/utils/crypto.utils.js" beforeDir="false" afterPath="$PROJECT_DIR$/dist/common/utils/crypto.utils.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/dist/common/utils/crypto.utils.js.map" beforeDir="false" afterPath="$PROJECT_DIR$/dist/common/utils/crypto.utils.js.map" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/dist/common/utils/time.utils.js" beforeDir="false" afterPath="$PROJECT_DIR$/dist/common/utils/time.utils.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/dist/common/utils/time.utils.js.map" beforeDir="false" afterPath="$PROJECT_DIR$/dist/common/utils/time.utils.js.map" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/dist/config/validation.schema.js" beforeDir="false" afterPath="$PROJECT_DIR$/dist/config/validation.schema.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/dist/config/validation.schema.js.map" beforeDir="false" afterPath="$PROJECT_DIR$/dist/config/validation.schema.js.map" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/dist/database/seeds/seed.js" beforeDir="false" afterPath="$PROJECT_DIR$/dist/database/seeds/seed.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/dist/database/seeds/seed.js.map" beforeDir="false" afterPath="$PROJECT_DIR$/dist/database/seeds/seed.js.map" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/dist/modules/attendance/cron/attendance-cron.service.js" beforeDir="false" afterPath="$PROJECT_DIR$/dist/modules/attendance/cron/attendance-cron.service.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/dist/modules/attendance/cron/attendance-cron.service.js.map" beforeDir="false" afterPath="$PROJECT_DIR$/dist/modules/attendance/cron/attendance-cron.service.js.map" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/dist/modules/attendance/services/attendance-events.service.js" beforeDir="false" afterPath="$PROJECT_DIR$/dist/modules/attendance/services/attendance-events.service.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/dist/modules/attendance/services/attendance-events.service.js.map" beforeDir="false" afterPath="$PROJECT_DIR$/dist/modules/attendance/services/attendance-events.service.js.map" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/dist/modules/attendance/services/attendance-processor.service.js" beforeDir="false" afterPath="$PROJECT_DIR$/dist/modules/attendance/services/attendance-processor.service.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/dist/modules/attendance/services/attendance-processor.service.js.map" beforeDir="false" afterPath="$PROJECT_DIR$/dist/modules/attendance/services/attendance-processor.service.js.map" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/dist/modules/attendance/services/attendance-records.service.js" beforeDir="false" afterPath="$PROJECT_DIR$/dist/modules/attendance/services/attendance-records.service.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/dist/modules/attendance/services/attendance-records.service.js.map" beforeDir="false" afterPath="$PROJECT_DIR$/dist/modules/attendance/services/attendance-records.service.js.map" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/dist/modules/payroll/payroll-processor.service.js" beforeDir="false" afterPath="$PROJECT_DIR$/dist/modules/payroll/payroll-processor.service.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/dist/modules/payroll/payroll-processor.service.js.map" beforeDir="false" afterPath="$PROJECT_DIR$/dist/modules/payroll/payroll-processor.service.js.map" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/dist/modules/terminals/terminal-integration.service.js" beforeDir="false" afterPath="$PROJECT_DIR$/dist/modules/terminals/terminal-integration.service.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/dist/modules/terminals/terminal-integration.service.js.map" beforeDir="false" afterPath="$PROJECT_DIR$/dist/modules/terminals/terminal-integration.service.js.map" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/dist/tsconfig.build.tsbuildinfo" beforeDir="false" afterPath="$PROJECT_DIR$/dist/tsconfig.build.tsbuildinfo" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/package.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/common/utils/time.utils.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/common/utils/time.utils.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/modules/attendance/services/attendance-events.service.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/modules/attendance/services/attendance-events.service.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/modules/attendance/services/attendance-processor.service.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/modules/attendance/services/attendance-processor.service.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/modules/attendance/services/attendance-records.service.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/modules/attendance/services/attendance-records.service.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/modules/payroll/payroll-processor.service.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/modules/payroll/payroll-processor.service.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tsconfig.json" beforeDir="false" afterPath="$PROJECT_DIR$/tsconfig.json" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -84,7 +111,7 @@
       <workItem from="1759423899642" duration="21960000" />
       <workItem from="1759496147663" duration="217000" />
       <workItem from="1759507878043" duration="10201000" />
-      <workItem from="1759602667384" duration="56321000" />
+      <workItem from="1759602667384" duration="57028000" />
     </task>
     <servers />
   </component>

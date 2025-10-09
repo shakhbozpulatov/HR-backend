@@ -10,7 +10,7 @@ import { ConfigService } from '@nestjs/config';
 import { InjectQueue } from '@nestjs/bull';
 import { Queue } from 'bull';
 import * as crypto from 'crypto';
-import * as moment from 'moment-timezone';
+import moment from 'moment-timezone';
 
 import {
   AttendanceEvent,

@@ -11,6 +11,9 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 var TerminalIntegrationService_1;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.TerminalIntegrationService = void 0;
@@ -20,7 +23,7 @@ const typeorm_1 = require("@nestjs/typeorm");
 const typeorm_2 = require("typeorm");
 const terminal_device_entity_1 = require("./entities/terminal-device.entity");
 const schedule_1 = require("@nestjs/schedule");
-const axios_1 = require("axios");
+const axios_1 = __importDefault(require("axios"));
 const user_entity_1 = require("../users/entities/user.entity");
 let TerminalIntegrationService = TerminalIntegrationService_1 = class TerminalIntegrationService {
     constructor(deviceRepository, userRepository, configService) {

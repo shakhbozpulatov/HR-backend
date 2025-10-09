@@ -15,7 +15,7 @@ import {
   AttendanceStatus,
 } from '../attendance/entities/attendance-record.entity';
 // import { Employee } from '../employees/entities/employee.entity';
-import * as moment from 'moment';
+import moment from 'moment';
 import { TariffType, User } from '@/modules/users/entities/user.entity';
 
 @Injectable()
