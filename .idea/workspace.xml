@@ -5,20 +5,82 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="f223feb0-6502-4a9b-9c03-44f93ba47b8c" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/src/modules/attendance/config/attendance.config.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/modules/attendance/controllers/attendance-events.controller.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/modules/attendance/controllers/attendance-records.controller.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/modules/attendance/controllers/batch-processing.controller.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/modules/attendance/controllers/device-enrollment.controller.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/modules/attendance/controllers/device-status.controller.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/modules/attendance/controllers/index.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/modules/attendance/cron/attendance-cron.service.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/modules/attendance/dto/batch-process.dto.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/modules/attendance/dto/enrollment.dto.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/modules/attendance/dto/index.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/modules/attendance/dto/resolve-quarantine.dto.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/modules/attendance/dto/response.dto.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/modules/attendance/entities/attendance-processing-log.entity.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/modules/attendance/entities/index.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/modules/attendance/entities/user-device-mapping.entity.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/modules/attendance/index.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/modules/attendance/processors/attendance-queue.processor.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/modules/attendance/services/attendance-events.service.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/modules/attendance/services/attendance-processor.service.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/modules/attendance/services/attendance-records.service.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/modules/attendance/services/user-device-mapping.service.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.env.example" beforeDir="false" afterPath="$PROJECT_DIR$/.env.example" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/dist/modules/terminals/entities/terminal-device.entity.d.ts" beforeDir="false" afterPath="$PROJECT_DIR$/dist/modules/terminals/entities/terminal-device.entity.d.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/dist/modules/terminals/entities/terminal-device.entity.js" beforeDir="false" afterPath="$PROJECT_DIR$/dist/modules/terminals/entities/terminal-device.entity.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/dist/modules/terminals/entities/terminal-device.entity.js.map" beforeDir="false" afterPath="$PROJECT_DIR$/dist/modules/terminals/entities/terminal-device.entity.js.map" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/dist/modules/terminals/terminals.controller.d.ts" beforeDir="false" afterPath="$PROJECT_DIR$/dist/modules/terminals/terminals.controller.d.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/dist/modules/terminals/terminals.controller.js" beforeDir="false" afterPath="$PROJECT_DIR$/dist/modules/terminals/terminals.controller.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/dist/modules/terminals/terminals.controller.js.map" beforeDir="false" afterPath="$PROJECT_DIR$/dist/modules/terminals/terminals.controller.js.map" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/dist/modules/terminals/terminals.service.d.ts" beforeDir="false" afterPath="$PROJECT_DIR$/dist/modules/terminals/terminals.service.d.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/dist/modules/terminals/terminals.service.js" beforeDir="false" afterPath="$PROJECT_DIR$/dist/modules/terminals/terminals.service.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/dist/modules/terminals/terminals.service.js.map" beforeDir="false" afterPath="$PROJECT_DIR$/dist/modules/terminals/terminals.service.js.map" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/dist/modules/attendance/attendance-events.controller.d.ts" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/dist/modules/attendance/attendance-events.controller.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/dist/modules/attendance/attendance-events.controller.js.map" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/dist/modules/attendance/attendance-events.service.d.ts" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/dist/modules/attendance/attendance-events.service.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/dist/modules/attendance/attendance-events.service.js.map" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/dist/modules/attendance/attendance-processor.service.d.ts" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/dist/modules/attendance/attendance-processor.service.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/dist/modules/attendance/attendance-processor.service.js.map" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/dist/modules/attendance/attendance-queue.processor.d.ts" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/dist/modules/attendance/attendance-queue.processor.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/dist/modules/attendance/attendance-queue.processor.js.map" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/dist/modules/attendance/attendance-records.controller.d.ts" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/dist/modules/attendance/attendance-records.controller.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/dist/modules/attendance/attendance-records.controller.js.map" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/dist/modules/attendance/attendance-records.service.d.ts" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/dist/modules/attendance/attendance-records.service.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/dist/modules/attendance/attendance-records.service.js.map" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/dist/modules/attendance/attendance.module.js" beforeDir="false" afterPath="$PROJECT_DIR$/dist/modules/attendance/attendance.module.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/dist/modules/attendance/attendance.module.js.map" beforeDir="false" afterPath="$PROJECT_DIR$/dist/modules/attendance/attendance.module.js.map" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/dist/modules/attendance/dto/attendance-filter.dto.d.ts" beforeDir="false" afterPath="$PROJECT_DIR$/dist/modules/attendance/dto/attendance-filter.dto.d.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/dist/modules/attendance/dto/attendance-filter.dto.js" beforeDir="false" afterPath="$PROJECT_DIR$/dist/modules/attendance/dto/attendance-filter.dto.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/dist/modules/attendance/dto/attendance-filter.dto.js.map" beforeDir="false" afterPath="$PROJECT_DIR$/dist/modules/attendance/dto/attendance-filter.dto.js.map" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/dist/modules/attendance/dto/manual-adjustment.dto.d.ts" beforeDir="false" afterPath="$PROJECT_DIR$/dist/modules/attendance/dto/manual-adjustment.dto.d.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/dist/modules/attendance/dto/manual-adjustment.dto.js" beforeDir="false" afterPath="$PROJECT_DIR$/dist/modules/attendance/dto/manual-adjustment.dto.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/dist/modules/attendance/dto/manual-adjustment.dto.js.map" beforeDir="false" afterPath="$PROJECT_DIR$/dist/modules/attendance/dto/manual-adjustment.dto.js.map" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/dist/modules/attendance/dto/webhook-event.dto.d.ts" beforeDir="false" afterPath="$PROJECT_DIR$/dist/modules/attendance/dto/webhook-event.dto.d.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/dist/modules/attendance/dto/webhook-event.dto.js" beforeDir="false" afterPath="$PROJECT_DIR$/dist/modules/attendance/dto/webhook-event.dto.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/dist/modules/attendance/dto/webhook-event.dto.js.map" beforeDir="false" afterPath="$PROJECT_DIR$/dist/modules/attendance/dto/webhook-event.dto.js.map" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/dist/modules/attendance/entities/attendance-event.entity.d.ts" beforeDir="false" afterPath="$PROJECT_DIR$/dist/modules/attendance/entities/attendance-event.entity.d.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/dist/modules/attendance/entities/attendance-event.entity.js" beforeDir="false" afterPath="$PROJECT_DIR$/dist/modules/attendance/entities/attendance-event.entity.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/dist/modules/attendance/entities/attendance-event.entity.js.map" beforeDir="false" afterPath="$PROJECT_DIR$/dist/modules/attendance/entities/attendance-event.entity.js.map" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/dist/modules/attendance/entities/attendance-record.entity.d.ts" beforeDir="false" afterPath="$PROJECT_DIR$/dist/modules/attendance/entities/attendance-record.entity.d.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/dist/modules/attendance/entities/attendance-record.entity.js" beforeDir="false" afterPath="$PROJECT_DIR$/dist/modules/attendance/entities/attendance-record.entity.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/dist/modules/attendance/entities/attendance-record.entity.js.map" beforeDir="false" afterPath="$PROJECT_DIR$/dist/modules/attendance/entities/attendance-record.entity.js.map" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/dist/tsconfig.build.tsbuildinfo" beforeDir="false" afterPath="$PROJECT_DIR$/dist/tsconfig.build.tsbuildinfo" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/modules/terminals/entities/terminal-device.entity.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/modules/terminals/entities/terminal-device.entity.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/modules/terminals/terminals.controller.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/modules/terminals/terminals.controller.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/modules/terminals/terminals.service.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/modules/terminals/terminals.service.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/package.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pnpm-lock.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/pnpm-lock.yaml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/modules/attendance/attendance-events.controller.ts" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/modules/attendance/attendance-events.service.ts" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/modules/attendance/attendance-processor.service.ts" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/modules/attendance/attendance-queue.processor.ts" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/modules/attendance/attendance-records.controller.ts" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/modules/attendance/attendance-records.service.ts" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/modules/attendance/attendance.controller.spec.ts" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/modules/attendance/attendance.module.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/modules/attendance/attendance.module.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/modules/attendance/attendance.service.spec.ts" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/modules/attendance/dto/attendance-filter.dto.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/modules/attendance/dto/attendance-filter.dto.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/modules/attendance/dto/manual-adjustment.dto.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/modules/attendance/dto/manual-adjustment.dto.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/modules/attendance/dto/webhook-event.dto.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/modules/attendance/dto/webhook-event.dto.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/modules/attendance/entities/attendance-event.entity.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/modules/attendance/entities/attendance-event.entity.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/modules/attendance/entities/attendance-record.entity.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/modules/attendance/entities/attendance-record.entity.ts" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -96,7 +158,7 @@
       <workItem from="1759423899642" duration="21960000" />
       <workItem from="1759496147663" duration="217000" />
       <workItem from="1759507878043" duration="10201000" />
-      <workItem from="1759602667384" duration="34427000" />
+      <workItem from="1759602667384" duration="53769000" />
     </task>
     <servers />
   </component>

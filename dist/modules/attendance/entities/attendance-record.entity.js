@@ -20,6 +20,8 @@ var AttendanceStatus;
     AttendanceStatus["INCOMPLETE"] = "INCOMPLETE";
     AttendanceStatus["ABSENT"] = "ABSENT";
     AttendanceStatus["HOLIDAY"] = "HOLIDAY";
+    AttendanceStatus["LEAVE"] = "LEAVE";
+    AttendanceStatus["WEEKEND"] = "WEEKEND";
 })(AttendanceStatus || (exports.AttendanceStatus = AttendanceStatus = {}));
 let AttendanceRecord = class AttendanceRecord {
 };
@@ -45,6 +47,18 @@ __decorate([
     __metadata("design:type", String)
 ], AttendanceRecord.prototype, "scheduled_end", void 0);
 __decorate([
+    (0, typeorm_1.Column)({ type: 'integer', nullable: true }),
+    __metadata("design:type", Number)
+], AttendanceRecord.prototype, "scheduled_minutes", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ type: 'time', nullable: true }),
+    __metadata("design:type", String)
+], AttendanceRecord.prototype, "first_clock_in", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ type: 'time', nullable: true }),
+    __metadata("design:type", String)
+], AttendanceRecord.prototype, "last_clock_out", void 0);
+__decorate([
     (0, typeorm_1.Column)({ type: 'integer', default: 0 }),
     __metadata("design:type", Number)
 ], AttendanceRecord.prototype, "worked_minutes", void 0);
@@ -61,13 +75,17 @@ __decorate([
     __metadata("design:type", Number)
 ], AttendanceRecord.prototype, "overtime_minutes", void 0);
 __decorate([
-    (0, typeorm_1.Column)({ type: 'integer', default: 0, nullable: true }),
+    (0, typeorm_1.Column)({ type: 'integer', default: 0 }),
     __metadata("design:type", Number)
 ], AttendanceRecord.prototype, "night_minutes", void 0);
 __decorate([
-    (0, typeorm_1.Column)({ type: 'integer', default: 0, nullable: true }),
+    (0, typeorm_1.Column)({ type: 'integer', default: 0 }),
     __metadata("design:type", Number)
 ], AttendanceRecord.prototype, "holiday_minutes", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ type: 'integer', default: 0 }),
+    __metadata("design:type", Number)
+], AttendanceRecord.prototype, "break_minutes", void 0);
 __decorate([
     (0, typeorm_1.Column)({
         type: 'enum',
@@ -83,11 +101,35 @@ __decorate([
 __decorate([
     (0, typeorm_1.Column)({ type: 'json', nullable: true }),
     __metadata("design:type", Array)
+], AttendanceRecord.prototype, "work_sessions", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ type: 'json', nullable: true }),
+    __metadata("design:type", Array)
 ], AttendanceRecord.prototype, "manual_adjustments", void 0);
 __decorate([
     (0, typeorm_1.Column)({ type: 'json', nullable: true }),
     __metadata("design:type", Array)
 ], AttendanceRecord.prototype, "approvals", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ type: 'boolean', default: false }),
+    __metadata("design:type", Boolean)
+], AttendanceRecord.prototype, "is_locked", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ type: 'boolean', default: false }),
+    __metadata("design:type", Boolean)
+], AttendanceRecord.prototype, "requires_approval", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ type: 'timestamptz', nullable: true }),
+    __metadata("design:type", Date)
+], AttendanceRecord.prototype, "last_processed_at", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ type: 'varchar', nullable: true }),
+    __metadata("design:type", String)
+], AttendanceRecord.prototype, "processed_by", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ type: 'text', nullable: true }),
+    __metadata("design:type", String)
+], AttendanceRecord.prototype, "notes", void 0);
 __decorate([
     (0, typeorm_1.CreateDateColumn)(),
     __metadata("design:type", Date)
@@ -97,7 +139,9 @@ __decorate([
     __metadata("design:type", Date)
 ], AttendanceRecord.prototype, "updated_at", void 0);
 __decorate([
-    (0, typeorm_1.ManyToOne)(() => user_entity_1.User, (user) => user.attendance_records),
+    (0, typeorm_1.ManyToOne)(() => user_entity_1.User, (user) => user.attendance_records, {
+        onDelete: 'CASCADE',
+    }),
     (0, typeorm_1.JoinColumn)({ name: 'user_id' }),
     __metadata("design:type", user_entity_1.User)
 ], AttendanceRecord.prototype, "user", void 0);
@@ -108,6 +152,8 @@ __decorate([
 exports.AttendanceRecord = AttendanceRecord = __decorate([
     (0, typeorm_1.Entity)('attendance_records'),
     (0, typeorm_1.Index)(['user_id', 'date'], { unique: true }),
-    (0, typeorm_1.Index)(['date', 'status'])
+    (0, typeorm_1.Index)(['date', 'status']),
+    (0, typeorm_1.Index)(['user_id', 'date', 'status']),
+    (0, typeorm_1.Index)(['is_locked', 'date'])
 ], AttendanceRecord);
 //# sourceMappingURL=attendance-record.entity.js.map

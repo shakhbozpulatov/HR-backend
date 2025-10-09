@@ -1,0 +1,46 @@
+import { Repository, DataSource } from 'typeorm';
+import { ConfigService } from '@nestjs/config';
+import { AttendanceEvent, AttendanceProcessingLog, AttendanceRecord } from '@/modules/attendance';
+import { ScheduleAssignmentsService } from '@/modules/schedules/schedule-assignments.service';
+import { HolidaysService } from '@/modules/holidays/holidays.service';
+export declare class AttendanceProcessorService {
+    private eventRepository;
+    private recordRepository;
+    private logRepository;
+    private scheduleService;
+    private holidaysService;
+    private configService;
+    private dataSource;
+    private readonly logger;
+    private readonly timezone;
+    private readonly graceInMinutes;
+    private readonly graceOutMinutes;
+    private readonly roundingMinutes;
+    private readonly overtimeThreshold;
+    private readonly nightShiftStart;
+    private readonly nightShiftEnd;
+    constructor(eventRepository: Repository<AttendanceEvent>, recordRepository: Repository<AttendanceRecord>, logRepository: Repository<AttendanceProcessingLog>, scheduleService: ScheduleAssignmentsService, holidaysService: HolidaysService, configService: ConfigService, dataSource: DataSource);
+    processEmployeeDay(userId: string, date: Date, triggeredBy?: string): Promise<AttendanceRecord>;
+    private processHolidayDay;
+    private processWeekendDay;
+    private processNoScheduleDay;
+    private processNormalWorkDay;
+    private getEventsForDay;
+    private pairEvents;
+    private calculateWorkTime;
+    private calculateNightMinutes;
+    private parseTimeToMoment;
+    private parseTimeToMinutes;
+    private roundToNearest;
+    private formatTime;
+    private sessionToJson;
+    private resetWorkMetrics;
+    private updateEventStatuses;
+    private logProcessing;
+    reprocessDateRange(employeeId: string, startDate: Date, endDate: Date, triggeredBy?: string): Promise<AttendanceRecord[]>;
+    batchProcessDate(date: Date, userIds?: string[], triggeredBy?: string): Promise<{
+        total: number;
+        success: number;
+        failed: number;
+    }>;
+}

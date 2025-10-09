@@ -4,19 +4,19 @@ import {
   IsDateString,
   IsOptional,
   IsObject,
-  IsNumber,
+  IsUUID,
+  Length,
 } from 'class-validator';
 import { EventType } from '../entities/attendance-event.entity';
 
 export class WebhookEventDto {
   @IsString()
-  event_id: string;
-
-  @IsString()
+  @IsUUID()
   device_id: string;
 
   @IsOptional()
   @IsString()
+  @Length(1, 50)
   terminal_user_id?: string;
 
   @IsEnum(EventType)
@@ -26,6 +26,20 @@ export class WebhookEventDto {
   timestamp: string;
 
   @IsOptional()
+  @IsString()
+  timezone?: string;
+
+  @IsOptional()
   @IsObject()
-  metadata?: any;
+  metadata?: {
+    temperature?: number;
+    mask_detected?: boolean;
+    image_url?: string;
+    verification_method?: 'fingerprint' | 'face' | 'card' | 'pin';
+    quality_score?: number;
+  };
+
+  @IsOptional()
+  @IsString()
+  signature?: string;
 }

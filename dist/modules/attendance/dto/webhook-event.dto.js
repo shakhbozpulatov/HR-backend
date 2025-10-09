@@ -17,15 +17,13 @@ class WebhookEventDto {
 exports.WebhookEventDto = WebhookEventDto;
 __decorate([
     (0, class_validator_1.IsString)(),
-    __metadata("design:type", String)
-], WebhookEventDto.prototype, "event_id", void 0);
-__decorate([
-    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsUUID)(),
     __metadata("design:type", String)
 ], WebhookEventDto.prototype, "device_id", void 0);
 __decorate([
     (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsString)(),
+    (0, class_validator_1.Length)(1, 50),
     __metadata("design:type", String)
 ], WebhookEventDto.prototype, "terminal_user_id", void 0);
 __decorate([
@@ -38,7 +36,17 @@ __decorate([
 ], WebhookEventDto.prototype, "timestamp", void 0);
 __decorate([
     (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], WebhookEventDto.prototype, "timezone", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsObject)(),
     __metadata("design:type", Object)
 ], WebhookEventDto.prototype, "metadata", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], WebhookEventDto.prototype, "signature", void 0);
 //# sourceMappingURL=webhook-event.dto.js.map
