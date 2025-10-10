@@ -9,10 +9,12 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.DatabaseConfig = void 0;
+exports.dataSourceOptions = exports.DatabaseConfig = void 0;
 const common_1 = require("@nestjs/common");
 const config_1 = require("@nestjs/config");
 const typeorm_1 = require("typeorm");
+const dotenv = require("dotenv");
+dotenv.config();
 let DatabaseConfig = class DatabaseConfig {
     constructor(configService) {
         this.configService = configService;
@@ -40,6 +42,21 @@ exports.DatabaseConfig = DatabaseConfig = __decorate([
     (0, common_1.Injectable)(),
     __metadata("design:paramtypes", [config_1.ConfigService])
 ], DatabaseConfig);
-const config = new DatabaseConfig(new config_1.ConfigService());
-exports.default = new typeorm_1.DataSource(config.createTypeOrmOptions());
+exports.dataSourceOptions = {
+    type: 'postgres',
+    host: process.env.DB_HOST || 'localhost',
+    port: parseInt(process.env.DB_PORT || '5432', 10),
+    username: process.env.DB_USERNAME || 'postgres',
+    password: process.env.DB_PASSWORD || 'sh1207200',
+    database: process.env.DB_NAME || 'hr_backend',
+    entities: [__dirname + '/../**/*.entity{.ts,.js}'],
+    migrations: [__dirname + '/../database/migrations/*{.ts,.js}'],
+    synchronize: false,
+    logging: process.env.NODE_ENV === 'development',
+    ssl: process.env.NODE_ENV === 'production'
+        ? { rejectUnauthorized: false }
+        : false,
+};
+const dataSource = new typeorm_1.DataSource(exports.dataSourceOptions);
+exports.default = dataSource;
 //# sourceMappingURL=database.config.js.map

@@ -1,10 +1,11 @@
 import { ConfigService } from '@nestjs/config';
 import { TypeOrmModuleOptions, TypeOrmOptionsFactory } from '@nestjs/typeorm';
-import { DataSource } from 'typeorm';
+import { DataSource, DataSourceOptions } from 'typeorm';
 export declare class DatabaseConfig implements TypeOrmOptionsFactory {
     private configService;
     constructor(configService: ConfigService);
     createTypeOrmOptions(): TypeOrmModuleOptions;
 }
-declare const _default: DataSource;
-export default _default;
+export declare const dataSourceOptions: DataSourceOptions;
+declare const dataSource: DataSource;
+export default dataSource;

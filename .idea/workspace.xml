@@ -6,6 +6,12 @@
   <component name="ChangeListManager">
     <list default="true" id="f223feb0-6502-4a9b-9c03-44f93ba47b8c" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/dist/config/database.config.d.ts" beforeDir="false" afterPath="$PROJECT_DIR$/dist/config/database.config.d.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/dist/config/database.config.js" beforeDir="false" afterPath="$PROJECT_DIR$/dist/config/database.config.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/dist/config/database.config.js.map" beforeDir="false" afterPath="$PROJECT_DIR$/dist/config/database.config.js.map" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/dist/tsconfig.build.tsbuildinfo" beforeDir="false" afterPath="$PROJECT_DIR$/dist/tsconfig.build.tsbuildinfo" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/package.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pnpm-lock.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/pnpm-lock.yaml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/config/database.config.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/config/database.config.ts" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -84,7 +90,7 @@
       <workItem from="1759423899642" duration="21960000" />
       <workItem from="1759496147663" duration="217000" />
       <workItem from="1759507878043" duration="10201000" />
-      <workItem from="1759602667384" duration="61319000" />
+      <workItem from="1759602667384" duration="63768000" />
     </task>
     <servers />
   </component>
