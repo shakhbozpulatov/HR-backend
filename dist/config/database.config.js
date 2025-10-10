@@ -20,6 +20,7 @@ let DatabaseConfig = class DatabaseConfig {
         this.configService = configService;
     }
     createTypeOrmOptions() {
+        const isProd = this.configService.get('NODE_ENV') === 'production';
         return {
             type: 'postgres',
             host: this.configService.get('DB_HOST', 'localhost'),
@@ -27,13 +28,15 @@ let DatabaseConfig = class DatabaseConfig {
             username: this.configService.get('DB_USERNAME', 'postgres'),
             password: this.configService.get('DB_PASSWORD', 'sh1207200'),
             database: this.configService.get('DB_NAME', 'hr_backend'),
-            entities: [__dirname + '/../**/*.entity{.ts,.js}'],
-            migrations: [__dirname + '/../database/migrations/*{.ts,.js}'],
-            synchronize: this.configService.get('NODE_ENV') === 'development',
-            logging: this.configService.get('NODE_ENV') === 'development',
-            ssl: this.configService.get('NODE_ENV') === 'production'
-                ? { rejectUnauthorized: false }
-                : false,
+            entities: isProd
+                ? [__dirname + '/../**/*.entity.js']
+                : [__dirname + '/../**/*.entity.ts'],
+            migrations: isProd
+                ? [__dirname + '/../migrations/*.js']
+                : [__dirname + '/../migrations/*.ts'],
+            synchronize: false,
+            logging: !isProd,
+            ssl: isProd ? { rejectUnauthorized: false } : false,
         };
     }
 };
@@ -42,6 +45,7 @@ exports.DatabaseConfig = DatabaseConfig = __decorate([
     (0, common_1.Injectable)(),
     __metadata("design:paramtypes", [config_1.ConfigService])
 ], DatabaseConfig);
+const isProd = process.env.NODE_ENV === 'production';
 exports.dataSourceOptions = {
     type: 'postgres',
     host: process.env.DB_HOST || 'localhost',
@@ -49,13 +53,11 @@ exports.dataSourceOptions = {
     username: process.env.DB_USERNAME || 'postgres',
     password: process.env.DB_PASSWORD || 'sh1207200',
     database: process.env.DB_NAME || 'hr_backend',
-    entities: [__dirname + '/../**/*.entity{.ts,.js}'],
-    migrations: [__dirname + '/../database/migrations/*{.ts,.js}'],
+    entities: isProd ? ['dist/**/*.entity.js'] : ['src/**/*.entity.ts'],
+    migrations: isProd ? ['dist/migrations/*.js'] : ['src/migrations/*.ts'],
     synchronize: false,
-    logging: process.env.NODE_ENV === 'development',
-    ssl: process.env.NODE_ENV === 'production'
-        ? { rejectUnauthorized: false }
-        : false,
+    logging: !isProd,
+    ssl: isProd ? { rejectUnauthorized: false } : false,
 };
 const dataSource = new typeorm_1.DataSource(exports.dataSourceOptions);
 exports.default = dataSource;
