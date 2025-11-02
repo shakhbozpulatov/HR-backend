@@ -40,6 +40,6 @@ export class CreateScheduleTemplateDto {
 
   @IsOptional()
   @IsNumber()
-  @Min(1)
+  @Min(0)
   rounding_min?: number;
 }

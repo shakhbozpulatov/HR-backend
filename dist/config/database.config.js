@@ -28,9 +28,8 @@ let DatabaseConfig = class DatabaseConfig {
             username: this.configService.get('DB_USERNAME', 'postgres'),
             password: this.configService.get('DB_PASSWORD', 'sh1207200'),
             database: this.configService.get('DB_NAME', 'hr_backend'),
-            entities: isProd
-                ? [__dirname + '/../**/*.entity.js']
-                : [__dirname + '/../**/*.entity.ts'],
+            entities: [__dirname + '/../**/*.entity{.ts,.js}'],
+            autoLoadEntities: true,
             migrations: isProd
                 ? [__dirname + '/../migrations/*.js']
                 : [__dirname + '/../migrations/*.ts'],

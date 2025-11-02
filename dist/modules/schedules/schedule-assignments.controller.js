@@ -16,6 +16,8 @@ exports.ScheduleAssignmentsController = void 0;
 const common_1 = require("@nestjs/common");
 const schedule_assignments_service_1 = require("./schedule-assignments.service");
 const create_assignment_dto_1 = require("./dto/create-assignment.dto");
+const update_user_assignment_dto_1 = require("./dto/update-user-assignment.dto");
+const create_exception_dto_1 = require("./dto/create-exception.dto");
 const auth_guard_1 = require("../../common/guards/auth.guard");
 const roles_guard_1 = require("../../common/guards/roles.guard");
 const roles_decorator_1 = require("../../common/decorators/roles.decorator");
@@ -29,6 +31,9 @@ let ScheduleAssignmentsController = class ScheduleAssignmentsController {
     }
     async getEmployeeAssignments(userId, req) {
         return await this.assignmentsService.findEmployeeAssignments(userId, req.user);
+    }
+    async updateTemplate(updateTemplateDto, req) {
+        return await this.assignmentsService.updateTemplate(updateTemplateDto, req.user);
     }
     async addException(assignmentId, exception, req) {
         return await this.assignmentsService.addException(assignmentId, exception, req.user);
@@ -54,13 +59,22 @@ __decorate([
     __metadata("design:returntype", Promise)
 ], ScheduleAssignmentsController.prototype, "getEmployeeAssignments", null);
 __decorate([
+    (0, common_1.Patch)('update-user-assignment'),
+    (0, roles_decorator_1.Roles)(user_entity_1.UserRole.SUPER_ADMIN, user_entity_1.UserRole.COMPANY_OWNER, user_entity_1.UserRole.ADMIN, user_entity_1.UserRole.HR_MANAGER),
+    __param(0, (0, common_1.Body)()),
+    __param(1, (0, common_1.Req)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [update_user_assignment_dto_1.UpdateUserAssignmentDto, Object]),
+    __metadata("design:returntype", Promise)
+], ScheduleAssignmentsController.prototype, "updateTemplate", null);
+__decorate([
     (0, common_1.Post)(':assignmentId/exceptions'),
     (0, roles_decorator_1.Roles)(user_entity_1.UserRole.SUPER_ADMIN, user_entity_1.UserRole.COMPANY_OWNER, user_entity_1.UserRole.ADMIN, user_entity_1.UserRole.HR_MANAGER),
     __param(0, (0, common_1.Param)('assignmentId')),
     __param(1, (0, common_1.Body)()),
     __param(2, (0, common_1.Req)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, Object, Object]),
+    __metadata("design:paramtypes", [String, create_exception_dto_1.CreateExceptionDto, Object]),
     __metadata("design:returntype", Promise)
 ], ScheduleAssignmentsController.prototype, "addException", null);
 exports.ScheduleAssignmentsController = ScheduleAssignmentsController = __decorate([

@@ -22,10 +22,9 @@ export class DatabaseConfig implements TypeOrmOptionsFactory {
       password: this.configService.get('DB_PASSWORD', 'sh1207200'),
       database: this.configService.get('DB_NAME', 'hr_backend'),
 
-      // 🧠 Entities (different for prod/dev)
-      entities: isProd
-        ? [__dirname + '/../**/*.entity.js']
-        : [__dirname + '/../**/*.entity.ts'],
+      // 🧠 Entities - use autoLoadEntities for dev
+      entities: [__dirname + '/../**/*.entity{.ts,.js}'],
+      autoLoadEntities: true,
 
       // 🧱 Migrations (different for prod/dev)
       migrations: isProd

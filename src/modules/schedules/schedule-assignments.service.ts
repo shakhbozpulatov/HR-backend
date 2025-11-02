@@ -5,9 +5,11 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { LessThanOrEqual, MoreThanOrEqual, Repository } from 'typeorm';
+import { LessThanOrEqual, MoreThanOrEqual, Repository, IsNull } from 'typeorm';
 import { UserScheduleAssignment } from './entities/employee-schedule-assignment.entity';
 import { CreateAssignmentDto } from './dto/create-assignment.dto';
+import { UpdateUserAssignmentDto } from './dto/update-user-assignment.dto';
+import { CreateExceptionDto } from './dto/create-exception.dto';
 import { User } from '@/modules/users/entities/user.entity';
 import { UserRole } from '@/modules/users/entities/user.entity';
 
@@ -82,11 +84,22 @@ export class ScheduleAssignmentsService {
       );
     }
 
-    return await this.assignmentRepository.find({
+    const assignments = await this.assignmentRepository.find({
       where: { user_id: userId },
       relations: ['default_template'],
       order: { effective_from: 'DESC' },
     });
+
+    // Clean up invalid exceptions (empty arrays or non-objects)
+    assignments.forEach((assignment) => {
+      if (assignment.exceptions && Array.isArray(assignment.exceptions)) {
+        assignment.exceptions = assignment.exceptions.filter(
+          (exc) => exc && typeof exc === 'object' && !Array.isArray(exc),
+        );
+      }
+    });
+
+    return assignments;
   }
 
   /**
@@ -94,7 +107,7 @@ export class ScheduleAssignmentsService {
    */
   async addException(
     assignmentId: string,
-    exception: any,
+    exception: CreateExceptionDto,
     actor: any,
   ): Promise<UserScheduleAssignment> {
     const assignment = await this.assignmentRepository.findOne({
@@ -116,12 +129,85 @@ export class ScheduleAssignmentsService {
       );
     }
 
-    if (!assignment.exceptions) {
+    // Initialize exceptions array if not exists
+    if (!assignment.exceptions || !Array.isArray(assignment.exceptions)) {
       assignment.exceptions = [];
     }
 
+    // Filter out any invalid entries (like empty arrays or non-objects)
+    assignment.exceptions = assignment.exceptions.filter(
+      (exc) => exc && typeof exc === 'object' && !Array.isArray(exc),
+    );
+
     assignment.exceptions.push(exception);
     return await this.assignmentRepository.save(assignment);
+  }
+
+  /**
+   * Update employee's schedule template
+   * This closes the current assignment and creates a new one with the new template
+   */
+  async updateTemplate(
+    updateTemplateDto: UpdateUserAssignmentDto,
+    actor: any,
+  ): Promise<UserScheduleAssignment> {
+    // 1️⃣ Xodimni topamiz
+    const employee = await this.userRepository.findOne({
+      where: { id: updateTemplateDto.user_id },
+      select: ['id', 'company_id', 'first_name', 'last_name'],
+    });
+
+    if (!employee) {
+      throw new NotFoundException('Employee not found');
+    }
+
+    // 2️⃣ SUPER_ADMIN bo'lmasa — faqat o'z company'ga tegishli xodimni o'zgartira oladi
+    if (
+      actor.role !== UserRole.SUPER_ADMIN &&
+      employee.company_id !== actor.company_id
+    ) {
+      throw new ForbiddenException(
+        'You can only update schedules for your own company employees',
+      );
+    }
+
+    // 3️⃣ Hozirgi aktiv assignmentni topamiz (effective_to = null)
+    const currentAssignment = await this.assignmentRepository.findOne({
+      where: {
+        user_id: updateTemplateDto.user_id,
+        effective_to: IsNull(),
+      },
+      order: { effective_from: 'DESC' },
+    });
+
+    if (!currentAssignment) {
+      throw new NotFoundException(
+        'No active assignment found for this employee',
+      );
+    }
+
+    // 4️⃣ Yangi effective_from eski effective_from dan kichik bo'lmasligi kerak
+    if (updateTemplateDto.effective_from < currentAssignment.effective_from) {
+      throw new BadRequestException(
+        'New effective_from must be after current assignment start date',
+      );
+    }
+
+    // 5️⃣ Eski assignmentni tugatamiz (effective_to ni o'rnatamiz)
+    const dayBeforeNewEffective = new Date(updateTemplateDto.effective_from);
+    dayBeforeNewEffective.setDate(dayBeforeNewEffective.getDate() - 1);
+    currentAssignment.effective_to = dayBeforeNewEffective;
+    await this.assignmentRepository.save(currentAssignment);
+
+    // 6️⃣ Yangi assignment yaratamiz
+    const newAssignment = this.assignmentRepository.create({
+      user_id: updateTemplateDto.user_id,
+      default_template_id: updateTemplateDto.new_template_id,
+      effective_from: updateTemplateDto.effective_from,
+      effective_to: updateTemplateDto.effective_to,
+    });
+
+    return await this.assignmentRepository.save(newAssignment);
   }
 
   async getEffectiveSchedule(

@@ -6,7 +6,25 @@
   <component name="ChangeListManager">
     <list default="true" id="f223feb0-6502-4a9b-9c03-44f93ba47b8c" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/dist/config/database.config.js" beforeDir="false" afterPath="$PROJECT_DIR$/dist/config/database.config.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/dist/config/database.config.js.map" beforeDir="false" afterPath="$PROJECT_DIR$/dist/config/database.config.js.map" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/dist/modules/schedules/dto/create-schedule-template.dto.js" beforeDir="false" afterPath="$PROJECT_DIR$/dist/modules/schedules/dto/create-schedule-template.dto.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/dist/modules/schedules/entities/employee-schedule-assignment.entity.js.map" beforeDir="false" afterPath="$PROJECT_DIR$/dist/modules/schedules/entities/employee-schedule-assignment.entity.js.map" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/dist/modules/schedules/entities/schedule-template.entity.js" beforeDir="false" afterPath="$PROJECT_DIR$/dist/modules/schedules/entities/schedule-template.entity.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/dist/modules/schedules/entities/schedule-template.entity.js.map" beforeDir="false" afterPath="$PROJECT_DIR$/dist/modules/schedules/entities/schedule-template.entity.js.map" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/dist/modules/schedules/schedule-assignments.controller.d.ts" beforeDir="false" afterPath="$PROJECT_DIR$/dist/modules/schedules/schedule-assignments.controller.d.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/dist/modules/schedules/schedule-assignments.controller.js" beforeDir="false" afterPath="$PROJECT_DIR$/dist/modules/schedules/schedule-assignments.controller.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/dist/modules/schedules/schedule-assignments.controller.js.map" beforeDir="false" afterPath="$PROJECT_DIR$/dist/modules/schedules/schedule-assignments.controller.js.map" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/dist/modules/schedules/schedule-assignments.service.d.ts" beforeDir="false" afterPath="$PROJECT_DIR$/dist/modules/schedules/schedule-assignments.service.d.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/dist/modules/schedules/schedule-assignments.service.js" beforeDir="false" afterPath="$PROJECT_DIR$/dist/modules/schedules/schedule-assignments.service.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/dist/modules/schedules/schedule-assignments.service.js.map" beforeDir="false" afterPath="$PROJECT_DIR$/dist/modules/schedules/schedule-assignments.service.js.map" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/dist/tsconfig.build.tsbuildinfo" beforeDir="false" afterPath="$PROJECT_DIR$/dist/tsconfig.build.tsbuildinfo" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/config/database.config.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/config/database.config.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/modules/schedules/dto/create-schedule-template.dto.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/modules/schedules/dto/create-schedule-template.dto.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/modules/schedules/entities/employee-schedule-assignment.entity.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/modules/schedules/entities/employee-schedule-assignment.entity.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/modules/schedules/entities/schedule-template.entity.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/modules/schedules/entities/schedule-template.entity.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/modules/schedules/schedule-assignments.controller.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/modules/schedules/schedule-assignments.controller.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/modules/schedules/schedule-assignments.service.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/modules/schedules/schedule-assignments.service.ts" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -84,7 +102,9 @@
       <workItem from="1759423899642" duration="21960000" />
       <workItem from="1759496147663" duration="217000" />
       <workItem from="1759507878043" duration="10201000" />
-      <workItem from="1759602667384" duration="65711000" />
+      <workItem from="1759602667384" duration="69146000" />
+      <workItem from="1760966793712" duration="2538000" />
+      <workItem from="1761999907692" duration="11072000" />
     </task>
     <servers />
   </component>

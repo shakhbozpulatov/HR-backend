@@ -53,11 +53,17 @@ let ScheduleAssignmentsService = class ScheduleAssignmentsService {
             employee.company_id !== actor.company_id) {
             throw new common_1.ForbiddenException('You can only view your own company employees');
         }
-        return await this.assignmentRepository.find({
+        const assignments = await this.assignmentRepository.find({
             where: { user_id: userId },
             relations: ['default_template'],
             order: { effective_from: 'DESC' },
         });
+        assignments.forEach((assignment) => {
+            if (assignment.exceptions && Array.isArray(assignment.exceptions)) {
+                assignment.exceptions = assignment.exceptions.filter((exc) => exc && typeof exc === 'object' && !Array.isArray(exc));
+            }
+        });
+        return assignments;
     }
     async addException(assignmentId, exception, actor) {
         const assignment = await this.assignmentRepository.findOne({
@@ -71,11 +77,49 @@ let ScheduleAssignmentsService = class ScheduleAssignmentsService {
             assignment.user?.company_id !== actor.company_id) {
             throw new common_1.ForbiddenException('You can only edit your own company assignments');
         }
-        if (!assignment.exceptions) {
+        if (!assignment.exceptions || !Array.isArray(assignment.exceptions)) {
             assignment.exceptions = [];
         }
+        assignment.exceptions = assignment.exceptions.filter((exc) => exc && typeof exc === 'object' && !Array.isArray(exc));
         assignment.exceptions.push(exception);
         return await this.assignmentRepository.save(assignment);
+    }
+    async updateTemplate(updateTemplateDto, actor) {
+        const employee = await this.userRepository.findOne({
+            where: { id: updateTemplateDto.user_id },
+            select: ['id', 'company_id', 'first_name', 'last_name'],
+        });
+        if (!employee) {
+            throw new common_1.NotFoundException('Employee not found');
+        }
+        if (actor.role !== user_entity_2.UserRole.SUPER_ADMIN &&
+            employee.company_id !== actor.company_id) {
+            throw new common_1.ForbiddenException('You can only update schedules for your own company employees');
+        }
+        const currentAssignment = await this.assignmentRepository.findOne({
+            where: {
+                user_id: updateTemplateDto.user_id,
+                effective_to: (0, typeorm_2.IsNull)(),
+            },
+            order: { effective_from: 'DESC' },
+        });
+        if (!currentAssignment) {
+            throw new common_1.NotFoundException('No active assignment found for this employee');
+        }
+        if (updateTemplateDto.effective_from < currentAssignment.effective_from) {
+            throw new common_1.BadRequestException('New effective_from must be after current assignment start date');
+        }
+        const dayBeforeNewEffective = new Date(updateTemplateDto.effective_from);
+        dayBeforeNewEffective.setDate(dayBeforeNewEffective.getDate() - 1);
+        currentAssignment.effective_to = dayBeforeNewEffective;
+        await this.assignmentRepository.save(currentAssignment);
+        const newAssignment = this.assignmentRepository.create({
+            user_id: updateTemplateDto.user_id,
+            default_template_id: updateTemplateDto.new_template_id,
+            effective_from: updateTemplateDto.effective_from,
+            effective_to: updateTemplateDto.effective_to,
+        });
+        return await this.assignmentRepository.save(newAssignment);
     }
     async getEffectiveSchedule(userId, date, actor) {
         const employee = await this.userRepository.findOne({

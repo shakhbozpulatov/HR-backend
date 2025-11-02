@@ -54,7 +54,7 @@ __decorate([
 __decorate([
     (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsNumber)(),
-    (0, class_validator_1.Min)(1),
+    (0, class_validator_1.Min)(0),
     __metadata("design:type", Number)
 ], CreateScheduleTemplateDto.prototype, "rounding_min", void 0);
 //# sourceMappingURL=create-schedule-template.dto.js.map

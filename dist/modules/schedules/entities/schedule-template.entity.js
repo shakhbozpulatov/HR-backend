@@ -69,7 +69,7 @@ __decorate([
     __metadata("design:type", Number)
 ], ScheduleTemplate.prototype, "grace_out_min", void 0);
 __decorate([
-    (0, typeorm_1.Column)({ type: 'integer', default: 5 }),
+    (0, typeorm_1.Column)({ type: 'integer', default: 1 }),
     __metadata("design:type", Number)
 ], ScheduleTemplate.prototype, "rounding_min", void 0);
 __decorate([
