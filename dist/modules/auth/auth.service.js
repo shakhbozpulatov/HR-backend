@@ -21,13 +21,19 @@ const user_entity_1 = require("../users/entities/user.entity");
 const company_entity_1 = require("../company/entities/company.entity");
 const crypto_utils_1 = require("../../common/utils/crypto.utils");
 const hc_service_1 = require("../hc/hc.service");
+const password_service_1 = require("./services/password.service");
+const permission_service_1 = require("./services/permission.service");
+const company_service_1 = require("./services/company.service");
 let AuthService = class AuthService {
-    constructor(userRepository, companyRepository, jwtService, cryptoUtils, hcService) {
+    constructor(userRepository, companyRepository, jwtService, cryptoUtils, hcService, passwordService, permissionService, companyService) {
         this.userRepository = userRepository;
         this.companyRepository = companyRepository;
         this.jwtService = jwtService;
         this.cryptoUtils = cryptoUtils;
         this.hcService = hcService;
+        this.passwordService = passwordService;
+        this.permissionService = permissionService;
+        this.companyService = companyService;
     }
     async login(loginDto) {
         const { email, password } = loginDto;
@@ -38,7 +44,7 @@ let AuthService = class AuthService {
         if (!user) {
             throw new common_1.UnauthorizedException('Invalid credentials');
         }
-        const isPasswordValid = this.cryptoUtils.comparePassword(password, user.password_hash);
+        const isPasswordValid = this.passwordService.comparePassword(password, user.password_hash);
         if (!isPasswordValid) {
             throw new common_1.UnauthorizedException('Invalid credentials');
         }
@@ -91,7 +97,7 @@ let AuthService = class AuthService {
                 registerDto.company_name.trim().length === 0) {
                 throw new common_1.BadRequestException('company_name is required when creating a new company');
             }
-            const companyCode = await this.generateCompanyCode();
+            const companyCode = await this.companyService.generateUniqueCompanyCode();
             company = this.companyRepository.create({
                 code: companyCode,
                 name: registerDto.company_name.trim(),
@@ -190,7 +196,7 @@ let AuthService = class AuthService {
         if (!actor) {
             throw new common_1.UnauthorizedException('User not found or inactive');
         }
-        this.validateUserCreationPermissions(actor.role, createUserDto.role);
+        this.permissionService.validateUserCreationPermission(actor.role, createUserDto.role);
         const existingUser = await this.userRepository.findOne({
             where: { email: createUserDto.email },
         });
@@ -254,8 +260,8 @@ let AuthService = class AuthService {
             }
             targetCompanyId = actor.company_id;
         }
-        const temporaryPassword = this.generateTemporaryPassword();
-        const hashedPassword = this.cryptoUtils.hashPassword(temporaryPassword);
+        const temporaryPassword = this.passwordService.generateTemporaryPassword();
+        const hashedPassword = this.passwordService.hashPassword(temporaryPassword);
         const newUser = this.userRepository.create({
             password_hash: hashedPassword,
             company_id: targetCompanyId,
@@ -370,9 +376,9 @@ let AuthService = class AuthService {
                 settings: user.company.settings,
                 created_at: user.company.created_at,
             };
-            profile.company.statistics = await this.getCompanyStatistics(user.company.id);
+            profile.company.statistics = await this.companyService.getCompanyStatistics(user.company.id);
         }
-        profile.permissions = this.getUserPermissions(user.role);
+        profile.permissions = this.permissionService.getUserPermissions(user.role);
         return profile;
     }
     async updateProfile(userId, updateProfileDto) {
@@ -448,8 +454,9 @@ let AuthService = class AuthService {
             admin.company_id !== targetUser.company_id) {
             throw new common_1.UnauthorizedException('Cannot reset password for users in other companies');
         }
-        const temporaryPassword = this.generateTemporaryPassword();
-        targetUser.password_hash = this.cryptoUtils.hashPassword(temporaryPassword);
+        const temporaryPassword = this.passwordService.generateTemporaryPassword();
+        targetUser.password_hash =
+            this.passwordService.hashPassword(temporaryPassword);
         await this.userRepository.save(targetUser);
         console.log(`✅ Password reset by ${admin.email} for user: ${targetUser.email}`);
         return { temporary_password: temporaryPassword };
@@ -469,140 +476,6 @@ let AuthService = class AuthService {
         }
         return user;
     }
-    validateUserCreationPermissions(actorRole, targetRole) {
-        const permissionMatrix = {
-            [user_entity_1.UserRole.SUPER_ADMIN]: [
-                user_entity_1.UserRole.SUPER_ADMIN,
-                user_entity_1.UserRole.COMPANY_OWNER,
-                user_entity_1.UserRole.ADMIN,
-                user_entity_1.UserRole.HR_MANAGER,
-                user_entity_1.UserRole.PAYROLL,
-                user_entity_1.UserRole.MANAGER,
-                user_entity_1.UserRole.EMPLOYEE,
-            ],
-            [user_entity_1.UserRole.COMPANY_OWNER]: [
-                user_entity_1.UserRole.ADMIN,
-                user_entity_1.UserRole.HR_MANAGER,
-                user_entity_1.UserRole.PAYROLL,
-                user_entity_1.UserRole.MANAGER,
-                user_entity_1.UserRole.EMPLOYEE,
-            ],
-            [user_entity_1.UserRole.ADMIN]: [
-                user_entity_1.UserRole.HR_MANAGER,
-                user_entity_1.UserRole.PAYROLL,
-                user_entity_1.UserRole.MANAGER,
-                user_entity_1.UserRole.EMPLOYEE,
-            ],
-            [user_entity_1.UserRole.HR_MANAGER]: [
-                user_entity_1.UserRole.PAYROLL,
-                user_entity_1.UserRole.MANAGER,
-                user_entity_1.UserRole.EMPLOYEE,
-            ],
-        };
-        const allowedRoles = permissionMatrix[actorRole] || [];
-        if (!allowedRoles.includes(targetRole)) {
-            throw new common_1.BadRequestException(`${actorRole} role cannot create ${targetRole} users`);
-        }
-    }
-    async generateCompanyCode() {
-        const lastCompany = await this.companyRepository
-            .createQueryBuilder('company')
-            .where('company.code LIKE :prefix', { prefix: 'COM%' })
-            .orderBy('company.code', 'DESC')
-            .getOne();
-        if (!lastCompany) {
-            return 'COM001';
-        }
-        const match = lastCompany.code.match(/COM(\d+)/);
-        if (!match) {
-            return 'COM001';
-        }
-        const lastNumber = parseInt(match[1], 10);
-        const newNumber = lastNumber + 1;
-        return `COM${newNumber.toString().padStart(3, '0')}`;
-    }
-    generateTemporaryPassword() {
-        const uppercase = 'ABCDEFGHJKLMNPQRSTUVWXYZ';
-        const lowercase = 'abcdefghjkmnpqrstuvwxyz';
-        const numbers = '23456789';
-        const special = '!@#$%';
-        let password = '';
-        password += uppercase.charAt(Math.floor(Math.random() * uppercase.length));
-        password += lowercase.charAt(Math.floor(Math.random() * lowercase.length));
-        password += numbers.charAt(Math.floor(Math.random() * numbers.length));
-        password += special.charAt(Math.floor(Math.random() * special.length));
-        const allChars = uppercase + lowercase + numbers;
-        for (let i = 4; i < 12; i++) {
-            password += allChars.charAt(Math.floor(Math.random() * allChars.length));
-        }
-        return password
-            .split('')
-            .sort(() => Math.random() - 0.5)
-            .join('');
-    }
-    async getCompanyStatistics(companyId) {
-        const totalUsers = await this.userRepository.count({
-            where: { company_id: companyId },
-        });
-        const activeUsers = await this.userRepository.count({
-            where: { company_id: companyId, active: true, status: user_entity_1.UserStatus.ACTIVE },
-        });
-        return {
-            total_users: totalUsers,
-            active_users: activeUsers,
-            inactive_users: totalUsers - activeUsers,
-        };
-    }
-    getUserPermissions(role) {
-        const permissionMap = {
-            [user_entity_1.UserRole.SUPER_ADMIN]: [
-                'view_all_companies',
-                'create_company',
-                'manage_companies',
-                'manage_subscriptions',
-                'view_all_users',
-                'manage_all_users',
-                'view_analytics',
-                'manage_system_settings',
-            ],
-            [user_entity_1.UserRole.COMPANY_OWNER]: [
-                'view_company',
-                'manage_company',
-                'manage_subscription',
-                'create_admin',
-                'create_hr_manager',
-                'view_all_users',
-                'manage_users',
-                'view_analytics',
-                'manage_departments',
-            ],
-            [user_entity_1.UserRole.ADMIN]: [
-                'view_company',
-                'manage_company_settings',
-                'create_hr_manager',
-                'create_manager',
-                'view_all_users',
-                'manage_users',
-                'view_analytics',
-                'manage_departments',
-            ],
-            [user_entity_1.UserRole.HR_MANAGER]: [
-                'view_company',
-                'create_employee',
-                'view_all_users',
-                'manage_users',
-            ],
-            [user_entity_1.UserRole.PAYROLL]: [
-                'view_all_users',
-                'view_payroll',
-                'manage_payroll',
-                'export_payroll',
-            ],
-            [user_entity_1.UserRole.MANAGER]: ['view_team', 'view_team_users'],
-            [user_entity_1.UserRole.EMPLOYEE]: ['view_own_profile', 'update_own_profile'],
-        };
-        return permissionMap[role] || [];
-    }
 };
 exports.AuthService = AuthService;
 exports.AuthService = AuthService = __decorate([
@@ -613,6 +486,9 @@ exports.AuthService = AuthService = __decorate([
         typeorm_2.Repository,
         jwt_1.JwtService,
         crypto_utils_1.CryptoUtils,
-        hc_service_1.HcService])
+        hc_service_1.HcService,
+        password_service_1.PasswordService,
+        permission_service_1.PermissionService,
+        company_service_1.CompanyService])
 ], AuthService);
 //# sourceMappingURL=auth.service.js.map

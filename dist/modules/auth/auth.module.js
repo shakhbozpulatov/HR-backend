@@ -19,16 +19,16 @@ const crypto_utils_1 = require("../../common/utils/crypto.utils");
 const hc_service_1 = require("../hc/hc.service");
 const hc_api_config_1 = require("../hc/config/hc-api.config");
 const hc_api_client_service_1 = require("../hc/services/hc-api-client.service");
+const password_service_1 = require("./services/password.service");
+const permission_service_1 = require("./services/permission.service");
+const company_service_1 = require("./services/company.service");
 let AuthModule = class AuthModule {
 };
 exports.AuthModule = AuthModule;
 exports.AuthModule = AuthModule = __decorate([
     (0, common_1.Module)({
         imports: [
-            typeorm_1.TypeOrmModule.forFeature([
-                user_entity_1.User,
-                company_entity_1.Company,
-            ]),
+            typeorm_1.TypeOrmModule.forFeature([user_entity_1.User, company_entity_1.Company]),
             passport_1.PassportModule,
         ],
         controllers: [auth_controller_1.AuthController],
@@ -36,11 +36,18 @@ exports.AuthModule = AuthModule = __decorate([
             auth_service_1.AuthService,
             jwt_strategy_1.JwtStrategy,
             crypto_utils_1.CryptoUtils,
+            password_service_1.PasswordService,
+            permission_service_1.PermissionService,
+            company_service_1.CompanyService,
             hc_service_1.HcService,
             hc_api_config_1.HcApiConfig,
             hc_api_client_service_1.HcApiClient,
         ],
-        exports: [auth_service_1.AuthService],
+        exports: [
+            auth_service_1.AuthService,
+            password_service_1.PasswordService,
+            permission_service_1.PermissionService,
+        ],
     })
 ], AuthModule);
 //# sourceMappingURL=auth.module.js.map

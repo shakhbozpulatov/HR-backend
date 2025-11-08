@@ -26,6 +26,24 @@ import { CryptoUtils } from '@/common/utils/crypto.utils';
 import { UpdateProfileDto } from '@/modules/auth/dto/update-profile.dto';
 import { HcService } from '@/modules/hc/hc.service';
 
+// SOLID: Dependency Inversion - depend on abstractions (services)
+import { PasswordService } from './services/password.service';
+import { PermissionService } from './services/permission.service';
+import { CompanyService } from './services/company.service';
+
+/**
+ * Auth Service
+ *
+ * SOLID Principles Applied:
+ * - Single Responsibility: Focus on authentication and user management
+ * - Dependency Inversion: Depends on abstractions (injected services)
+ * - Open/Closed: Easy to extend without modifying existing code
+ *
+ * Delegates responsibilities to specialized services:
+ * - PasswordService: Password operations
+ * - PermissionService: Permission validation
+ * - CompanyService: Company operations
+ */
 @Injectable()
 export class AuthService {
   constructor(
@@ -36,6 +54,11 @@ export class AuthService {
     private jwtService: JwtService,
     private cryptoUtils: CryptoUtils,
     private hcService: HcService,
+
+    // SOLID: Dependency Injection - inject specialized services
+    private passwordService: PasswordService,
+    private permissionService: PermissionService,
+    private companyService: CompanyService,
   ) {}
 
   /**
@@ -55,8 +78,8 @@ export class AuthService {
       throw new UnauthorizedException('Invalid credentials');
     }
 
-    // Verify password
-    const isPasswordValid = this.cryptoUtils.comparePassword(
+    // SOLID: Use PasswordService for password comparison
+    const isPasswordValid = this.passwordService.comparePassword(
       password,
       user.password_hash,
     );
@@ -145,8 +168,8 @@ export class AuthService {
         );
       }
 
-      // Generate unique company code
-      const companyCode = await this.generateCompanyCode();
+      // SOLID: Use CompanyService for code generation
+      const companyCode = await this.companyService.generateUniqueCompanyCode();
 
       // Create company
       company = this.companyRepository.create({
@@ -290,8 +313,11 @@ export class AuthService {
       throw new UnauthorizedException('User not found or inactive');
     }
 
-    // Validate actor has permission to create this role
-    this.validateUserCreationPermissions(actor.role, createUserDto.role);
+    // SOLID: Use PermissionService for validation
+    this.permissionService.validateUserCreationPermission(
+      actor.role,
+      createUserDto.role,
+    );
 
     // Check if email already exists
     const existingUser = await this.userRepository.findOne({
@@ -392,9 +418,9 @@ export class AuthService {
       targetCompanyId = actor.company_id;
     }
 
-    // Generate secure temporary password
-    const temporaryPassword = this.generateTemporaryPassword();
-    const hashedPassword = this.cryptoUtils.hashPassword(temporaryPassword);
+    // SOLID: Use PasswordService for password generation and hashing
+    const temporaryPassword = this.passwordService.generateTemporaryPassword();
+    const hashedPassword = this.passwordService.hashPassword(temporaryPassword);
 
     // Create user with proper initial status
     const newUser = this.userRepository.create({
@@ -557,14 +583,14 @@ export class AuthService {
         created_at: user.company.created_at,
       };
 
-      // Get company statistics
-      profile.company.statistics = await this.getCompanyStatistics(
+      // SOLID: Use CompanyService for statistics
+      profile.company.statistics = await this.companyService.getCompanyStatistics(
         user.company.id,
       );
     }
 
-    // Add permissions based on role
-    profile.permissions = this.getUserPermissions(user.role);
+    // SOLID: Use PermissionService for permissions
+    profile.permissions = this.permissionService.getUserPermissions(user.role);
 
     return profile;
   }
@@ -711,9 +737,10 @@ export class AuthService {
       );
     }
 
-    // Generate new temporary password
-    const temporaryPassword = this.generateTemporaryPassword();
-    targetUser.password_hash = this.cryptoUtils.hashPassword(temporaryPassword);
+    // SOLID: Use PasswordService
+    const temporaryPassword = this.passwordService.generateTemporaryPassword();
+    targetUser.password_hash =
+      this.passwordService.hashPassword(temporaryPassword);
     await this.userRepository.save(targetUser);
 
     console.log(
@@ -749,177 +776,10 @@ export class AuthService {
     return user;
   }
 
-  /**
-   * PERMISSION VALIDATION
-   * Enforce role hierarchy for user creation
-   */
-  private validateUserCreationPermissions(
-    actorRole: UserRole,
-    targetRole: UserRole,
-  ): void {
-    const permissionMatrix = {
-      [UserRole.SUPER_ADMIN]: [
-        UserRole.SUPER_ADMIN,
-        UserRole.COMPANY_OWNER,
-        UserRole.ADMIN,
-        UserRole.HR_MANAGER,
-        UserRole.PAYROLL,
-        UserRole.MANAGER,
-        UserRole.EMPLOYEE,
-      ],
-      [UserRole.COMPANY_OWNER]: [
-        UserRole.ADMIN,
-        UserRole.HR_MANAGER,
-        UserRole.PAYROLL,
-        UserRole.MANAGER,
-        UserRole.EMPLOYEE,
-      ],
-      [UserRole.ADMIN]: [
-        UserRole.HR_MANAGER,
-        UserRole.PAYROLL,
-        UserRole.MANAGER,
-        UserRole.EMPLOYEE,
-      ],
-      [UserRole.HR_MANAGER]: [
-        UserRole.PAYROLL,
-        UserRole.MANAGER,
-        UserRole.EMPLOYEE,
-      ],
-    };
-
-    const allowedRoles = permissionMatrix[actorRole] || [];
-
-    if (!allowedRoles.includes(targetRole)) {
-      throw new BadRequestException(
-        `${actorRole} role cannot create ${targetRole} users`,
-      );
-    }
-  }
-
-  /**
-   * HELPER: Generate unique company code
-   */
-  private async generateCompanyCode(): Promise<string> {
-    const lastCompany = await this.companyRepository
-      .createQueryBuilder('company')
-      .where('company.code LIKE :prefix', { prefix: 'COM%' })
-      .orderBy('company.code', 'DESC')
-      .getOne();
-
-    if (!lastCompany) {
-      return 'COM001';
-    }
-
-    const match = lastCompany.code.match(/COM(\d+)/);
-    if (!match) {
-      return 'COM001';
-    }
-
-    const lastNumber = parseInt(match[1], 10);
-    const newNumber = lastNumber + 1;
-    return `COM${newNumber.toString().padStart(3, '0')}`;
-  }
-
-  /**
-   * HELPER: Generate secure temporary password
-   */
-  private generateTemporaryPassword(): string {
-    const uppercase = 'ABCDEFGHJKLMNPQRSTUVWXYZ';
-    const lowercase = 'abcdefghjkmnpqrstuvwxyz';
-    const numbers = '23456789';
-    const special = '!@#$%';
-
-    let password = '';
-    password += uppercase.charAt(Math.floor(Math.random() * uppercase.length));
-    password += lowercase.charAt(Math.floor(Math.random() * lowercase.length));
-    password += numbers.charAt(Math.floor(Math.random() * numbers.length));
-    password += special.charAt(Math.floor(Math.random() * special.length));
-
-    const allChars = uppercase + lowercase + numbers;
-    for (let i = 4; i < 12; i++) {
-      password += allChars.charAt(Math.floor(Math.random() * allChars.length));
-    }
-
-    // Shuffle password
-    return password
-      .split('')
-      .sort(() => Math.random() - 0.5)
-      .join('');
-  }
-
-  /**
-   * Get company statistics
-   */
-  private async getCompanyStatistics(companyId: string): Promise<any> {
-    // Total users
-    const totalUsers = await this.userRepository.count({
-      where: { company_id: companyId },
-    });
-
-    // Active users
-    const activeUsers = await this.userRepository.count({
-      where: { company_id: companyId, active: true, status: UserStatus.ACTIVE },
-    });
-
-    return {
-      total_users: totalUsers,
-      active_users: activeUsers,
-      inactive_users: totalUsers - activeUsers,
-    };
-  }
-
-  /**
-   * Get user permissions based on role
-   */
-  private getUserPermissions(role: UserRole): string[] {
-    const permissionMap = {
-      [UserRole.SUPER_ADMIN]: [
-        'view_all_companies',
-        'create_company',
-        'manage_companies',
-        'manage_subscriptions',
-        'view_all_users',
-        'manage_all_users',
-        'view_analytics',
-        'manage_system_settings',
-      ],
-      [UserRole.COMPANY_OWNER]: [
-        'view_company',
-        'manage_company',
-        'manage_subscription',
-        'create_admin',
-        'create_hr_manager',
-        'view_all_users',
-        'manage_users',
-        'view_analytics',
-        'manage_departments',
-      ],
-      [UserRole.ADMIN]: [
-        'view_company',
-        'manage_company_settings',
-        'create_hr_manager',
-        'create_manager',
-        'view_all_users',
-        'manage_users',
-        'view_analytics',
-        'manage_departments',
-      ],
-      [UserRole.HR_MANAGER]: [
-        'view_company',
-        'create_employee',
-        'view_all_users',
-        'manage_users',
-      ],
-      [UserRole.PAYROLL]: [
-        'view_all_users',
-        'view_payroll',
-        'manage_payroll',
-        'export_payroll',
-      ],
-      [UserRole.MANAGER]: ['view_team', 'view_team_users'],
-      [UserRole.EMPLOYEE]: ['view_own_profile', 'update_own_profile'],
-    };
-
-    return permissionMap[role] || [];
-  }
+  // Note: All helper methods have been moved to specialized services:
+  // - validateUserCreationPermissions → PermissionService
+  // - generateCompanyCode → CompanyService
+  // - generateTemporaryPassword → PasswordService
+  // - getCompanyStatistics → CompanyService
+  // - getUserPermissions → PermissionService
 }

@@ -9,13 +9,19 @@ import { ChangePasswordDto } from './dto/change-password.dto';
 import { CryptoUtils } from '@/common/utils/crypto.utils';
 import { UpdateProfileDto } from '@/modules/auth/dto/update-profile.dto';
 import { HcService } from '@/modules/hc/hc.service';
+import { PasswordService } from './services/password.service';
+import { PermissionService } from './services/permission.service';
+import { CompanyService } from './services/company.service';
 export declare class AuthService {
     private userRepository;
     private companyRepository;
     private jwtService;
     private cryptoUtils;
     private hcService;
-    constructor(userRepository: Repository<User>, companyRepository: Repository<Company>, jwtService: JwtService, cryptoUtils: CryptoUtils, hcService: HcService);
+    private passwordService;
+    private permissionService;
+    private companyService;
+    constructor(userRepository: Repository<User>, companyRepository: Repository<Company>, jwtService: JwtService, cryptoUtils: CryptoUtils, hcService: HcService, passwordService: PasswordService, permissionService: PermissionService, companyService: CompanyService);
     login(loginDto: LoginDto): Promise<{
         access_token: string;
         user: any;
@@ -41,9 +47,4 @@ export declare class AuthService {
         temporary_password: string;
     }>;
     validateUser(payload: any): Promise<User>;
-    private validateUserCreationPermissions;
-    private generateCompanyCode;
-    private generateTemporaryPassword;
-    private getCompanyStatistics;
-    private getUserPermissions;
 }
