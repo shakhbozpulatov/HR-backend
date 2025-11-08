@@ -19,19 +19,6 @@ let HcService = class HcService {
         this.apiClient = apiClient;
         this.config = config;
     }
-    onModuleInit() {
-        try {
-            this.config.validate();
-            console.log('✅ HC Service initialized successfully', {
-                baseUrl: this.config.getBaseUrl(),
-                hasToken: !!this.config.getAccessToken(),
-            });
-        }
-        catch (error) {
-            console.error('❌ HC Service initialization failed:', error.message);
-            throw error;
-        }
-    }
     async createUserOnCabinet(dto) {
         const endpoint = this.config.getEndpoints().person.add;
         const formattedDto = {
@@ -74,11 +61,23 @@ let HcService = class HcService {
             data: { personId },
         });
     }
-    async bindUserWithTerminal(data) {
+    async bindUserWithTerminal(personId, accessLevelIdList) {
         const endpoint = this.config.getEndpoints().terminal.bind;
+        const requestData = {
+            personList: [
+                {
+                    personId,
+                    accessLevelIdList,
+                },
+            ],
+        };
+        console.log('🔗 Binding user to terminal:', {
+            personId,
+            accessLevelIdList,
+        });
         return this.apiClient.post({
             endpoint,
-            data,
+            data: requestData,
         });
     }
     async unbindUserFromTerminal(data) {
@@ -87,6 +86,19 @@ let HcService = class HcService {
             endpoint,
             data,
         });
+    }
+    onModuleInit() {
+        try {
+            this.config.validate();
+            console.log('✅ HC Service initialized successfully', {
+                baseUrl: this.config.getBaseUrl(),
+                hasToken: !!this.config.getAccessToken(),
+            });
+        }
+        catch (error) {
+            console.error('❌ HC Service initialization failed:', error.message);
+            throw error;
+        }
     }
 };
 exports.HcService = HcService;

@@ -30,9 +30,9 @@ let CryptoUtils = class CryptoUtils {
     }
     generateHcPersonId() {
         const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-        const timestamp = Date.now().toString().slice(-7);
+        const timestamp = Date.now().toString().slice(-2);
         let randomPart = '';
-        for (let i = 0; i < 6; i++) {
+        for (let i = 0; i < 3; i++) {
             randomPart += chars.charAt(Math.floor(Math.random() * chars.length));
         }
         return `EMP${timestamp}${randomPart}`;

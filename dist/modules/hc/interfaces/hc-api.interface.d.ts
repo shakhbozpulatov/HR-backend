@@ -26,5 +26,5 @@ export interface HcApiRequestOptions {
 }
 export interface IHcService {
     createUserOnCabinet(dto: any): Promise<HcApiResponse<HcPersonData>>;
-    bindUserWithTerminal?(data: any): Promise<HcApiResponse>;
+    bindUserWithTerminal?(personId: string, accessLevelIdList: string[]): Promise<HcApiResponse>;
 }

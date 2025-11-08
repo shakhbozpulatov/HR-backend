@@ -7,6 +7,7 @@ export declare class AdminCreateUserDto {
     last_name: string;
     groupId: string;
     gender: number;
+    accessLevelIdList?: string[];
     middle_name?: string;
     dob?: string;
     phone?: string;

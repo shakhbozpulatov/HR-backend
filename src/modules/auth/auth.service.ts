@@ -467,6 +467,30 @@ export class AuthService {
         console.log(
           `✅ User synced with HC system: ${savedUser.email} (HC Person ID: ${savedUser.hcPersonId})`,
         );
+
+        // Bind user to terminal if accessLevelIdList is provided
+        if (
+          createUserDto.accessLevelIdList &&
+          createUserDto.accessLevelIdList.length > 0
+        ) {
+          try {
+            await this.hcService.bindUserWithTerminal(
+              savedUser.hcPersonId,
+              createUserDto.accessLevelIdList,
+            );
+
+            console.log(
+              `✅ User bound to terminal: ${savedUser.email} (Access Levels: ${createUserDto.accessLevelIdList.join(', ')})`,
+            );
+          } catch (bindError) {
+            console.warn(
+              `⚠️ User synced but terminal binding failed: ${savedUser.email}`,
+              bindError.message,
+            );
+            // Don't fail the entire operation if binding fails
+            // User is already created and synced
+          }
+        }
       } catch (hcError) {
         // HC sync failed, mark user as failed sync but keep the user in DB
         savedUser.status = UserStatus.FAILED_SYNC;

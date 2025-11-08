@@ -46,7 +46,7 @@ export class HcApiConfig {
         list: '/person/v1/persons/list',
       },
       terminal: {
-        bind: '/terminal/v1/bind',
+        bind: '/acspm/v1/accesslevel/person/add',
         unbind: '/terminal/v1/unbind',
       },
       // Easy to add more endpoints in future

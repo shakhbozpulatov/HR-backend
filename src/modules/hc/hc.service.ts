@@ -9,44 +9,12 @@ import {
   IHcService,
 } from './interfaces/hc-api.interface';
 
-/**
- * HC Service
- *
- * SOLID Principles Applied:
- * - Single Responsibility: Only handles business logic for HC operations
- * - Open/Closed: Easy to add new methods without modifying existing code
- * - Liskov Substitution: Implements IHcService interface
- * - Interface Segregation: Uses focused interfaces
- * - Dependency Inversion: Depends on abstractions (HcApiClient, HcApiConfig)
- *
- * Benefits:
- * - Clean separation of concerns
- * - Easy to test (mockable dependencies)
- * - Easy to extend with new HC API methods
- * - Reusable components
- */
 @Injectable()
 export class HcService implements IHcService, OnModuleInit {
   constructor(
     private readonly apiClient: HcApiClient,
     private readonly config: HcApiConfig,
   ) {}
-
-  /**
-   * Validate configuration on module initialization
-   */
-  onModuleInit() {
-    try {
-      this.config.validate();
-      console.log('✅ HC Service initialized successfully', {
-        baseUrl: this.config.getBaseUrl(),
-        hasToken: !!this.config.getAccessToken(),
-      });
-    } catch (error) {
-      console.error('❌ HC Service initialization failed:', error.message);
-      throw error;
-    }
-  }
 
   /**
    * Create user on HC Cabinet
@@ -126,18 +94,34 @@ export class HcService implements IHcService, OnModuleInit {
   }
 
   /**
-   * Bind user with terminal
-   * Placeholder for future implementation
+   * Bind user with terminal (access level)
+   * @param personId - HC person ID
+   * @param accessLevelIdList - List of access level IDs for terminals
+   * @returns HC API response
    */
-  async bindUserWithTerminal(data: {
-    personId: string;
-    terminalId: string;
-  }): Promise<HcApiResponse> {
+  async bindUserWithTerminal(
+    personId: string,
+    accessLevelIdList: string[],
+  ): Promise<HcApiResponse> {
     const endpoint = this.config.getEndpoints().terminal.bind;
+
+    const requestData = {
+      personList: [
+        {
+          personId,
+          accessLevelIdList,
+        },
+      ],
+    };
+
+    console.log('🔗 Binding user to terminal:', {
+      personId,
+      accessLevelIdList,
+    });
 
     return this.apiClient.post({
       endpoint,
-      data,
+      data: requestData,
     });
   }
 
@@ -155,4 +139,37 @@ export class HcService implements IHcService, OnModuleInit {
       data,
     });
   }
+
+  /**
+   * Validate configuration on module initialization
+   */
+  onModuleInit() {
+    try {
+      this.config.validate();
+      console.log('✅ HC Service initialized successfully', {
+        baseUrl: this.config.getBaseUrl(),
+        hasToken: !!this.config.getAccessToken(),
+      });
+    } catch (error) {
+      console.error('❌ HC Service initialization failed:', error.message);
+      throw error;
+    }
+  }
 }
+
+/**
+ * HC Service
+ *
+ * SOLID Principles Applied:
+ * - Single Responsibility: Only handles business logic for HC operations
+ * - Open/Closed: Easy to add new methods without modifying existing code
+ * - Liskov Substitution: Implements IHcService interface
+ * - Interface Segregation: Uses focused interfaces
+ * - Dependency Inversion: Depends on abstractions (HcApiClient, HcApiConfig)
+ *
+ * Benefits:
+ * - Clean separation of concerns
+ * - Easy to test (mockable dependencies)
+ * - Easy to extend with new HC API methods
+ * - Reusable components
+ */

@@ -291,6 +291,16 @@ let AuthService = class AuthService {
                 savedUser.status = user_entity_1.UserStatus.SYNCED;
                 await this.userRepository.save(savedUser);
                 console.log(`✅ User synced with HC system: ${savedUser.email} (HC Person ID: ${savedUser.hcPersonId})`);
+                if (createUserDto.accessLevelIdList &&
+                    createUserDto.accessLevelIdList.length > 0) {
+                    try {
+                        await this.hcService.bindUserWithTerminal(savedUser.hcPersonId, createUserDto.accessLevelIdList);
+                        console.log(`✅ User bound to terminal: ${savedUser.email} (Access Levels: ${createUserDto.accessLevelIdList.join(', ')})`);
+                    }
+                    catch (bindError) {
+                        console.warn(`⚠️ User synced but terminal binding failed: ${savedUser.email}`, bindError.message);
+                    }
+                }
             }
             catch (hcError) {
                 savedUser.status = user_entity_1.UserStatus.FAILED_SYNC;

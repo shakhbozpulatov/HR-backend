@@ -7,17 +7,14 @@ export declare class HcService implements IHcService, OnModuleInit {
     private readonly apiClient;
     private readonly config;
     constructor(apiClient: HcApiClient, config: HcApiConfig);
-    onModuleInit(): void;
     createUserOnCabinet(dto: CreateHCUserDto): Promise<HcApiResponse<HcPersonData>>;
     updateUserOnCabinet(personId: string, updateData: Partial<CreateHCUserDto>): Promise<HcApiResponse<HcPersonData>>;
     getUserFromCabinet(personId: string): Promise<HcApiResponse<HcPersonData>>;
     deleteUserFromCabinet(personId: string): Promise<HcApiResponse>;
-    bindUserWithTerminal(data: {
-        personId: string;
-        terminalId: string;
-    }): Promise<HcApiResponse>;
+    bindUserWithTerminal(personId: string, accessLevelIdList: string[]): Promise<HcApiResponse>;
     unbindUserFromTerminal(data: {
         personId: string;
         terminalId: string;
     }): Promise<HcApiResponse>;
+    onModuleInit(): void;
 }
