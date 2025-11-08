@@ -20,11 +20,14 @@ export declare enum TariffType {
 }
 export declare enum UserStatus {
     ACTIVE = "active",
-    INACTIVE = "inactive"
+    INACTIVE = "inactive",
+    SYNCED = "synced",
+    FAILED_SYNC = "failed_sync"
 }
 export declare class User {
     id: string;
     company_id?: string;
+    hcPersonId: string;
     role: UserRole;
     email: string;
     password_hash: string;

@@ -37,6 +37,8 @@ var UserStatus;
 (function (UserStatus) {
     UserStatus["ACTIVE"] = "active";
     UserStatus["INACTIVE"] = "inactive";
+    UserStatus["SYNCED"] = "synced";
+    UserStatus["FAILED_SYNC"] = "failed_sync";
 })(UserStatus || (exports.UserStatus = UserStatus = {}));
 let User = class User {
 };
@@ -49,6 +51,10 @@ __decorate([
     (0, typeorm_1.Column)({ type: 'uuid', nullable: true }),
     __metadata("design:type", String)
 ], User.prototype, "company_id", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ nullable: true, unique: true, name: 'hc_person_id' }),
+    __metadata("design:type", String)
+], User.prototype, "hcPersonId", void 0);
 __decorate([
     (0, typeorm_1.Column)({ type: 'enum', enum: UserRole }),
     __metadata("design:type", String)

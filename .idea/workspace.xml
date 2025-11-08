@@ -5,26 +5,37 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="f223feb0-6502-4a9b-9c03-44f93ba47b8c" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/src/modules/hc/dto/hc-user.dto.ts" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/dist/config/database.config.js" beforeDir="false" afterPath="$PROJECT_DIR$/dist/config/database.config.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/dist/config/database.config.js.map" beforeDir="false" afterPath="$PROJECT_DIR$/dist/config/database.config.js.map" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/dist/modules/schedules/dto/create-schedule-template.dto.js" beforeDir="false" afterPath="$PROJECT_DIR$/dist/modules/schedules/dto/create-schedule-template.dto.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/dist/modules/schedules/entities/employee-schedule-assignment.entity.js.map" beforeDir="false" afterPath="$PROJECT_DIR$/dist/modules/schedules/entities/employee-schedule-assignment.entity.js.map" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/dist/modules/schedules/entities/schedule-template.entity.js" beforeDir="false" afterPath="$PROJECT_DIR$/dist/modules/schedules/entities/schedule-template.entity.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/dist/modules/schedules/entities/schedule-template.entity.js.map" beforeDir="false" afterPath="$PROJECT_DIR$/dist/modules/schedules/entities/schedule-template.entity.js.map" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/dist/modules/schedules/schedule-assignments.controller.d.ts" beforeDir="false" afterPath="$PROJECT_DIR$/dist/modules/schedules/schedule-assignments.controller.d.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/dist/modules/schedules/schedule-assignments.controller.js" beforeDir="false" afterPath="$PROJECT_DIR$/dist/modules/schedules/schedule-assignments.controller.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/dist/modules/schedules/schedule-assignments.controller.js.map" beforeDir="false" afterPath="$PROJECT_DIR$/dist/modules/schedules/schedule-assignments.controller.js.map" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/dist/modules/schedules/schedule-assignments.service.d.ts" beforeDir="false" afterPath="$PROJECT_DIR$/dist/modules/schedules/schedule-assignments.service.d.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/dist/modules/schedules/schedule-assignments.service.js" beforeDir="false" afterPath="$PROJECT_DIR$/dist/modules/schedules/schedule-assignments.service.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/dist/modules/schedules/schedule-assignments.service.js.map" beforeDir="false" afterPath="$PROJECT_DIR$/dist/modules/schedules/schedule-assignments.service.js.map" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/dist/app.module.js" beforeDir="false" afterPath="$PROJECT_DIR$/dist/app.module.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/dist/app.module.js.map" beforeDir="false" afterPath="$PROJECT_DIR$/dist/app.module.js.map" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/dist/common/utils/crypto.utils.d.ts" beforeDir="false" afterPath="$PROJECT_DIR$/dist/common/utils/crypto.utils.d.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/dist/common/utils/crypto.utils.js" beforeDir="false" afterPath="$PROJECT_DIR$/dist/common/utils/crypto.utils.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/dist/common/utils/crypto.utils.js.map" beforeDir="false" afterPath="$PROJECT_DIR$/dist/common/utils/crypto.utils.js.map" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/dist/modules/auth/auth.controller.js" beforeDir="false" afterPath="$PROJECT_DIR$/dist/modules/auth/auth.controller.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/dist/modules/auth/auth.controller.js.map" beforeDir="false" afterPath="$PROJECT_DIR$/dist/modules/auth/auth.controller.js.map" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/dist/modules/auth/auth.module.js" beforeDir="false" afterPath="$PROJECT_DIR$/dist/modules/auth/auth.module.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/dist/modules/auth/auth.module.js.map" beforeDir="false" afterPath="$PROJECT_DIR$/dist/modules/auth/auth.module.js.map" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/dist/modules/auth/auth.service.d.ts" beforeDir="false" afterPath="$PROJECT_DIR$/dist/modules/auth/auth.service.d.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/dist/modules/auth/auth.service.js" beforeDir="false" afterPath="$PROJECT_DIR$/dist/modules/auth/auth.service.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/dist/modules/auth/auth.service.js.map" beforeDir="false" afterPath="$PROJECT_DIR$/dist/modules/auth/auth.service.js.map" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/dist/modules/auth/dto/admin-create-user.dto.d.ts" beforeDir="false" afterPath="$PROJECT_DIR$/dist/modules/auth/dto/admin-create-user.dto.d.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/dist/modules/auth/dto/admin-create-user.dto.js" beforeDir="false" afterPath="$PROJECT_DIR$/dist/modules/auth/dto/admin-create-user.dto.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/dist/modules/auth/dto/admin-create-user.dto.js.map" beforeDir="false" afterPath="$PROJECT_DIR$/dist/modules/auth/dto/admin-create-user.dto.js.map" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/dist/modules/schedules/dto/update-template.dto.d.ts" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/dist/modules/schedules/dto/update-template.dto.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/dist/modules/schedules/dto/update-template.dto.js.map" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/dist/modules/users/entities/user.entity.d.ts" beforeDir="false" afterPath="$PROJECT_DIR$/dist/modules/users/entities/user.entity.d.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/dist/modules/users/entities/user.entity.js" beforeDir="false" afterPath="$PROJECT_DIR$/dist/modules/users/entities/user.entity.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/dist/modules/users/entities/user.entity.js.map" beforeDir="false" afterPath="$PROJECT_DIR$/dist/modules/users/entities/user.entity.js.map" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/dist/tsconfig.build.tsbuildinfo" beforeDir="false" afterPath="$PROJECT_DIR$/dist/tsconfig.build.tsbuildinfo" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/config/database.config.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/config/database.config.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/modules/schedules/dto/create-schedule-template.dto.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/modules/schedules/dto/create-schedule-template.dto.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/modules/schedules/entities/employee-schedule-assignment.entity.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/modules/schedules/entities/employee-schedule-assignment.entity.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/modules/schedules/entities/schedule-template.entity.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/modules/schedules/entities/schedule-template.entity.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/modules/schedules/schedule-assignments.controller.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/modules/schedules/schedule-assignments.controller.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/modules/schedules/schedule-assignments.service.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/modules/schedules/schedule-assignments.service.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/app.module.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/app.module.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/common/utils/crypto.utils.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/common/utils/crypto.utils.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/modules/auth/auth.controller.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/modules/auth/auth.controller.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/modules/auth/auth.module.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/modules/auth/auth.module.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/modules/auth/auth.service.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/modules/auth/auth.service.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/modules/auth/dto/admin-create-user.dto.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/modules/auth/dto/admin-create-user.dto.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/modules/users/entities/user.entity.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/modules/users/entities/user.entity.ts" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -83,7 +94,7 @@
   <component name="SharedIndexes">
     <attachedChunks>
       <set>
-        <option value="bundled-js-predefined-d6986cc7102b-09060db00ec0-JavaScript-WS-251.28293.44" />
+        <option value="bundled-js-predefined-d6986cc7102b-09060db00ec0-JavaScript-WS-251.29188.1" />
       </set>
     </attachedChunks>
   </component>
@@ -104,7 +115,9 @@
       <workItem from="1759507878043" duration="10201000" />
       <workItem from="1759602667384" duration="69146000" />
       <workItem from="1760966793712" duration="2538000" />
-      <workItem from="1761999907692" duration="11072000" />
+      <workItem from="1761999907692" duration="12597000" />
+      <workItem from="1762320726092" duration="3322000" />
+      <workItem from="1762593728645" duration="11512000" />
     </task>
     <servers />
   </component>

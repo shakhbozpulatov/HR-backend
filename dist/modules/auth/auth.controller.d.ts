@@ -3,7 +3,6 @@ import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
 import { AdminCreateUserDto } from './dto/admin-create-user.dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
-import { UserRole } from '@/modules/users/entities/user.entity';
 import { UpdateProfileDto } from '@/modules/auth/dto/update-profile.dto';
 export declare class AuthController {
     private readonly authService;
@@ -16,17 +15,7 @@ export declare class AuthController {
         access_token: string;
         user: any;
     }>;
-    createUserByAdmin(createUserDto: AdminCreateUserDto, req: any): Promise<{
-        message: string;
-        user: {
-            user_id: string;
-            email: string;
-            role: UserRole;
-            company_id: string;
-        };
-        temporary_password: string;
-        note: string;
-    }>;
+    createUserByAdmin(createUserDto: AdminCreateUserDto, req: any): Promise<any>;
     changePassword(changePasswordDto: ChangePasswordDto, req: any): Promise<{
         message: string;
     }>;

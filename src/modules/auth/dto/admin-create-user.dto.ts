@@ -28,6 +28,12 @@ export class AdminCreateUserDto {
   @IsString()
   last_name: string;
 
+  @IsString()
+  groupId: string;
+
+  @IsNumber()
+  gender: number;
+
   @IsOptional()
   @IsString()
   middle_name?: string;

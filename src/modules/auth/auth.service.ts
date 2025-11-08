@@ -24,6 +24,7 @@ import { AdminCreateUserDto } from './dto/admin-create-user.dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
 import { CryptoUtils } from '@/common/utils/crypto.utils';
 import { UpdateProfileDto } from '@/modules/auth/dto/update-profile.dto';
+import { HcService } from '@/modules/hc/hc.service';
 
 @Injectable()
 export class AuthService {
@@ -34,6 +35,7 @@ export class AuthService {
     private companyRepository: Repository<Company>,
     private jwtService: JwtService,
     private cryptoUtils: CryptoUtils,
+    private hcService: HcService,
   ) {}
 
   /**
@@ -270,7 +272,14 @@ export class AuthService {
   async createUserByAdmin(
     createUserDto: AdminCreateUserDto,
     actorUserId: string,
-  ): Promise<{ user: User; temporary_password: string }> {
+  ): Promise<{
+    user: User;
+    temporary_password: string;
+    hcUser: any;
+    hcError?: any;
+    syncStatus?: string;
+    warning?: string;
+  }> {
     // Get actor user with relations
     const actor = await this.userRepository.findOne({
       where: { id: actorUserId, active: true },
@@ -278,7 +287,7 @@ export class AuthService {
     });
 
     if (!actor) {
-      throw new UnauthorizedException('Actor not found or inactive');
+      throw new UnauthorizedException('User not found or inactive');
     }
 
     // Validate actor has permission to create this role
@@ -290,7 +299,68 @@ export class AuthService {
     });
 
     if (existingUser) {
-      throw new ConflictException('Email already exists');
+      // If user exists and is not synced, attempt to sync with HC
+      if (existingUser.status !== UserStatus.SYNCED) {
+        console.log(
+          `⚠️ User already exists but not synced: ${existingUser.email}. Attempting re-sync...`,
+        );
+
+        try {
+          const hcPersonCode = this.cryptoUtils.generateHcPersonId();
+          const hcResponse = await this.hcService.createUserOnCabinet({
+            groupId: createUserDto.groupId || '1',
+            personCode: hcPersonCode,
+            firstName: createUserDto.first_name,
+            lastName: createUserDto.last_name,
+            gender: createUserDto.gender,
+            phone: createUserDto.phone,
+            startDate: createUserDto.start_date,
+            endDate: createUserDto.end_date,
+          });
+
+          // Update existing user with HC data
+          existingUser.hcPersonId = hcResponse.data?.personId || hcPersonCode;
+          existingUser.status = UserStatus.SYNCED;
+          await this.userRepository.save(existingUser);
+
+          console.log(
+            `✅ Existing user re-synced with HC: ${existingUser.email}`,
+          );
+
+          return {
+            user: existingUser,
+            hcUser: hcResponse,
+            temporary_password:
+              'N/A - User already exists (re-synced with HC system)',
+          };
+        } catch (err) {
+          existingUser.status = UserStatus.FAILED_SYNC;
+          await this.userRepository.save(existingUser);
+
+          console.error(
+            `❌ Re-sync failed for existing user: ${existingUser.email}`,
+            err.message,
+          );
+
+          // Extract HC error details
+          let errorMessage = err.message;
+          if (err.getResponse && typeof err.getResponse === 'function') {
+            const errorResponse = err.getResponse();
+            if (typeof errorResponse === 'object') {
+              errorMessage = `${errorResponse.error || errorResponse.message} (errorCode: ${errorResponse.errorCode})`;
+            }
+          }
+
+          throw new ConflictException(
+            `User with email ${existingUser.email} already exists but HC sync failed: ${errorMessage}`,
+          );
+        }
+      }
+
+      // User already exists and is fully synced
+      throw new ConflictException(
+        `Email ${createUserDto.email} is already registered and synced`,
+      );
     }
 
     // Determine target company_id
@@ -326,26 +396,111 @@ export class AuthService {
     const temporaryPassword = this.generateTemporaryPassword();
     const hashedPassword = this.cryptoUtils.hashPassword(temporaryPassword);
 
-    // Create user
+    // Create user with proper initial status
     const newUser = this.userRepository.create({
       password_hash: hashedPassword,
       company_id: targetCompanyId,
+      status: UserStatus.ACTIVE,
+      active: true,
       ...createUserDto,
     });
 
-    const savedUser = await this.userRepository.save(newUser);
+    let savedUser: User;
+    let hcResponse: any;
 
-    console.log(
-      `✅ User created by ${actor.email}: ${savedUser.email} (${savedUser.role})`,
-    );
+    try {
+      // Save user to database
+      savedUser = await this.userRepository.save(newUser);
 
-    // TODO: Send email to new user with temporary password
-    // await this.emailService.sendWelcomeEmail(savedUser.email, temporaryPassword);
+      console.log(
+        `✅ User created by ${actor.email}: ${savedUser.email} (${savedUser.role})`,
+      );
 
-    return {
-      user: savedUser,
-      temporary_password: temporaryPassword,
-    };
+      // Prepare HC user data
+      const hcPersonCode = this.cryptoUtils.generateHcPersonId();
+      const hcUserData = {
+        groupId: createUserDto.groupId || '1',
+        personCode: hcPersonCode,
+        firstName: savedUser.first_name,
+        lastName: savedUser.last_name,
+        gender: createUserDto.gender,
+        phone: savedUser.phone,
+        startDate: createUserDto.start_date,
+        endDate: createUserDto.end_date,
+      };
+
+      // Attempt to sync with HC system
+      try {
+        hcResponse = await this.hcService.createUserOnCabinet(hcUserData);
+
+        // Update user with HC person ID and sync status
+        savedUser.hcPersonId = hcResponse.data?.personId || hcPersonCode;
+        savedUser.status = UserStatus.SYNCED;
+        await this.userRepository.save(savedUser);
+
+        console.log(
+          `✅ User synced with HC system: ${savedUser.email} (HC Person ID: ${savedUser.hcPersonId})`,
+        );
+      } catch (hcError) {
+        // HC sync failed, mark user as failed sync but keep the user in DB
+        savedUser.status = UserStatus.FAILED_SYNC;
+        await this.userRepository.save(savedUser);
+
+        console.warn(
+          `⚠️ User created but HC sync failed: ${savedUser.email}`,
+          hcError.message,
+        );
+
+        // Extract HC error details from HttpException
+        let hcErrorDetails: any = {
+          message: hcError.message || 'HC sync failed',
+          errorCode: null,
+          details: null,
+        };
+
+        // If it's a NestJS HttpException, extract the response
+        if (hcError.getResponse && typeof hcError.getResponse === 'function') {
+          const errorResponse = hcError.getResponse();
+
+          // errorResponse structure from HcApiClient:
+          // { message, error, errorCode, details }
+          if (typeof errorResponse === 'object') {
+            hcErrorDetails = {
+              message: errorResponse.message || hcError.message,
+              errorCode: errorResponse.errorCode || null,
+              error: errorResponse.error || null,
+              details: errorResponse.details || null,
+            };
+          }
+        }
+
+        console.error('❌ HC Error Details for API Response:', hcErrorDetails);
+
+        // Return user with failed sync status and HC error details
+        return {
+          user: savedUser,
+          hcUser: null,
+          temporary_password: temporaryPassword,
+          hcError: hcErrorDetails,
+          syncStatus: 'FAILED_SYNC',
+          warning: 'User created successfully but HC sync failed',
+        };
+      }
+
+      // TODO: Send email to new user with temporary password
+      // await this.emailService.sendWelcomeEmail(savedUser.email, temporaryPassword);
+
+      return {
+        user: savedUser,
+        hcUser: hcResponse,
+        temporary_password: temporaryPassword,
+      };
+    } catch (error) {
+      console.error('❌ Failed to create user:', error.message);
+      throw new BadRequestException(
+        `Failed to create user: ${error.message || 'Unknown error'}`,
+      );
+    }
   }
 
   /**

@@ -9,29 +9,42 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.UpdateTemplateDto = void 0;
+exports.CreateHCUserDto = void 0;
 const class_validator_1 = require("class-validator");
-const class_transformer_1 = require("class-transformer");
-class UpdateTemplateDto {
+class CreateHCUserDto {
 }
-exports.UpdateTemplateDto = UpdateTemplateDto;
+exports.CreateHCUserDto = CreateHCUserDto;
 __decorate([
     (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
-], UpdateTemplateDto.prototype, "user_id", void 0);
+], CreateHCUserDto.prototype, "groupId", void 0);
 __decorate([
     (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
-], UpdateTemplateDto.prototype, "new_template_id", void 0);
+], CreateHCUserDto.prototype, "personCode", void 0);
 __decorate([
-    (0, class_validator_1.IsDate)(),
-    (0, class_transformer_1.Type)(() => Date),
-    __metadata("design:type", Date)
-], UpdateTemplateDto.prototype, "effective_from", void 0);
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], CreateHCUserDto.prototype, "firstName", void 0);
+__decorate([
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], CreateHCUserDto.prototype, "lastName", void 0);
+__decorate([
+    (0, class_validator_1.IsNumber)(),
+    __metadata("design:type", Number)
+], CreateHCUserDto.prototype, "gender", void 0);
+__decorate([
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], CreateHCUserDto.prototype, "phone", void 0);
+__decorate([
+    (0, class_validator_1.IsDateString)(),
+    __metadata("design:type", String)
+], CreateHCUserDto.prototype, "startDate", void 0);
 __decorate([
     (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.IsDate)(),
-    (0, class_transformer_1.Type)(() => Date),
-    __metadata("design:type", Date)
-], UpdateTemplateDto.prototype, "effective_to", void 0);
-//# sourceMappingURL=update-template.dto.js.map
+    (0, class_validator_1.IsDateString)(),
+    __metadata("design:type", String)
+], CreateHCUserDto.prototype, "endDate", void 0);
+//# sourceMappingURL=hc-user.dto.js.map

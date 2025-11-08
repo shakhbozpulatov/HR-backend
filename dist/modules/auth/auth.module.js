@@ -16,6 +16,9 @@ const user_entity_1 = require("../users/entities/user.entity");
 const company_entity_1 = require("../company/entities/company.entity");
 const jwt_strategy_1 = require("./strategies/jwt.strategy");
 const crypto_utils_1 = require("../../common/utils/crypto.utils");
+const hc_service_1 = require("../hc/hc.service");
+const hc_api_config_1 = require("../hc/config/hc-api.config");
+const hc_api_client_service_1 = require("../hc/services/hc-api-client.service");
 let AuthModule = class AuthModule {
 };
 exports.AuthModule = AuthModule;
@@ -29,7 +32,14 @@ exports.AuthModule = AuthModule = __decorate([
             passport_1.PassportModule,
         ],
         controllers: [auth_controller_1.AuthController],
-        providers: [auth_service_1.AuthService, jwt_strategy_1.JwtStrategy, crypto_utils_1.CryptoUtils],
+        providers: [
+            auth_service_1.AuthService,
+            jwt_strategy_1.JwtStrategy,
+            crypto_utils_1.CryptoUtils,
+            hc_service_1.HcService,
+            hc_api_config_1.HcApiConfig,
+            hc_api_client_service_1.HcApiClient,
+        ],
         exports: [auth_service_1.AuthService],
     })
 ], AuthModule);

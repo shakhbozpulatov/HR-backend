@@ -36,19 +36,30 @@ let AuthController = class AuthController {
         return await this.authService.register(registerDto);
     }
     async createUserByAdmin(createUserDto, req) {
-        console.log('emplId', req.user.user_id);
         const result = await this.authService.createUserByAdmin(createUserDto, req.user.user_id);
-        return {
+        const response = {
             message: 'User created successfully',
             user: {
                 user_id: result.user.id,
                 email: result.user.email,
                 role: result.user.role,
                 company_id: result.user.company_id,
+                status: result.user.status,
             },
             temporary_password: result.temporary_password,
             note: 'Please share this temporary password securely with the new user',
         };
+        if (result.hcError || result.syncStatus === 'FAILED_SYNC') {
+            response.warning = result.warning || 'User created but HC sync failed';
+            response.syncStatus = result.syncStatus;
+            response.hcError = result.hcError;
+            response.hcUser = null;
+        }
+        else {
+            response.hcUser = result.hcUser;
+            response.syncStatus = 'SYNCED';
+        }
+        return response;
     }
     async changePassword(changePasswordDto, req) {
         return await this.authService.changePassword(req.user.user_id, changePasswordDto);

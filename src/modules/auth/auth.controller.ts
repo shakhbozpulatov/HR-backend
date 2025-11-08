@@ -64,23 +64,38 @@ export class AuthController {
     @Body() createUserDto: AdminCreateUserDto,
     @Req() req,
   ) {
-    console.log('emplId', req.user.user_id);
     const result = await this.authService.createUserByAdmin(
       createUserDto,
       req.user.user_id,
     );
 
-    return {
+    // Base response
+    const response: any = {
       message: 'User created successfully',
       user: {
         user_id: result.user.id,
         email: result.user.email,
         role: result.user.role,
         company_id: result.user.company_id,
+        status: result.user.status, // Include sync status
       },
       temporary_password: result.temporary_password,
       note: 'Please share this temporary password securely with the new user',
     };
+
+    // If HC sync failed, add error details to response
+    if (result.hcError || result.syncStatus === 'FAILED_SYNC') {
+      response.warning = result.warning || 'User created but HC sync failed';
+      response.syncStatus = result.syncStatus;
+      response.hcError = result.hcError;
+      response.hcUser = null;
+    } else {
+      // HC sync success
+      response.hcUser = result.hcUser;
+      response.syncStatus = 'SYNCED';
+    }
+
+    return response;
   }
 
   /**

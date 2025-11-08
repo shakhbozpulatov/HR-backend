@@ -8,12 +8,14 @@ import { AdminCreateUserDto } from './dto/admin-create-user.dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
 import { CryptoUtils } from '@/common/utils/crypto.utils';
 import { UpdateProfileDto } from '@/modules/auth/dto/update-profile.dto';
+import { HcService } from '@/modules/hc/hc.service';
 export declare class AuthService {
     private userRepository;
     private companyRepository;
     private jwtService;
     private cryptoUtils;
-    constructor(userRepository: Repository<User>, companyRepository: Repository<Company>, jwtService: JwtService, cryptoUtils: CryptoUtils);
+    private hcService;
+    constructor(userRepository: Repository<User>, companyRepository: Repository<Company>, jwtService: JwtService, cryptoUtils: CryptoUtils, hcService: HcService);
     login(loginDto: LoginDto): Promise<{
         access_token: string;
         user: any;
@@ -25,6 +27,10 @@ export declare class AuthService {
     createUserByAdmin(createUserDto: AdminCreateUserDto, actorUserId: string): Promise<{
         user: User;
         temporary_password: string;
+        hcUser: any;
+        hcError?: any;
+        syncStatus?: string;
+        warning?: string;
     }>;
     getProfile(userId: string): Promise<any>;
     updateProfile(userId: string, updateProfileDto: UpdateProfileDto): Promise<any>;

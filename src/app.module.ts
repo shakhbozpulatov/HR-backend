@@ -20,6 +20,7 @@ import { HolidaysModule } from '@/modules/holidays/holidays.module';
 import { AuditModule } from '@/modules/audit/audit.module';
 import { UsersModule } from '@/modules/users/users.module';
 import { CompanyModule } from './modules/company/company.module';
+import { HcModule } from './modules/hc/hc.module';
 
 @Module({
   imports: [
@@ -55,6 +56,7 @@ import { CompanyModule } from './modules/company/company.module';
     UsersModule,
     CommonModule,
     CompanyModule,
+    HcModule,
   ],
 })
 export class AppModule {}

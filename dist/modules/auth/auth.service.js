@@ -20,12 +20,14 @@ const jwt_1 = require("@nestjs/jwt");
 const user_entity_1 = require("../users/entities/user.entity");
 const company_entity_1 = require("../company/entities/company.entity");
 const crypto_utils_1 = require("../../common/utils/crypto.utils");
+const hc_service_1 = require("../hc/hc.service");
 let AuthService = class AuthService {
-    constructor(userRepository, companyRepository, jwtService, cryptoUtils) {
+    constructor(userRepository, companyRepository, jwtService, cryptoUtils, hcService) {
         this.userRepository = userRepository;
         this.companyRepository = companyRepository;
         this.jwtService = jwtService;
         this.cryptoUtils = cryptoUtils;
+        this.hcService = hcService;
     }
     async login(loginDto) {
         const { email, password } = loginDto;
@@ -186,14 +188,52 @@ let AuthService = class AuthService {
             relations: ['company'],
         });
         if (!actor) {
-            throw new common_1.UnauthorizedException('Actor not found or inactive');
+            throw new common_1.UnauthorizedException('User not found or inactive');
         }
         this.validateUserCreationPermissions(actor.role, createUserDto.role);
         const existingUser = await this.userRepository.findOne({
             where: { email: createUserDto.email },
         });
         if (existingUser) {
-            throw new common_1.ConflictException('Email already exists');
+            if (existingUser.status !== user_entity_1.UserStatus.SYNCED) {
+                console.log(`⚠️ User already exists but not synced: ${existingUser.email}. Attempting re-sync...`);
+                try {
+                    const hcPersonCode = this.cryptoUtils.generateHcPersonId();
+                    const hcResponse = await this.hcService.createUserOnCabinet({
+                        groupId: createUserDto.groupId || '1',
+                        personCode: hcPersonCode,
+                        firstName: createUserDto.first_name,
+                        lastName: createUserDto.last_name,
+                        gender: createUserDto.gender,
+                        phone: createUserDto.phone,
+                        startDate: createUserDto.start_date,
+                        endDate: createUserDto.end_date,
+                    });
+                    existingUser.hcPersonId = hcResponse.data?.personId || hcPersonCode;
+                    existingUser.status = user_entity_1.UserStatus.SYNCED;
+                    await this.userRepository.save(existingUser);
+                    console.log(`✅ Existing user re-synced with HC: ${existingUser.email}`);
+                    return {
+                        user: existingUser,
+                        hcUser: hcResponse,
+                        temporary_password: 'N/A - User already exists (re-synced with HC system)',
+                    };
+                }
+                catch (err) {
+                    existingUser.status = user_entity_1.UserStatus.FAILED_SYNC;
+                    await this.userRepository.save(existingUser);
+                    console.error(`❌ Re-sync failed for existing user: ${existingUser.email}`, err.message);
+                    let errorMessage = err.message;
+                    if (err.getResponse && typeof err.getResponse === 'function') {
+                        const errorResponse = err.getResponse();
+                        if (typeof errorResponse === 'object') {
+                            errorMessage = `${errorResponse.error || errorResponse.message} (errorCode: ${errorResponse.errorCode})`;
+                        }
+                    }
+                    throw new common_1.ConflictException(`User with email ${existingUser.email} already exists but HC sync failed: ${errorMessage}`);
+                }
+            }
+            throw new common_1.ConflictException(`Email ${createUserDto.email} is already registered and synced`);
         }
         let targetCompanyId;
         if (actor.role === user_entity_1.UserRole.SUPER_ADMIN) {
@@ -219,14 +259,73 @@ let AuthService = class AuthService {
         const newUser = this.userRepository.create({
             password_hash: hashedPassword,
             company_id: targetCompanyId,
+            status: user_entity_1.UserStatus.ACTIVE,
+            active: true,
             ...createUserDto,
         });
-        const savedUser = await this.userRepository.save(newUser);
-        console.log(`✅ User created by ${actor.email}: ${savedUser.email} (${savedUser.role})`);
-        return {
-            user: savedUser,
-            temporary_password: temporaryPassword,
-        };
+        let savedUser;
+        let hcResponse;
+        try {
+            savedUser = await this.userRepository.save(newUser);
+            console.log(`✅ User created by ${actor.email}: ${savedUser.email} (${savedUser.role})`);
+            const hcPersonCode = this.cryptoUtils.generateHcPersonId();
+            const hcUserData = {
+                groupId: createUserDto.groupId || '1',
+                personCode: hcPersonCode,
+                firstName: savedUser.first_name,
+                lastName: savedUser.last_name,
+                gender: createUserDto.gender,
+                phone: savedUser.phone,
+                startDate: createUserDto.start_date,
+                endDate: createUserDto.end_date,
+            };
+            try {
+                hcResponse = await this.hcService.createUserOnCabinet(hcUserData);
+                savedUser.hcPersonId = hcResponse.data?.personId || hcPersonCode;
+                savedUser.status = user_entity_1.UserStatus.SYNCED;
+                await this.userRepository.save(savedUser);
+                console.log(`✅ User synced with HC system: ${savedUser.email} (HC Person ID: ${savedUser.hcPersonId})`);
+            }
+            catch (hcError) {
+                savedUser.status = user_entity_1.UserStatus.FAILED_SYNC;
+                await this.userRepository.save(savedUser);
+                console.warn(`⚠️ User created but HC sync failed: ${savedUser.email}`, hcError.message);
+                let hcErrorDetails = {
+                    message: hcError.message || 'HC sync failed',
+                    errorCode: null,
+                    details: null,
+                };
+                if (hcError.getResponse && typeof hcError.getResponse === 'function') {
+                    const errorResponse = hcError.getResponse();
+                    if (typeof errorResponse === 'object') {
+                        hcErrorDetails = {
+                            message: errorResponse.message || hcError.message,
+                            errorCode: errorResponse.errorCode || null,
+                            error: errorResponse.error || null,
+                            details: errorResponse.details || null,
+                        };
+                    }
+                }
+                console.error('❌ HC Error Details for API Response:', hcErrorDetails);
+                return {
+                    user: savedUser,
+                    hcUser: null,
+                    temporary_password: temporaryPassword,
+                    hcError: hcErrorDetails,
+                    syncStatus: 'FAILED_SYNC',
+                    warning: 'User created successfully but HC sync failed',
+                };
+            }
+            return {
+                user: savedUser,
+                hcUser: hcResponse,
+                temporary_password: temporaryPassword,
+            };
+        }
+        catch (error) {
+            console.error('❌ Failed to create user:', error.message);
+            throw new common_1.BadRequestException(`Failed to create user: ${error.message || 'Unknown error'}`);
+        }
     }
     async getProfile(userId) {
         const user = await this.userRepository.findOne({
@@ -513,6 +612,7 @@ exports.AuthService = AuthService = __decorate([
     __metadata("design:paramtypes", [typeorm_2.Repository,
         typeorm_2.Repository,
         jwt_1.JwtService,
-        crypto_utils_1.CryptoUtils])
+        crypto_utils_1.CryptoUtils,
+        hc_service_1.HcService])
 ], AuthService);
 //# sourceMappingURL=auth.service.js.map
