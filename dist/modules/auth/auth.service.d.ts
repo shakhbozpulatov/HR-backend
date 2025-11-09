@@ -8,12 +8,20 @@ import { AdminCreateUserDto } from './dto/admin-create-user.dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
 import { CryptoUtils } from '@/common/utils/crypto.utils';
 import { UpdateProfileDto } from '@/modules/auth/dto/update-profile.dto';
+import { HcService } from '@/modules/hc/hc.service';
+import { PasswordService } from './services/password.service';
+import { PermissionService } from './services/permission.service';
+import { CompanyService } from './services/company.service';
 export declare class AuthService {
     private userRepository;
     private companyRepository;
     private jwtService;
     private cryptoUtils;
-    constructor(userRepository: Repository<User>, companyRepository: Repository<Company>, jwtService: JwtService, cryptoUtils: CryptoUtils);
+    private hcService;
+    private passwordService;
+    private permissionService;
+    private companyService;
+    constructor(userRepository: Repository<User>, companyRepository: Repository<Company>, jwtService: JwtService, cryptoUtils: CryptoUtils, hcService: HcService, passwordService: PasswordService, permissionService: PermissionService, companyService: CompanyService);
     login(loginDto: LoginDto): Promise<{
         access_token: string;
         user: any;
@@ -25,6 +33,10 @@ export declare class AuthService {
     createUserByAdmin(createUserDto: AdminCreateUserDto, actorUserId: string): Promise<{
         user: User;
         temporary_password: string;
+        hcUser: any;
+        hcError?: any;
+        syncStatus?: string;
+        warning?: string;
     }>;
     getProfile(userId: string): Promise<any>;
     updateProfile(userId: string, updateProfileDto: UpdateProfileDto): Promise<any>;
@@ -35,9 +47,8 @@ export declare class AuthService {
         temporary_password: string;
     }>;
     validateUser(payload: any): Promise<User>;
-    private validateUserCreationPermissions;
-    private generateCompanyCode;
-    private generateTemporaryPassword;
-    private getCompanyStatistics;
-    private getUserPermissions;
+    uploadUserPhoto(personId: string, photoBuffer: Buffer, mimetype: string): Promise<{
+        message: string;
+        photo_url: string;
+    }>;
 }

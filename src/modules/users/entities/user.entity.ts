@@ -35,6 +35,8 @@ export enum TariffType {
 export enum UserStatus {
   ACTIVE = 'active',
   INACTIVE = 'inactive',
+  SYNCED = 'synced',
+  FAILED_SYNC = 'failed_sync',
 }
 
 @Entity('users')
@@ -45,6 +47,9 @@ export class User {
 
   @Column({ type: 'uuid', nullable: true })
   company_id?: string; // SUPER_ADMIN uchun null bo'lishi mumkin
+
+  @Column({ nullable: true, unique: true, name: 'hc_person_id' })
+  hcPersonId: string;
 
   @Column({ type: 'enum', enum: UserRole })
   role: UserRole;
@@ -122,6 +127,9 @@ export class User {
 
   @Column({ nullable: true })
   terminal_user_id?: string;
+
+  @Column({ type: 'text', nullable: true })
+  photo_url?: string; // URL to stored photo
 
   @Column({ type: 'json', nullable: true })
   external_ids?: Record<string, string>;

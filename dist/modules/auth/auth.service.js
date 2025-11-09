@@ -20,12 +20,20 @@ const jwt_1 = require("@nestjs/jwt");
 const user_entity_1 = require("../users/entities/user.entity");
 const company_entity_1 = require("../company/entities/company.entity");
 const crypto_utils_1 = require("../../common/utils/crypto.utils");
+const hc_service_1 = require("../hc/hc.service");
+const password_service_1 = require("./services/password.service");
+const permission_service_1 = require("./services/permission.service");
+const company_service_1 = require("./services/company.service");
 let AuthService = class AuthService {
-    constructor(userRepository, companyRepository, jwtService, cryptoUtils) {
+    constructor(userRepository, companyRepository, jwtService, cryptoUtils, hcService, passwordService, permissionService, companyService) {
         this.userRepository = userRepository;
         this.companyRepository = companyRepository;
         this.jwtService = jwtService;
         this.cryptoUtils = cryptoUtils;
+        this.hcService = hcService;
+        this.passwordService = passwordService;
+        this.permissionService = permissionService;
+        this.companyService = companyService;
     }
     async login(loginDto) {
         const { email, password } = loginDto;
@@ -36,7 +44,7 @@ let AuthService = class AuthService {
         if (!user) {
             throw new common_1.UnauthorizedException('Invalid credentials');
         }
-        const isPasswordValid = this.cryptoUtils.comparePassword(password, user.password_hash);
+        const isPasswordValid = this.passwordService.comparePassword(password, user.password_hash);
         if (!isPasswordValid) {
             throw new common_1.UnauthorizedException('Invalid credentials');
         }
@@ -89,7 +97,7 @@ let AuthService = class AuthService {
                 registerDto.company_name.trim().length === 0) {
                 throw new common_1.BadRequestException('company_name is required when creating a new company');
             }
-            const companyCode = await this.generateCompanyCode();
+            const companyCode = await this.companyService.generateUniqueCompanyCode();
             company = this.companyRepository.create({
                 code: companyCode,
                 name: registerDto.company_name.trim(),
@@ -186,14 +194,52 @@ let AuthService = class AuthService {
             relations: ['company'],
         });
         if (!actor) {
-            throw new common_1.UnauthorizedException('Actor not found or inactive');
+            throw new common_1.UnauthorizedException('User not found or inactive');
         }
-        this.validateUserCreationPermissions(actor.role, createUserDto.role);
+        this.permissionService.validateUserCreationPermission(actor.role, createUserDto.role);
         const existingUser = await this.userRepository.findOne({
             where: { email: createUserDto.email },
         });
         if (existingUser) {
-            throw new common_1.ConflictException('Email already exists');
+            if (existingUser.status !== user_entity_1.UserStatus.SYNCED) {
+                console.log(`⚠️ User already exists but not synced: ${existingUser.email}. Attempting re-sync...`);
+                try {
+                    const hcPersonCode = this.cryptoUtils.generateHcPersonId();
+                    const hcResponse = await this.hcService.createUserOnCabinet({
+                        groupId: createUserDto.groupId || '1',
+                        personCode: hcPersonCode,
+                        firstName: createUserDto.first_name,
+                        lastName: createUserDto.last_name,
+                        gender: createUserDto.gender,
+                        phone: createUserDto.phone,
+                        startDate: createUserDto.start_date,
+                        endDate: createUserDto.end_date,
+                    });
+                    existingUser.hcPersonId = hcResponse.data?.personId || hcPersonCode;
+                    existingUser.status = user_entity_1.UserStatus.SYNCED;
+                    await this.userRepository.save(existingUser);
+                    console.log(`✅ Existing user re-synced with HC: ${existingUser.email}`);
+                    return {
+                        user: existingUser,
+                        hcUser: hcResponse,
+                        temporary_password: 'N/A - User already exists (re-synced with HC system)',
+                    };
+                }
+                catch (err) {
+                    existingUser.status = user_entity_1.UserStatus.FAILED_SYNC;
+                    await this.userRepository.save(existingUser);
+                    console.error(`❌ Re-sync failed for existing user: ${existingUser.email}`, err.message);
+                    let errorMessage = err.message;
+                    if (err.getResponse && typeof err.getResponse === 'function') {
+                        const errorResponse = err.getResponse();
+                        if (typeof errorResponse === 'object') {
+                            errorMessage = `${errorResponse.error || errorResponse.message} (errorCode: ${errorResponse.errorCode})`;
+                        }
+                    }
+                    throw new common_1.ConflictException(`User with email ${existingUser.email} already exists but HC sync failed: ${errorMessage}`);
+                }
+            }
+            throw new common_1.ConflictException(`Email ${createUserDto.email} is already registered and synced`);
         }
         let targetCompanyId;
         if (actor.role === user_entity_1.UserRole.SUPER_ADMIN) {
@@ -214,19 +260,88 @@ let AuthService = class AuthService {
             }
             targetCompanyId = actor.company_id;
         }
-        const temporaryPassword = this.generateTemporaryPassword();
-        const hashedPassword = this.cryptoUtils.hashPassword(temporaryPassword);
+        const temporaryPassword = this.passwordService.generateTemporaryPassword();
+        const hashedPassword = this.passwordService.hashPassword(temporaryPassword);
         const newUser = this.userRepository.create({
             password_hash: hashedPassword,
             company_id: targetCompanyId,
+            status: user_entity_1.UserStatus.ACTIVE,
+            active: true,
             ...createUserDto,
         });
-        const savedUser = await this.userRepository.save(newUser);
-        console.log(`✅ User created by ${actor.email}: ${savedUser.email} (${savedUser.role})`);
-        return {
-            user: savedUser,
-            temporary_password: temporaryPassword,
-        };
+        let savedUser;
+        let hcResponse;
+        try {
+            savedUser = await this.userRepository.save(newUser);
+            console.log(`✅ User created by ${actor.email}: ${savedUser.email} (${savedUser.role})`);
+            const hcPersonCode = this.cryptoUtils.generateHcPersonId();
+            const hcUserData = {
+                groupId: createUserDto.groupId || '1',
+                personCode: hcPersonCode,
+                firstName: savedUser.first_name,
+                lastName: savedUser.last_name,
+                gender: createUserDto.gender,
+                phone: savedUser.phone,
+                startDate: createUserDto.start_date,
+                endDate: createUserDto.end_date,
+            };
+            try {
+                hcResponse = await this.hcService.createUserOnCabinet(hcUserData);
+                savedUser.hcPersonId = hcResponse.data?.personId || hcPersonCode;
+                savedUser.status = user_entity_1.UserStatus.SYNCED;
+                await this.userRepository.save(savedUser);
+                console.log(`✅ User synced with HC system: ${savedUser.email} (HC Person ID: ${savedUser.hcPersonId})`);
+                if (createUserDto.accessLevelIdList &&
+                    createUserDto.accessLevelIdList.length > 0) {
+                    try {
+                        await this.hcService.bindUserWithTerminal(savedUser.hcPersonId, createUserDto.accessLevelIdList);
+                        console.log(`✅ User bound to terminal: ${savedUser.email} (Access Levels: ${createUserDto.accessLevelIdList.join(', ')})`);
+                    }
+                    catch (bindError) {
+                        console.warn(`⚠️ User synced but terminal binding failed: ${savedUser.email}`, bindError.message);
+                    }
+                }
+            }
+            catch (hcError) {
+                savedUser.status = user_entity_1.UserStatus.FAILED_SYNC;
+                await this.userRepository.save(savedUser);
+                console.warn(`⚠️ User created but HC sync failed: ${savedUser.email}`, hcError.message);
+                let hcErrorDetails = {
+                    message: hcError.message || 'HC sync failed',
+                    errorCode: null,
+                    details: null,
+                };
+                if (hcError.getResponse && typeof hcError.getResponse === 'function') {
+                    const errorResponse = hcError.getResponse();
+                    if (typeof errorResponse === 'object') {
+                        hcErrorDetails = {
+                            message: errorResponse.message || hcError.message,
+                            errorCode: errorResponse.errorCode || null,
+                            error: errorResponse.error || null,
+                            details: errorResponse.details || null,
+                        };
+                    }
+                }
+                console.error('❌ HC Error Details for API Response:', hcErrorDetails);
+                return {
+                    user: savedUser,
+                    hcUser: null,
+                    temporary_password: temporaryPassword,
+                    hcError: hcErrorDetails,
+                    syncStatus: 'FAILED_SYNC',
+                    warning: 'User created successfully but HC sync failed',
+                };
+            }
+            return {
+                user: savedUser,
+                hcUser: hcResponse,
+                temporary_password: temporaryPassword,
+            };
+        }
+        catch (error) {
+            console.error('❌ Failed to create user:', error.message);
+            throw new common_1.BadRequestException(`Failed to create user: ${error.message || 'Unknown error'}`);
+        }
     }
     async getProfile(userId) {
         const user = await this.userRepository.findOne({
@@ -271,9 +386,9 @@ let AuthService = class AuthService {
                 settings: user.company.settings,
                 created_at: user.company.created_at,
             };
-            profile.company.statistics = await this.getCompanyStatistics(user.company.id);
+            profile.company.statistics = await this.companyService.getCompanyStatistics(user.company.id);
         }
-        profile.permissions = this.getUserPermissions(user.role);
+        profile.permissions = this.permissionService.getUserPermissions(user.role);
         return profile;
     }
     async updateProfile(userId, updateProfileDto) {
@@ -349,8 +464,9 @@ let AuthService = class AuthService {
             admin.company_id !== targetUser.company_id) {
             throw new common_1.UnauthorizedException('Cannot reset password for users in other companies');
         }
-        const temporaryPassword = this.generateTemporaryPassword();
-        targetUser.password_hash = this.cryptoUtils.hashPassword(temporaryPassword);
+        const temporaryPassword = this.passwordService.generateTemporaryPassword();
+        targetUser.password_hash =
+            this.passwordService.hashPassword(temporaryPassword);
         await this.userRepository.save(targetUser);
         console.log(`✅ Password reset by ${admin.email} for user: ${targetUser.email}`);
         return { temporary_password: temporaryPassword };
@@ -370,139 +486,39 @@ let AuthService = class AuthService {
         }
         return user;
     }
-    validateUserCreationPermissions(actorRole, targetRole) {
-        const permissionMatrix = {
-            [user_entity_1.UserRole.SUPER_ADMIN]: [
-                user_entity_1.UserRole.SUPER_ADMIN,
-                user_entity_1.UserRole.COMPANY_OWNER,
-                user_entity_1.UserRole.ADMIN,
-                user_entity_1.UserRole.HR_MANAGER,
-                user_entity_1.UserRole.PAYROLL,
-                user_entity_1.UserRole.MANAGER,
-                user_entity_1.UserRole.EMPLOYEE,
-            ],
-            [user_entity_1.UserRole.COMPANY_OWNER]: [
-                user_entity_1.UserRole.ADMIN,
-                user_entity_1.UserRole.HR_MANAGER,
-                user_entity_1.UserRole.PAYROLL,
-                user_entity_1.UserRole.MANAGER,
-                user_entity_1.UserRole.EMPLOYEE,
-            ],
-            [user_entity_1.UserRole.ADMIN]: [
-                user_entity_1.UserRole.HR_MANAGER,
-                user_entity_1.UserRole.PAYROLL,
-                user_entity_1.UserRole.MANAGER,
-                user_entity_1.UserRole.EMPLOYEE,
-            ],
-            [user_entity_1.UserRole.HR_MANAGER]: [
-                user_entity_1.UserRole.PAYROLL,
-                user_entity_1.UserRole.MANAGER,
-                user_entity_1.UserRole.EMPLOYEE,
-            ],
-        };
-        const allowedRoles = permissionMatrix[actorRole] || [];
-        if (!allowedRoles.includes(targetRole)) {
-            throw new common_1.BadRequestException(`${actorRole} role cannot create ${targetRole} users`);
-        }
-    }
-    async generateCompanyCode() {
-        const lastCompany = await this.companyRepository
-            .createQueryBuilder('company')
-            .where('company.code LIKE :prefix', { prefix: 'COM%' })
-            .orderBy('company.code', 'DESC')
-            .getOne();
-        if (!lastCompany) {
-            return 'COM001';
-        }
-        const match = lastCompany.code.match(/COM(\d+)/);
-        if (!match) {
-            return 'COM001';
-        }
-        const lastNumber = parseInt(match[1], 10);
-        const newNumber = lastNumber + 1;
-        return `COM${newNumber.toString().padStart(3, '0')}`;
-    }
-    generateTemporaryPassword() {
-        const uppercase = 'ABCDEFGHJKLMNPQRSTUVWXYZ';
-        const lowercase = 'abcdefghjkmnpqrstuvwxyz';
-        const numbers = '23456789';
-        const special = '!@#$%';
-        let password = '';
-        password += uppercase.charAt(Math.floor(Math.random() * uppercase.length));
-        password += lowercase.charAt(Math.floor(Math.random() * lowercase.length));
-        password += numbers.charAt(Math.floor(Math.random() * numbers.length));
-        password += special.charAt(Math.floor(Math.random() * special.length));
-        const allChars = uppercase + lowercase + numbers;
-        for (let i = 4; i < 12; i++) {
-            password += allChars.charAt(Math.floor(Math.random() * allChars.length));
-        }
-        return password
-            .split('')
-            .sort(() => Math.random() - 0.5)
-            .join('');
-    }
-    async getCompanyStatistics(companyId) {
-        const totalUsers = await this.userRepository.count({
-            where: { company_id: companyId },
+    async uploadUserPhoto(personId, photoBuffer, mimetype) {
+        const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(personId);
+        const user = await this.userRepository.findOne({
+            where: isUuid
+                ? { id: personId, active: true }
+                : { hcPersonId: personId, active: true },
         });
-        const activeUsers = await this.userRepository.count({
-            where: { company_id: companyId, active: true, status: user_entity_1.UserStatus.ACTIVE },
-        });
-        return {
-            total_users: totalUsers,
-            active_users: activeUsers,
-            inactive_users: totalUsers - activeUsers,
-        };
-    }
-    getUserPermissions(role) {
-        const permissionMap = {
-            [user_entity_1.UserRole.SUPER_ADMIN]: [
-                'view_all_companies',
-                'create_company',
-                'manage_companies',
-                'manage_subscriptions',
-                'view_all_users',
-                'manage_all_users',
-                'view_analytics',
-                'manage_system_settings',
-            ],
-            [user_entity_1.UserRole.COMPANY_OWNER]: [
-                'view_company',
-                'manage_company',
-                'manage_subscription',
-                'create_admin',
-                'create_hr_manager',
-                'view_all_users',
-                'manage_users',
-                'view_analytics',
-                'manage_departments',
-            ],
-            [user_entity_1.UserRole.ADMIN]: [
-                'view_company',
-                'manage_company_settings',
-                'create_hr_manager',
-                'create_manager',
-                'view_all_users',
-                'manage_users',
-                'view_analytics',
-                'manage_departments',
-            ],
-            [user_entity_1.UserRole.HR_MANAGER]: [
-                'view_company',
-                'create_employee',
-                'view_all_users',
-                'manage_users',
-            ],
-            [user_entity_1.UserRole.PAYROLL]: [
-                'view_all_users',
-                'view_payroll',
-                'manage_payroll',
-                'export_payroll',
-            ],
-            [user_entity_1.UserRole.MANAGER]: ['view_team', 'view_team_users'],
-            [user_entity_1.UserRole.EMPLOYEE]: ['view_own_profile', 'update_own_profile'],
-        };
-        return permissionMap[role] || [];
+        if (!user) {
+            throw new common_1.NotFoundException(`User not found with ${isUuid ? 'ID' : 'HC person ID'}: ${personId}`);
+        }
+        if (!user.hcPersonId) {
+            throw new common_1.BadRequestException('User is not synced with HC system. Cannot upload photo.');
+        }
+        const photoData = photoBuffer.toString('base64');
+        const photoUrl = `data:${mimetype};base64,${photoData}`;
+        user.photo_url = photoUrl;
+        await this.userRepository.save(user);
+        console.log(`📸 Photo saved locally for user: ${user.email}`);
+        try {
+            await this.hcService.uploadUserPhoto(user.hcPersonId, photoData);
+            console.log(`✅ Photo uploaded to HC system for user: ${user.email} (HC Person ID: ${user.hcPersonId})`);
+            return {
+                message: 'Photo uploaded successfully to both database and HC system',
+                photo_url: photoUrl,
+            };
+        }
+        catch (hcError) {
+            console.warn(`⚠️ Photo saved locally but HC upload failed: ${user.email}`, hcError.message);
+            return {
+                message: 'Photo uploaded to database but HC upload failed. Please try again later.',
+                photo_url: photoUrl,
+            };
+        }
     }
 };
 exports.AuthService = AuthService;
@@ -513,6 +529,10 @@ exports.AuthService = AuthService = __decorate([
     __metadata("design:paramtypes", [typeorm_2.Repository,
         typeorm_2.Repository,
         jwt_1.JwtService,
-        crypto_utils_1.CryptoUtils])
+        crypto_utils_1.CryptoUtils,
+        hc_service_1.HcService,
+        password_service_1.PasswordService,
+        permission_service_1.PermissionService,
+        company_service_1.CompanyService])
 ], AuthService);
 //# sourceMappingURL=auth.service.js.map

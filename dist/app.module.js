@@ -26,6 +26,7 @@ const holidays_module_1 = require("./modules/holidays/holidays.module");
 const audit_module_1 = require("./modules/audit/audit.module");
 const users_module_1 = require("./modules/users/users.module");
 const company_module_1 = require("./modules/company/company.module");
+const hc_module_1 = require("./modules/hc/hc.module");
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
@@ -62,6 +63,7 @@ exports.AppModule = AppModule = __decorate([
             users_module_1.UsersModule,
             common_module_1.CommonModule,
             company_module_1.CompanyModule,
+            hc_module_1.HcModule,
         ],
     })
 ], AppModule);

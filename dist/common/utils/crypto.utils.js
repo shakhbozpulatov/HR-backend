@@ -28,6 +28,15 @@ let CryptoUtils = class CryptoUtils {
     comparePassword(password, hash) {
         return bcrypt.compareSync(password, hash);
     }
+    generateHcPersonId() {
+        const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+        const timestamp = Date.now().toString().slice(-2);
+        let randomPart = '';
+        for (let i = 0; i < 3; i++) {
+            randomPart += chars.charAt(Math.floor(Math.random() * chars.length));
+        }
+        return `EMP${timestamp}${randomPart}`;
+    }
 };
 exports.CryptoUtils = CryptoUtils;
 exports.CryptoUtils = CryptoUtils = __decorate([

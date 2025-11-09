@@ -1,4 +1,5 @@
 import {
+  IsArray,
   IsDateString,
   IsEmail,
   IsEnum,
@@ -27,6 +28,17 @@ export class AdminCreateUserDto {
 
   @IsString()
   last_name: string;
+
+  @IsString()
+  groupId: string;
+
+  @IsNumber()
+  gender: number;
+
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  accessLevelIdList?: string[];
 
   @IsOptional()
   @IsString()
