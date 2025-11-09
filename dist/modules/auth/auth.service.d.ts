@@ -47,4 +47,8 @@ export declare class AuthService {
         temporary_password: string;
     }>;
     validateUser(payload: any): Promise<User>;
+    uploadUserPhoto(personId: string, photoBuffer: Buffer, mimetype: string): Promise<{
+        message: string;
+        photo_url: string;
+    }>;
 }

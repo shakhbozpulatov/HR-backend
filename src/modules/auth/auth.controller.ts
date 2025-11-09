@@ -9,7 +9,11 @@ import {
   Get,
   HttpCode,
   HttpStatus,
+  UseInterceptors,
+  UploadedFile,
+  BadRequestException,
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
@@ -196,6 +200,59 @@ export class AuthController {
       success: true,
       data: updatedProfile,
       message: 'Profile updated successfully',
+    };
+  }
+
+  /**
+   * PROTECTED: Upload user photo
+   * Uploads photo to both database and HC system
+   * Accepts personId and photo file via form-data
+   */
+  @Post('upload-photo')
+  @UseGuards(AuthGuard)
+  @UseInterceptors(
+    FileInterceptor('photo', {
+      limits: {
+        fileSize: 5 * 1024 * 1024, // 5MB max file size
+      },
+      fileFilter: (_req, file, callback) => {
+        if (!file.mimetype.match(/\/(jpg|jpeg|png)$/)) {
+          return callback(
+            new BadRequestException(
+              'Only JPG, JPEG, and PNG files are allowed',
+            ),
+            false,
+          );
+        }
+        callback(null, true);
+      },
+    }),
+  )
+  @HttpCode(HttpStatus.OK)
+  async uploadPhoto(
+    @UploadedFile() file: Express.Multer.File,
+    @Body('personId') personId: string,
+  ) {
+    if (!file) {
+      throw new BadRequestException('No photo file provided');
+    }
+
+    if (!personId) {
+      throw new BadRequestException('personId is required');
+    }
+
+    const result = await this.authService.uploadUserPhoto(
+      personId,
+      file.buffer,
+      file.mimetype,
+    );
+
+    return {
+      success: true,
+      data: {
+        photo_url: result.photo_url,
+      },
+      message: result.message,
     };
   }
 

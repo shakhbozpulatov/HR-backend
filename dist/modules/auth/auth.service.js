@@ -486,6 +486,40 @@ let AuthService = class AuthService {
         }
         return user;
     }
+    async uploadUserPhoto(personId, photoBuffer, mimetype) {
+        const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(personId);
+        const user = await this.userRepository.findOne({
+            where: isUuid
+                ? { id: personId, active: true }
+                : { hcPersonId: personId, active: true },
+        });
+        if (!user) {
+            throw new common_1.NotFoundException(`User not found with ${isUuid ? 'ID' : 'HC person ID'}: ${personId}`);
+        }
+        if (!user.hcPersonId) {
+            throw new common_1.BadRequestException('User is not synced with HC system. Cannot upload photo.');
+        }
+        const photoData = photoBuffer.toString('base64');
+        const photoUrl = `data:${mimetype};base64,${photoData}`;
+        user.photo_url = photoUrl;
+        await this.userRepository.save(user);
+        console.log(`📸 Photo saved locally for user: ${user.email}`);
+        try {
+            await this.hcService.uploadUserPhoto(user.hcPersonId, photoData);
+            console.log(`✅ Photo uploaded to HC system for user: ${user.email} (HC Person ID: ${user.hcPersonId})`);
+            return {
+                message: 'Photo uploaded successfully to both database and HC system',
+                photo_url: photoUrl,
+            };
+        }
+        catch (hcError) {
+            console.warn(`⚠️ Photo saved locally but HC upload failed: ${user.email}`, hcError.message);
+            return {
+                message: 'Photo uploaded to database but HC upload failed. Please try again later.',
+                photo_url: photoUrl,
+            };
+        }
+    }
 };
 exports.AuthService = AuthService;
 exports.AuthService = AuthService = __decorate([

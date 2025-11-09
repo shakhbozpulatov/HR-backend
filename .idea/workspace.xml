@@ -6,25 +6,29 @@
   <component name="ChangeListManager">
     <list default="true" id="f223feb0-6502-4a9b-9c03-44f93ba47b8c" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/dist/common/utils/crypto.utils.js" beforeDir="false" afterPath="$PROJECT_DIR$/dist/common/utils/crypto.utils.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/dist/modules/auth/auth.controller.d.ts" beforeDir="false" afterPath="$PROJECT_DIR$/dist/modules/auth/auth.controller.d.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/dist/modules/auth/auth.controller.js" beforeDir="false" afterPath="$PROJECT_DIR$/dist/modules/auth/auth.controller.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/dist/modules/auth/auth.controller.js.map" beforeDir="false" afterPath="$PROJECT_DIR$/dist/modules/auth/auth.controller.js.map" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/dist/modules/auth/auth.service.d.ts" beforeDir="false" afterPath="$PROJECT_DIR$/dist/modules/auth/auth.service.d.ts" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/dist/modules/auth/auth.service.js" beforeDir="false" afterPath="$PROJECT_DIR$/dist/modules/auth/auth.service.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/dist/modules/auth/auth.service.js.map" beforeDir="false" afterPath="$PROJECT_DIR$/dist/modules/auth/auth.service.js.map" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/dist/modules/auth/dto/admin-create-user.dto.d.ts" beforeDir="false" afterPath="$PROJECT_DIR$/dist/modules/auth/dto/admin-create-user.dto.d.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/dist/modules/auth/dto/admin-create-user.dto.js" beforeDir="false" afterPath="$PROJECT_DIR$/dist/modules/auth/dto/admin-create-user.dto.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/dist/modules/auth/dto/admin-create-user.dto.js.map" beforeDir="false" afterPath="$PROJECT_DIR$/dist/modules/auth/dto/admin-create-user.dto.js.map" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/dist/modules/hc/config/hc-api.config.d.ts" beforeDir="false" afterPath="$PROJECT_DIR$/dist/modules/hc/config/hc-api.config.d.ts" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/dist/modules/hc/config/hc-api.config.js" beforeDir="false" afterPath="$PROJECT_DIR$/dist/modules/hc/config/hc-api.config.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/dist/modules/hc/config/hc-api.config.js.map" beforeDir="false" afterPath="$PROJECT_DIR$/dist/modules/hc/config/hc-api.config.js.map" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/dist/modules/hc/hc.service.d.ts" beforeDir="false" afterPath="$PROJECT_DIR$/dist/modules/hc/hc.service.d.ts" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/dist/modules/hc/hc.service.js" beforeDir="false" afterPath="$PROJECT_DIR$/dist/modules/hc/hc.service.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/dist/modules/hc/hc.service.js.map" beforeDir="false" afterPath="$PROJECT_DIR$/dist/modules/hc/hc.service.js.map" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/dist/modules/hc/interfaces/hc-api.interface.d.ts" beforeDir="false" afterPath="$PROJECT_DIR$/dist/modules/hc/interfaces/hc-api.interface.d.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/dist/modules/users/entities/user.entity.d.ts" beforeDir="false" afterPath="$PROJECT_DIR$/dist/modules/users/entities/user.entity.d.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/dist/modules/users/entities/user.entity.js" beforeDir="false" afterPath="$PROJECT_DIR$/dist/modules/users/entities/user.entity.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/dist/modules/users/entities/user.entity.js.map" beforeDir="false" afterPath="$PROJECT_DIR$/dist/modules/users/entities/user.entity.js.map" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/dist/tsconfig.build.tsbuildinfo" beforeDir="false" afterPath="$PROJECT_DIR$/dist/tsconfig.build.tsbuildinfo" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/common/utils/crypto.utils.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/common/utils/crypto.utils.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/package.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pnpm-lock.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/pnpm-lock.yaml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/modules/auth/auth.controller.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/modules/auth/auth.controller.ts" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/modules/auth/auth.service.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/modules/auth/auth.service.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/modules/auth/dto/admin-create-user.dto.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/modules/auth/dto/admin-create-user.dto.ts" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/modules/hc/config/hc-api.config.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/modules/hc/config/hc-api.config.ts" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/modules/hc/hc.service.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/modules/hc/hc.service.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/modules/hc/interfaces/hc-api.interface.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/modules/hc/interfaces/hc-api.interface.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/modules/users/entities/user.entity.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/modules/users/entities/user.entity.ts" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -106,7 +110,7 @@
       <workItem from="1760966793712" duration="2538000" />
       <workItem from="1761999907692" duration="12597000" />
       <workItem from="1762320726092" duration="3322000" />
-      <workItem from="1762593728645" duration="18458000" />
+      <workItem from="1762593728645" duration="22933000" />
     </task>
     <servers />
   </component>

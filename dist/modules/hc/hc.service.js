@@ -87,6 +87,20 @@ let HcService = class HcService {
             data,
         });
     }
+    async uploadUserPhoto(personId, photoData) {
+        const endpoint = this.config.getEndpoints().person['upload-photo'];
+        console.log('📸 Uploading photo to HC:', {
+            personId,
+            photoDataLength: photoData.length,
+        });
+        return this.apiClient.post({
+            endpoint,
+            data: {
+                personId,
+                photoData,
+            },
+        });
+    }
     onModuleInit() {
         try {
             this.config.validate();

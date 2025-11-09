@@ -52,6 +52,7 @@ export declare class User {
     hourly_rate?: number;
     monthly_salary?: number;
     terminal_user_id?: string;
+    photo_url?: string;
     external_ids?: Record<string, string>;
     company?: Company;
     department?: Department;

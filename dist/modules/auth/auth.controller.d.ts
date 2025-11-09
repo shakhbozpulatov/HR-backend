@@ -53,6 +53,13 @@ export declare class AuthController {
         data: any;
         message: string;
     }>;
+    uploadPhoto(file: Express.Multer.File, personId: string): Promise<{
+        success: boolean;
+        data: {
+            photo_url: string;
+        };
+        message: string;
+    }>;
     logout(): Promise<{
         message: string;
     }>;

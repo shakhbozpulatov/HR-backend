@@ -800,6 +800,79 @@ export class AuthService {
     return user;
   }
 
+  /**
+   * UPLOAD USER PHOTO
+   * Upload photo to both local database and HC system
+   * Accepts either database UUID or HC person ID
+   */
+  async uploadUserPhoto(
+    personId: string,
+    photoBuffer: Buffer,
+    mimetype: string,
+  ): Promise<{ message: string; photo_url: string }> {
+    // Check if personId is UUID format or HC person ID
+    const isUuid =
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+        personId,
+      );
+
+    // Get user by either UUID or HC person ID
+    const user = await this.userRepository.findOne({
+      where: isUuid
+        ? { id: personId, active: true }
+        : { hcPersonId: personId, active: true },
+    });
+
+    if (!user) {
+      throw new NotFoundException(
+        `User not found with ${isUuid ? 'ID' : 'HC person ID'}: ${personId}`,
+      );
+    }
+
+    // Check if user has HC person ID
+    if (!user.hcPersonId) {
+      throw new BadRequestException(
+        'User is not synced with HC system. Cannot upload photo.',
+      );
+    }
+
+    // Convert buffer to base64
+    const photoData = photoBuffer.toString('base64');
+
+    // Save photo locally (as base64 URL for now - can be changed to file storage)
+    const photoUrl = `data:${mimetype};base64,${photoData}`;
+    user.photo_url = photoUrl;
+    await this.userRepository.save(user);
+
+    console.log(`📸 Photo saved locally for user: ${user.email}`);
+
+    // Upload to HC system
+    try {
+      await this.hcService.uploadUserPhoto(user.hcPersonId, photoData);
+
+      console.log(
+        `✅ Photo uploaded to HC system for user: ${user.email} (HC Person ID: ${user.hcPersonId})`,
+      );
+
+      return {
+        message: 'Photo uploaded successfully to both database and HC system',
+        photo_url: photoUrl,
+      };
+    } catch (hcError) {
+      console.warn(
+        `⚠️ Photo saved locally but HC upload failed: ${user.email}`,
+        hcError.message,
+      );
+
+      // Photo is already saved locally, so we return success with warning
+      return {
+        message:
+          'Photo uploaded to database but HC upload failed. Please try again later.',
+        photo_url: photoUrl,
+      };
+    }
+  }
+
   // Note: All helper methods have been moved to specialized services:
   // - validateUserCreationPermissions → PermissionService
   // - generateCompanyCode → CompanyService

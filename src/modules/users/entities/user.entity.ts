@@ -128,6 +128,9 @@ export class User {
   @Column({ nullable: true })
   terminal_user_id?: string;
 
+  @Column({ type: 'text', nullable: true })
+  photo_url?: string; // URL to stored photo
+
   @Column({ type: 'json', nullable: true })
   external_ids?: Record<string, string>;
 

@@ -141,6 +141,32 @@ export class HcService implements IHcService, OnModuleInit {
   }
 
   /**
+   * Upload user photo to HC Cabinet
+   * @param personId - HC person ID
+   * @param photoData - Base64 encoded photo data
+   * @returns HC API response
+   */
+  async uploadUserPhoto(
+    personId: string,
+    photoData: string,
+  ): Promise<HcApiResponse> {
+    const endpoint = this.config.getEndpoints().person['upload-photo'];
+
+    console.log('📸 Uploading photo to HC:', {
+      personId,
+      photoDataLength: photoData.length,
+    });
+
+    return this.apiClient.post({
+      endpoint,
+      data: {
+        personId,
+        photoData,
+      },
+    });
+  }
+
+  /**
    * Validate configuration on module initialization
    */
   onModuleInit() {

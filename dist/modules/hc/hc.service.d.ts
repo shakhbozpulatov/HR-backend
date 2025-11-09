@@ -16,5 +16,6 @@ export declare class HcService implements IHcService, OnModuleInit {
         personId: string;
         terminalId: string;
     }): Promise<HcApiResponse>;
+    uploadUserPhoto(personId: string, photoData: string): Promise<HcApiResponse>;
     onModuleInit(): void;
 }

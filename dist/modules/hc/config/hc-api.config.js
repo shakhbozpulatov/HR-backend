@@ -39,6 +39,7 @@ let HcApiConfig = class HcApiConfig {
                 delete: '/person/v1/persons/delete',
                 get: '/person/v1/persons/get',
                 list: '/person/v1/persons/list',
+                'upload-photo': '/person/v1/persons/photo',
             },
             terminal: {
                 bind: '/acspm/v1/accesslevel/person/add',

@@ -13,6 +13,7 @@ export declare class HcApiConfig {
             delete: string;
             get: string;
             list: string;
+            'upload-photo': string;
         };
         terminal: {
             bind: string;

@@ -156,6 +156,10 @@ __decorate([
     __metadata("design:type", String)
 ], User.prototype, "terminal_user_id", void 0);
 __decorate([
+    (0, typeorm_1.Column)({ type: 'text', nullable: true }),
+    __metadata("design:type", String)
+], User.prototype, "photo_url", void 0);
+__decorate([
     (0, typeorm_1.Column)({ type: 'json', nullable: true }),
     __metadata("design:type", Object)
 ], User.prototype, "external_ids", void 0);
