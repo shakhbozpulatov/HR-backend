@@ -608,9 +608,8 @@ export class AuthService {
       };
 
       // SOLID: Use CompanyService for statistics
-      profile.company.statistics = await this.companyService.getCompanyStatistics(
-        user.company.id,
-      );
+      profile.company.statistics =
+        await this.companyService.getCompanyStatistics(user.company.id);
     }
 
     // SOLID: Use PermissionService for permissions
