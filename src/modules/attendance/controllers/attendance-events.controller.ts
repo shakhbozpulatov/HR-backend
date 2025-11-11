@@ -10,7 +10,6 @@ import {
   Query,
   Param,
   UseGuards,
-  Headers,
   HttpCode,
   HttpStatus,
   ParseUUIDPipe,
@@ -33,11 +32,22 @@ import { Roles } from '@/common/decorators/roles.decorator';
 import { Public } from '@/common/decorators/public.decorator';
 import { CurrentUser } from '@/common/decorators/current-user.decorator';
 import { UserRole } from '@/modules/users/entities/user.entity';
+import { HcApiResponse } from '@/modules/hc/interfaces/hc-api.interface';
 
 @Controller('attendance/events')
 @UseInterceptors(ClassSerializerInterceptor)
 export class AttendanceEventsController {
   constructor(private readonly eventsService: AttendanceEventsService) {}
+
+  @Post('subscribe')
+  async subscribe(@Body() subscribeType: number): Promise<HcApiResponse<any>> {
+    return await this.eventsService.subscribeService(subscribeType);
+  }
+
+  @Get('get-events')
+  async getEvents(@Query('maxNumberPerTime') maxNumberPerTime: number) {
+    return await this.eventsService.getAllEvents(maxNumberPerTime);
+  }
 
   /**
    * Receive webhook event from biometric device
@@ -48,23 +58,8 @@ export class AttendanceEventsController {
   @Public()
   @Throttle({ short: { limit: 100, ttl: 60000 } })
   @HttpCode(HttpStatus.CREATED)
-  async receiveWebhookEvent(
-    @Body(ValidationPipe) eventData: WebhookEventDto,
-    @Headers('x-idempotency-key') idempotencyKey: string,
-    @Headers('x-signature') signature?: string,
-  ) {
-    if (!idempotencyKey) {
-      return {
-        success: false,
-        error: 'x-idempotency-key header is required',
-      };
-    }
-
-    const event = await this.eventsService.processWebhookEvent(
-      eventData,
-      idempotencyKey,
-      signature,
-    );
+  async receiveWebhookEvent(@Body(ValidationPipe) eventData: WebhookEventDto) {
+    const event = await this.eventsService.processWebhookEvent(eventData);
 
     return {
       success: true,
@@ -79,18 +74,18 @@ export class AttendanceEventsController {
    * Get attendance events with filters
    * Requires authentication and appropriate role
    */
-  @Get()
-  @UseGuards(AuthGuard, RolesGuard)
-  @Roles(
-    UserRole.SUPER_ADMIN,
-    UserRole.COMPANY_OWNER,
-    UserRole.ADMIN,
-    UserRole.HR_MANAGER,
-    UserRole.MANAGER,
-  )
-  async getEvents(@Query(ValidationPipe) filterDto: AttendanceFilterDto) {
-    return await this.eventsService.findAll(filterDto);
-  }
+  // @Get()
+  // @UseGuards(AuthGuard, RolesGuard)
+  // @Roles(
+  //   UserRole.SUPER_ADMIN,
+  //   UserRole.COMPANY_OWNER,
+  //   UserRole.ADMIN,
+  //   UserRole.HR_MANAGER,
+  //   UserRole.MANAGER,
+  // )
+  // async getEvents(@Query(ValidationPipe) filterDto: AttendanceFilterDto) {
+  //   return await this.eventsService.findAll(filterDto);
+  // }
 
   /**
    * Get quarantined events

@@ -50,6 +50,10 @@ export class HcApiConfig {
         bind: '/acspm/v1/accesslevel/person/add',
         unbind: '/terminal/v1/unbind',
       },
+      mq: {
+        subscribe: '/combine/v1/mq/subscribe',
+        messages: '/combine/v1/mq/messages',
+      },
       // Easy to add more endpoints in future
     };
   }

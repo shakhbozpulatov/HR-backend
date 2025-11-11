@@ -7,10 +7,10 @@ import { BullModule } from '@nestjs/bull';
 import { ThrottlerModule } from '@nestjs/throttler';
 
 // Entities
-import { AttendanceEvent } from './entities/attendance-event.entity';
-import { AttendanceRecord } from './entities/attendance-record.entity';
-import { UserDeviceMapping } from './entities/user-device-mapping.entity';
-import { AttendanceProcessingLog } from './entities/attendance-processing-log.entity';
+import { AttendanceEvent } from '@/modules/attendance/entities';
+import { AttendanceRecord } from '@/modules/attendance/entities';
+import { UserDeviceMapping } from '@/modules/attendance/entities';
+import { AttendanceProcessingLog } from '@/modules/attendance/entities';
 
 // Services
 import { AttendanceEventsService } from './services/attendance-events.service';
@@ -32,6 +32,9 @@ import { AttendanceCronService } from './cron/attendance-cron.service';
 // Other modules
 import { SchedulesModule } from '../schedules/schedules.module';
 import { HolidaysModule } from '../holidays/holidays.module';
+import { HcService } from '@/modules/hc/hc.service';
+import { HcApiClient } from '@/modules/hc/services/hc-api-client.service';
+import { HcApiConfig } from '@/modules/hc/config/hc-api.config';
 
 @Module({
   imports: [
@@ -84,6 +87,9 @@ import { HolidaysModule } from '../holidays/holidays.module';
     UserDeviceMappingService,
     AttendanceQueueProcessor,
     AttendanceCronService,
+    HcService,
+    HcApiClient,
+    HcApiConfig,
   ],
   exports: [
     AttendanceEventsService,

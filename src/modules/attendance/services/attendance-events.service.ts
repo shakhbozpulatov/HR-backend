@@ -1,11 +1,11 @@
 import {
+  BadRequestException,
   Injectable,
   Logger,
   NotFoundException,
-  BadRequestException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, Between, DataSource } from 'typeorm';
+import { Between, DataSource, Repository } from 'typeorm';
 import { ConfigService } from '@nestjs/config';
 import { InjectQueue } from '@nestjs/bull';
 import { Queue } from 'bull';
@@ -22,6 +22,8 @@ import {
   UserDeviceMapping,
   WebhookEventDto,
 } from '@/modules/attendance';
+import { HcService } from '@/modules/hc/hc.service';
+import { HcApiResponse } from '@/modules/hc/interfaces/hc-api.interface';
 
 @Injectable()
 export class AttendanceEventsService {
@@ -36,9 +38,26 @@ export class AttendanceEventsService {
     @InjectQueue('attendance')
     private attendanceQueue: Queue,
     private configService: ConfigService,
+    private hcService: HcService,
     private dataSource: DataSource,
   ) {
     this.webhookSecret = this.configService.get('WEBHOOK_SECRET', '');
+  }
+
+  async subscribeService(subscribeType: number): Promise<HcApiResponse<any>> {
+    if (!subscribeType) {
+      throw new BadRequestException({ message: 'Subscribe type not provided' });
+    }
+    return await this.hcService.subscribeEvent(subscribeType);
+  }
+
+  async getAllEvents(maxNumberPerTime: number) {
+    if (!maxNumberPerTime) {
+      throw new BadRequestException({
+        message: 'maxNumberPerTime type not provided',
+      });
+    }
+    return await this.hcService.getAllEvents(maxNumberPerTime);
   }
 
   /**
@@ -46,27 +65,7 @@ export class AttendanceEventsService {
    */
   async processWebhookEvent(
     eventData: WebhookEventDto,
-    idempotencyKey: string,
-    signature?: string,
   ): Promise<AttendanceEvent> {
-    // 1. Validate signature if provided
-    if (signature && !this.validateSignature(eventData, signature)) {
-      this.logger.warn(
-        `Invalid signature for idempotency key: ${idempotencyKey}`,
-      );
-      throw new BadRequestException('Invalid webhook signature');
-    }
-
-    // 2. Check for existing event (idempotency)
-    const existingEvent = await this.eventRepository.findOne({
-      where: { ingestion_idempotency_key: idempotencyKey },
-    });
-
-    if (existingEvent) {
-      this.logger.log(`Duplicate event detected: ${idempotencyKey}`);
-      return existingEvent;
-    }
-
     // 3. Resolve user_id from terminal_user_id
     let userId: string | null = null;
     let processingStatus = ProcessingStatus.PENDING;
@@ -113,11 +112,6 @@ export class AttendanceEventsService {
         ts_utc: tsUtc,
         ts_local: tsLocal,
         source_payload: eventData.metadata,
-        ingestion_idempotency_key: idempotencyKey,
-        signature_valid: signature
-          ? this.validateSignature(eventData, signature)
-          : true,
-        signature_hash: signature || null,
         processing_status: processingStatus,
         processed_at:
           processingStatus === ProcessingStatus.PROCESSED ? new Date() : null,
@@ -139,19 +133,6 @@ export class AttendanceEventsService {
       return savedEvent;
     } catch (error) {
       await queryRunner.rollbackTransaction();
-
-      // Handle unique constraint violation (race condition)
-      if (error.code === '23505') {
-        const existingEvent = await this.eventRepository.findOne({
-          where: { ingestion_idempotency_key: idempotencyKey },
-        });
-        if (existingEvent) {
-          this.logger.log(
-            `Race condition: event already exists ${idempotencyKey}`,
-          );
-          return existingEvent;
-        }
-      }
 
       this.logger.error(
         `Failed to process webhook event: ${error.message}`,

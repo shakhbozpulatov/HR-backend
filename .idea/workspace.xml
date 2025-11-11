@@ -6,8 +6,12 @@
   <component name="ChangeListManager">
     <list default="true" id="f223feb0-6502-4a9b-9c03-44f93ba47b8c" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/modules/holidays/holidays.controller.spec.ts" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/modules/holidays/holidays.service.spec.ts" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/modules/attendance/attendance.module.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/modules/attendance/attendance.module.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/modules/attendance/controllers/attendance-events.controller.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/modules/attendance/controllers/attendance-events.controller.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/modules/attendance/dto/webhook-event.dto.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/modules/attendance/dto/webhook-event.dto.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/modules/attendance/services/attendance-events.service.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/modules/attendance/services/attendance-events.service.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/modules/hc/config/hc-api.config.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/modules/hc/config/hc-api.config.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/modules/hc/hc.service.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/modules/hc/hc.service.ts" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />

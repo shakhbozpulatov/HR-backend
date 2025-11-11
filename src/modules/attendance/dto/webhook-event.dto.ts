@@ -7,7 +7,7 @@ import {
   IsUUID,
   Length,
 } from 'class-validator';
-import { EventType } from '../entities/attendance-event.entity';
+import { EventType } from '@/modules/attendance';
 
 export class WebhookEventDto {
   @IsString()

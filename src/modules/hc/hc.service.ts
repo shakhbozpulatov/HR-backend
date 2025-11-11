@@ -166,6 +166,20 @@ export class HcService implements IHcService, OnModuleInit {
     });
   }
 
+  async subscribeEvent(subscribeType: number) {
+    const endpoint = this.config.getEndpoints().mq.subscribe;
+    return this.apiClient.post({
+      endpoint,
+      data: subscribeType,
+    });
+  }
+
+  async getAllEvents(maxNumberPerTime: number) {
+    const endpoint = this.config.getEndpoints().mq.messages;
+
+    return this.apiClient.post({ endpoint, data: maxNumberPerTime });
+  }
+
   /**
    * Validate configuration on module initialization
    */
