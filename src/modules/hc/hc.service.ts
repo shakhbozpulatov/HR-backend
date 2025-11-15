@@ -7,6 +7,8 @@ import {
   HcApiResponse,
   HcPersonData,
   IHcService,
+  HcCertificateRecordSearchRequest,
+  HcCertificateRecordSearchResponse,
 } from './interfaces/hc-api.interface';
 
 @Injectable()
@@ -180,15 +182,45 @@ export class HcService implements IHcService, OnModuleInit {
     return this.apiClient.post({ endpoint, data: maxNumberPerTime });
   }
 
+  async completeEvent(batchId: string) {
+    const endpoint = this.config.getEndpoints().mq.complete;
+
+    return this.apiClient.post({ endpoint, data: batchId });
+  }
+
+  /**
+   * Search certificate records (attendance events) from HC
+   * @param request - Search criteria with pagination
+   * @returns HC API response with certificate records
+   */
+  async searchCertificateRecords(
+    request: HcCertificateRecordSearchRequest,
+  ): Promise<HcApiResponse<HcCertificateRecordSearchResponse>> {
+    const endpoint = this.config.getEndpoints().acs.certificateRecords;
+
+    console.log('🔍 Searching certificate records from HC:', {
+      pageIndex: request.pageIndex,
+      pageSize: request.pageSize,
+      beginTime: request.searchCreteria.beginTime,
+      endTime: request.searchCreteria.endTime,
+    });
+
+    return this.apiClient.post<HcCertificateRecordSearchResponse>({
+      endpoint,
+      data: request,
+    });
+  }
+
   /**
    * Validate configuration on module initialization
    */
-  onModuleInit() {
+  async onModuleInit() {
     try {
       this.config.validate();
       console.log('✅ HC Service initialized successfully', {
         baseUrl: this.config.getBaseUrl(),
-        hasToken: !!this.config.getAccessToken(),
+        hasAppKey: !!this.config.getAppKey(),
+        hasSecretKey: !!this.config.getSecretKey(),
       });
     } catch (error) {
       console.error('❌ HC Service initialization failed:', error.message);

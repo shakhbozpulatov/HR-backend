@@ -24,39 +24,79 @@ export class ScheduleAssignmentsService {
   ) {}
 
   /**
-   * Create new schedule assignment for employee
+   * Create new schedule assignment for employee(s)
    * Only users within the same company (or SUPER_ADMIN) can do this
+   * Supports bulk assignment for multiple users
+   * If assignment already exists for same user + effective_from, it will be updated
    */
   async createAssignment(
     createAssignmentDto: CreateAssignmentDto,
     actor: any,
-  ): Promise<UserScheduleAssignment> {
-    // 1️⃣ Xodimni topamiz
-    const employee = await this.userRepository.findOne({
-      where: { id: createAssignmentDto.user_id },
-      select: ['id', 'company_id', 'first_name', 'last_name'],
-    });
+  ): Promise<UserScheduleAssignment | UserScheduleAssignment[]> {
+    const userIds = createAssignmentDto.user_id;
+    const createdAssignments: UserScheduleAssignment[] = [];
 
-    if (!employee) {
-      throw new NotFoundException('Employee not found');
+    // Loop through all user IDs
+    for (const userId of userIds) {
+      // 1️⃣ Xodimni topamiz
+      const employee = await this.userRepository.findOne({
+        where: { id: userId },
+        select: ['id', 'company_id', 'first_name', 'last_name'],
+      });
+
+      if (!employee) {
+        throw new NotFoundException(`Employee with ID ${userId} not found`);
+      }
+
+      // 2️⃣ SUPER_ADMIN bo'lmasa — faqat o'z company'ga tegishli xodimni qo'sha oladi
+      if (
+        actor.role !== UserRole.SUPER_ADMIN &&
+        employee.company_id !== actor.company_id
+      ) {
+        throw new ForbiddenException(
+          `You can only assign schedules to your own company employees (failed for user ${userId})`,
+        );
+      }
+
+      // 3️⃣ Mavjud assignment ni tekshiramiz (user_id + effective_from unique constraint)
+      const existingAssignment = await this.assignmentRepository.findOne({
+        where: {
+          user_id: userId,
+          effective_from: createAssignmentDto.effective_from,
+        },
+      });
+
+      let savedAssignment: UserScheduleAssignment;
+
+      if (existingAssignment) {
+        // Agar mavjud bo'lsa - update qilamiz
+        existingAssignment.default_template_id =
+          createAssignmentDto.default_template_id;
+        existingAssignment.effective_to = createAssignmentDto.effective_to;
+        existingAssignment.exceptions = createAssignmentDto.exceptions;
+
+        savedAssignment =
+          await this.assignmentRepository.save(existingAssignment);
+      } else {
+        // Agar yo'q bo'lsa - yangi assignment yaratamiz
+        const assignment = this.assignmentRepository.create({
+          user_id: userId,
+          default_template_id: createAssignmentDto.default_template_id,
+          effective_from: createAssignmentDto.effective_from,
+          effective_to: createAssignmentDto.effective_to,
+          exceptions: createAssignmentDto.exceptions,
+        });
+
+        savedAssignment = await this.assignmentRepository.save(assignment);
+      }
+
+      createdAssignments.push(savedAssignment);
     }
 
-    // 2️⃣ SUPER_ADMIN bo‘lmasa — faqat o‘z company’ga tegishli xodimni qo‘sha oladi
-    if (
-      actor.role !== UserRole.SUPER_ADMIN &&
-      employee.company_id !== actor.company_id
-    ) {
-      throw new ForbiddenException(
-        'You can only assign schedules to your own company employees',
-      );
-    }
-
-    // 3️⃣ Assignmentni yaratamiz
-    const assignment = this.assignmentRepository.create({
-      ...createAssignmentDto,
-    });
-
-    return await this.assignmentRepository.save(assignment);
+    // Return single assignment if only one user, array if multiple
+    return createdAssignments.length === 1
+      ? createdAssignments[0]
+      : createdAssignments;
   }
 
   /**

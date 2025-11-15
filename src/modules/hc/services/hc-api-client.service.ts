@@ -1,6 +1,7 @@
 import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
 import axios, { AxiosInstance, AxiosRequestConfig } from 'axios';
 import { HcApiConfig } from '../config/hc-api.config';
+import { HcAuthService } from './hc-auth.service';
 import {
   HcApiResponse,
   HcApiRequestOptions,
@@ -15,26 +16,38 @@ import {
 export class HcApiClient {
   private readonly axiosInstance: AxiosInstance;
 
-  constructor(private readonly config: HcApiConfig) {
+  constructor(
+    private readonly config: HcApiConfig,
+    private readonly authService: HcAuthService,
+  ) {
     this.axiosInstance = axios.create({
       baseURL: this.config.getBaseUrl(),
       timeout: this.config.getDefaultTimeout(),
-      headers: this.config.getHeaders(),
+      headers: {
+        'Content-Type': 'application/json',
+      },
     });
 
     this.setupInterceptors();
   }
 
   /**
-   * Setup request/response interceptors for logging
+   * Setup request/response interceptors for logging and authentication
    */
   private setupInterceptors(): void {
-    // Request interceptor
+    // Request interceptor - Add access token to headers
     this.axiosInstance.interceptors.request.use(
-      (config) => {
+      async (config) => {
+        // Get fresh access token before each request
+        const accessToken = await this.authService.getAccessToken();
+
+        // Add token to headers
+        config.headers.token = accessToken;
+
         console.log('🔄 HC API Request:', {
           url: config.url,
           method: config.method?.toUpperCase(),
+          hasToken: !!accessToken,
           data: config.data,
         });
         return config;
@@ -66,9 +79,7 @@ export class HcApiClient {
    * @param options - Request options
    * @returns HC API response
    */
-  async post<T = any>(
-    options: HcApiRequestOptions,
-  ): Promise<HcApiResponse<T>> {
+  async post<T = any>(options: HcApiRequestOptions): Promise<HcApiResponse<T>> {
     try {
       const requestConfig: AxiosRequestConfig = {
         timeout: options.timeout || this.config.getDefaultTimeout(),
@@ -140,10 +151,7 @@ export class HcApiClient {
   /**
    * Handle errors from HC API
    */
-  private handleError(
-    error: any,
-    options: HcApiRequestOptions,
-  ): HttpException {
+  private handleError(error: any, options: HcApiRequestOptions): HttpException {
     // If it's already an HttpException (from validateResponse), re-throw
     if (error instanceof HttpException) {
       return error;
@@ -158,7 +166,10 @@ export class HcApiClient {
       responseData: error.response?.data,
     };
 
-    console.error('❌ HC API Error Details:', JSON.stringify(errorDetails, null, 2));
+    console.error(
+      '❌ HC API Error Details:',
+      JSON.stringify(errorDetails, null, 2),
+    );
 
     const errorMessage =
       error.response?.data?.message ||

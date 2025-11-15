@@ -7,30 +7,45 @@ import { Injectable } from '@nestjs/common';
 @Injectable()
 export class HcApiConfig {
   private readonly baseUrl: string;
-  private readonly accessToken: string;
+  private readonly appKey: string;
+  private readonly secretKey: string;
 
   constructor() {
     this.baseUrl = process.env.HC_API_URL || '';
-    this.accessToken = process.env.HC_ACCESS_TOKEN || '';
+    this.appKey = process.env.HC_APP_KEY || '';
+    this.secretKey = process.env.HC_SECRET_KEY || '';
   }
 
   getBaseUrl(): string {
     return this.baseUrl;
   }
 
-  getAccessToken(): string {
-    return this.accessToken;
+  getAppKey(): string {
+    return this.appKey;
+  }
+
+  getSecretKey(): string {
+    return this.secretKey;
   }
 
   getDefaultTimeout(): number {
     return 10000; // 10 seconds
   }
 
-  getHeaders(): Record<string, string> {
-    return {
-      token: this.accessToken,
+  /**
+   * Get headers for HC API requests
+   * Note: Token is managed by HcAuthService and injected by HcApiClient
+   */
+  getHeaders(accessToken?: string): Record<string, string> {
+    const headers: Record<string, string> = {
       'Content-Type': 'application/json',
     };
+
+    if (accessToken) {
+      headers.token = accessToken;
+    }
+
+    return headers;
   }
 
   /**
@@ -53,6 +68,10 @@ export class HcApiConfig {
       mq: {
         subscribe: '/combine/v1/mq/subscribe',
         messages: '/combine/v1/mq/messages',
+        complete: '/combine/v1/mq/messages/complete',
+      },
+      acs: {
+        certificateRecords: '/acs/v1/event/certificaterecords/search',
       },
       // Easy to add more endpoints in future
     };
@@ -66,8 +85,12 @@ export class HcApiConfig {
       throw new Error('HC_API_URL environment variable is required');
     }
 
-    if (!this.accessToken) {
-      throw new Error('HC_ACCESS_TOKEN environment variable is required');
+    if (!this.appKey) {
+      throw new Error('HC_APP_KEY environment variable is required');
+    }
+
+    if (!this.secretKey) {
+      throw new Error('HC_SECRET_KEY environment variable is required');
     }
   }
 }

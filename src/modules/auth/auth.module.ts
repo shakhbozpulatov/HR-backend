@@ -15,6 +15,7 @@ import { HcApiClient } from '@/modules/hc/services/hc-api-client.service';
 import { PasswordService } from './services/password.service';
 import { PermissionService } from './services/permission.service';
 import { CompanyService } from './services/company.service';
+import { HcAuthService } from '@/modules/hc/services/hc-auth.service';
 
 /**
  * Auth Module
@@ -33,10 +34,7 @@ import { CompanyService } from './services/company.service';
  * - HcService: HC Cabinet integration
  */
 @Module({
-  imports: [
-    TypeOrmModule.forFeature([User, Company]),
-    PassportModule,
-  ],
+  imports: [TypeOrmModule.forFeature([User, Company]), PassportModule],
   controllers: [AuthController],
   providers: [
     // Core services
@@ -48,6 +46,7 @@ import { CompanyService } from './services/company.service';
     PasswordService,
     PermissionService,
     CompanyService,
+    HcAuthService,
 
     // HC Integration services
     HcService,
@@ -56,8 +55,8 @@ import { CompanyService } from './services/company.service';
   ],
   exports: [
     AuthService,
-    PasswordService,      // Export for use in other modules
-    PermissionService,    // Export for use in other modules
+    PasswordService, // Export for use in other modules
+    PermissionService, // Export for use in other modules
   ],
 })
 export class AuthModule {}

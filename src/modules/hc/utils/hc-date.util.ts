@@ -84,7 +84,9 @@ export class HcDateFormatter {
   /**
    * Format multiple dates at once
    */
-  static formatDates(dates: Record<string, string | Date | undefined>): Record<string, string | undefined> {
+  static formatDates(
+    dates: Record<string, string | Date | undefined>,
+  ): Record<string, string | undefined> {
     const formatted: Record<string, string | undefined> = {};
 
     for (const [key, value] of Object.entries(dates)) {

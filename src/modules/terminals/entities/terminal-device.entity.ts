@@ -4,11 +4,9 @@ import {
   Column,
   CreateDateColumn,
   UpdateDateColumn,
-  OneToMany,
   ManyToOne,
   JoinColumn,
 } from 'typeorm';
-import { AttendanceEvent } from '@/modules/attendance/entities/attendance-event.entity';
 import { Company } from '@/modules/company/entities/company.entity';
 
 export enum DeviceStatus {
@@ -53,6 +51,5 @@ export class TerminalDevice {
   @JoinColumn({ name: 'company_id' })
   company: Company;
 
-  @OneToMany(() => AttendanceEvent, (event) => event.device)
-  events: AttendanceEvent[];
+  // Note: AttendanceEvent relation removed - using HC string IDs instead of UUID relations
 }

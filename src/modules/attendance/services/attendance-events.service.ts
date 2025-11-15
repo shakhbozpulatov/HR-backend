@@ -24,6 +24,11 @@ import {
 } from '@/modules/attendance';
 import { HcService } from '@/modules/hc/hc.service';
 import { HcApiResponse } from '@/modules/hc/interfaces/hc-api.interface';
+import { User } from '@/modules/users/entities/user.entity';
+import {
+  FetchAttendanceEventsDto,
+  GetEventsDto,
+} from '@/modules/attendance/dto/fetch-attendance-events.dto';
 
 @Injectable()
 export class AttendanceEventsService {
@@ -35,11 +40,15 @@ export class AttendanceEventsService {
     private eventRepository: Repository<AttendanceEvent>,
     @InjectRepository(UserDeviceMapping)
     private mappingRepository: Repository<UserDeviceMapping>,
+    @InjectRepository(User)
+    private userRepository: Repository<User>,
     @InjectQueue('attendance')
     private attendanceQueue: Queue,
     private configService: ConfigService,
     private hcService: HcService,
     private dataSource: DataSource,
+    @InjectRepository(AttendanceEvent)
+    private readonly attendanceEventRepository: Repository<AttendanceEvent>,
   ) {
     this.webhookSecret = this.configService.get('WEBHOOK_SECRET', '');
   }
@@ -51,13 +60,134 @@ export class AttendanceEventsService {
     return await this.hcService.subscribeEvent(subscribeType);
   }
 
-  async getAllEvents(maxNumberPerTime: number) {
+  async writeEvent(maxNumberPerTime: number) {
     if (!maxNumberPerTime) {
       throw new BadRequestException({
         message: 'maxNumberPerTime type not provided',
       });
     }
-    return await this.hcService.getAllEvents(maxNumberPerTime);
+
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
+    try {
+      // Fetch events from HC
+      const events = await this.hcService.getAllEvents(maxNumberPerTime);
+      this.logger.log(
+        `Fetched ${events.data?.events?.length || 0} events from HC`,
+      );
+
+      if (!events.data?.events || events.data.events.length === 0) {
+        this.logger.warn('No events found from HC service');
+        await queryRunner.commitTransaction();
+        return {
+          data: null,
+          message: 'No events found',
+        };
+      }
+
+      // Fix: Time range was backwards - beginTime should be BEFORE endTime
+      const endTime = new Date().toISOString();
+      const beginTime = new Date(Date.now() - 3 * 1000).toISOString();
+
+      // Fetch certificate records from HC
+      const hcRecords = await this.hcService.searchCertificateRecords({
+        pageIndex: 1,
+        pageSize: maxNumberPerTime,
+        searchCreteria: {
+          beginTime: beginTime,
+          endTime: endTime,
+        },
+      });
+
+      // Validate we have records
+      if (
+        !hcRecords.data?.recordList ||
+        hcRecords.data.recordList.length === 0
+      ) {
+        this.logger.warn('No certificate records found from HC service');
+        await queryRunner.commitTransaction();
+        return {
+          data: null,
+          message: 'No certificate records found',
+        };
+      }
+
+      this.logger.log(
+        `Fetched ${hcRecords.data.recordList.length} certificate records from HC`,
+      );
+
+      const firstEvent = events.data.events[0];
+      const firstRecord = hcRecords.data.recordList[0];
+
+      // Validate required data exists
+      if (!firstEvent?.basicInfo?.resourceInfo?.deviceInfo?.id) {
+        throw new BadRequestException('Invalid event structure from HC');
+      }
+
+      if (!firstRecord?.deviceId || !firstRecord?.personInfo?.id) {
+        throw new BadRequestException('Invalid record structure from HC');
+      }
+
+      // Check if device IDs match
+      if (
+        firstEvent.basicInfo.resourceInfo.deviceInfo.id !== firstRecord.deviceId
+      ) {
+        this.logger.warn(
+          `Device ID mismatch: Event device ${firstEvent.basicInfo.resourceInfo.deviceInfo.id} vs Record device ${firstRecord.deviceId}`,
+        );
+        await queryRunner.commitTransaction();
+        return {
+          data: null,
+          message: 'Device ID mismatch between event and record',
+        };
+      }
+
+      // Create attendance event
+      const attendanceEvent = this.attendanceEventRepository.create({
+        user_id: firstRecord.personInfo.id,
+        device_id: firstRecord.deviceId,
+        event_type:
+          firstRecord.attendanceStatus === 1
+            ? EventType.CLOCK_IN
+            : EventType.CLOCK_OUT,
+        event_source: EventSource.BIOMETRIC_DEVICE,
+        ts_utc: new Date(firstRecord.occurTime),
+        ts_local: new Date(firstRecord.deviceTime),
+        source_payload: firstRecord,
+        signature_valid: true,
+        processing_status: ProcessingStatus.PENDING,
+      });
+
+      // Save within transaction
+      const savedEvent = await queryRunner.manager.save(attendanceEvent);
+
+      // Complete the event batch
+      if (events.data?.batchId) {
+        await this.hcService.completeEvent(events.data.batchId);
+        this.logger.log(`Completed event batch: ${events.data.batchId}`);
+      }
+
+      await queryRunner.commitTransaction();
+
+      this.logger.log(
+        `Successfully saved attendance event ${savedEvent.event_id} for user ${savedEvent.user_id}`,
+      );
+
+      return {
+        data: savedEvent,
+      };
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      this.logger.error(
+        `Failed to write events: ${error.message}`,
+        error.stack,
+      );
+      throw error;
+    } finally {
+      await queryRunner.release();
+    }
   }
 
   /**
@@ -150,7 +280,6 @@ export class AttendanceEventsService {
   async findOne(eventId: string): Promise<AttendanceEvent> {
     const event = await this.eventRepository.findOne({
       where: { event_id: eventId },
-      relations: ['user', 'device'],
     });
 
     if (!event) {
@@ -418,7 +547,6 @@ export class AttendanceEventsService {
   async getQuarantinedEvents(): Promise<AttendanceEvent[]> {
     return await this.eventRepository.find({
       where: { processing_status: ProcessingStatus.QUARANTINED },
-      relations: ['device'],
       order: { created_at: 'DESC' },
       take: 100,
     });
@@ -552,10 +680,7 @@ export class AttendanceEventsService {
       processing_status,
     } = filterDto;
 
-    const queryBuilder = this.eventRepository
-      .createQueryBuilder('event')
-      .leftJoinAndSelect('event.user', 'user')
-      .leftJoinAndSelect('event.device', 'device');
+    const queryBuilder = this.eventRepository.createQueryBuilder('event');
 
     if (user_id) {
       queryBuilder.andWhere('event.user_id = :user_id', { user_id });
@@ -588,5 +713,90 @@ export class AttendanceEventsService {
       .getManyAndCount();
 
     return { data, total };
+  }
+
+  /**
+   * Get attendance events with time range filter
+   * If no time range provided, returns last 7 days events
+   * Filters by created_at (when event was saved to database)
+   * Can filter by userId (HC person ID - links events.user_id with users.hcPersonId)
+   */
+  async getEvents(dto: {
+    startTime?: string;
+    endTime?: string;
+    page?: number;
+    limit?: number;
+    userId?: string;
+  }): Promise<{
+    data: AttendanceEvent[];
+    total: number;
+    pagination: {
+      page: number;
+      limit: number;
+      total: number;
+      totalPages: number;
+    };
+  }> {
+    const page = dto.page || 1;
+    const limit = dto.limit || 20;
+
+    // Set default time range to last 7 days if not provided (UTC)
+    let endTime = dto.endTime ? new Date(dto.endTime) : new Date(); // Current time UTC
+    const startTime = dto.startTime
+      ? new Date(dto.startTime)
+      : new Date(Date.now() - 7 * 24 * 60 * 60 * 1000); // 7 days ago UTC
+
+    // Add 1 second buffer to endTime to handle microsecond precision issues
+    // PostgreSQL stores timestamps with microsecond precision, but JS only has millisecond
+    // Without this, events at exact endTime might be excluded due to microsecond differences
+    endTime = new Date(endTime.getTime() + 1000);
+
+    this.logger.log(
+      `Fetching events from ${startTime.toISOString()} to ${endTime.toISOString()} (UTC), page ${page}, limit ${limit}${dto.userId ? `, userId=${dto.userId}` : ''}`,
+    );
+
+    // Filter by created_at (when event was saved to database)
+    const queryBuilder = this.eventRepository
+      .createQueryBuilder('event')
+      .where('event.created_at >= :startTime', { startTime })
+      .andWhere('event.created_at < :endTime', { endTime })
+      .orderBy('event.created_at', 'DESC')
+      .skip((page - 1) * limit)
+      .take(limit);
+
+    // Filter by userId if provided
+    // Note: events.user_id stores HC person ID, which matches users.hcPersonId
+    if (dto.userId) {
+      queryBuilder.andWhere('event.user_id = :userId', { userId: dto.userId });
+    }
+
+    // Debug: log the query
+    const sql = queryBuilder.getSql();
+    this.logger.debug(`SQL Query: ${sql}`);
+    this.logger.debug(
+      `Parameters: startTime=${startTime.toISOString()}, endTime=${endTime.toISOString()}${dto.userId ? `, userId=${dto.userId}` : ''}`,
+    );
+
+    const [data, total] = await queryBuilder.getManyAndCount();
+
+    this.logger.log(`Found ${total} events, returning page ${page}`);
+
+    // Debug: log first event if exists
+    if (data.length > 0) {
+      this.logger.debug(
+        `First event created_at: ${data[0].created_at.toISOString()}, user_id: ${data[0].user_id || 'null'}`,
+      );
+    }
+
+    return {
+      data,
+      total,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit),
+      },
+    };
   }
 }

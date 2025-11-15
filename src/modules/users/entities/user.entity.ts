@@ -11,7 +11,6 @@ import {
 } from 'typeorm';
 import { Company } from '@/modules/company/entities/company.entity';
 import { Department } from '@/modules/company/entities/department.entity';
-import { AttendanceEvent } from '@/modules/attendance/entities/attendance-event.entity';
 import { AttendanceRecord } from '@/modules/attendance/entities/attendance-record.entity';
 import { UserScheduleAssignment } from '@/modules/schedules/entities/employee-schedule-assignment.entity';
 import { PayrollItem } from '@/modules/payroll/entities/payroll-item.entity';
@@ -49,7 +48,7 @@ export class User {
   company_id?: string; // SUPER_ADMIN uchun null bo'lishi mumkin
 
   @Column({ nullable: true, unique: true, name: 'hc_person_id' })
-  hcPersonId: string;
+  hcPersonId?: string;
 
   @Column({ type: 'enum', enum: UserRole })
   role: UserRole;
@@ -134,6 +133,13 @@ export class User {
   @Column({ type: 'json', nullable: true })
   external_ids?: Record<string, string>;
 
+  // Attendance tracking fields
+  @Column({ type: 'enum', enum: ['clock_in', 'clock_out'], nullable: true })
+  last_event_type?: 'clock_in' | 'clock_out';
+
+  @Column({ type: 'date', nullable: true })
+  last_event_date?: Date;
+
   // 🔗 Relations
   @ManyToOne(() => Company, (company) => company.users, { nullable: true })
   @JoinColumn({ name: 'company_id' })
@@ -149,8 +155,7 @@ export class User {
   @JoinColumn({ name: 'manager_id' })
   manager: User;
 
-  @OneToMany(() => AttendanceEvent, (event) => event.user)
-  attendance_events: AttendanceEvent[];
+  // Note: AttendanceEvent relation removed - using HC string IDs instead of UUID relations
 
   @OneToMany(() => AttendanceRecord, (record) => record.user)
   attendance_records: AttendanceRecord[];

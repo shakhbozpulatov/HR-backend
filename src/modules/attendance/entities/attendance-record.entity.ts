@@ -6,10 +6,8 @@ import {
   UpdateDateColumn,
   ManyToOne,
   JoinColumn,
-  OneToMany,
   Index,
 } from 'typeorm';
-import { AttendanceEvent } from './attendance-event.entity';
 import { User } from '@/modules/users/entities/user.entity';
 
 export enum AttendanceStatus {
@@ -156,6 +154,5 @@ export class AttendanceRecord {
   @JoinColumn({ name: 'user_id' })
   user: User;
 
-  @OneToMany(() => AttendanceEvent, (event) => event.user)
-  events: AttendanceEvent[];
+  // Note: AttendanceEvent relation removed - using HC string IDs instead of UUID relations
 }

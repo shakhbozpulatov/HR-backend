@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { HcService } from './hc.service';
 import { HcApiClient } from './services/hc-api-client.service';
+import { HcAuthService } from './services/hc-auth.service';
 import { HcApiConfig } from './config/hc-api.config';
 
 /**
@@ -10,6 +11,7 @@ import { HcApiConfig } from './config/hc-api.config';
 @Module({
   providers: [
     HcApiConfig, // Configuration service
+    HcAuthService, // Authentication service (token management)
     HcApiClient, // HTTP client service
     HcService, // Main business logic service
   ],

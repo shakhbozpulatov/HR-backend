@@ -20,11 +20,13 @@ import {
 import { Throttle } from '@nestjs/throttler';
 
 import { AttendanceEventsService } from '@/modules/attendance';
+import { WebhookEventDto, ResolveQuarantineDto } from '../dto';
 import {
-  AttendanceFilterDto,
-  WebhookEventDto,
-  ResolveQuarantineDto,
-} from '../dto';
+  FetchAttendanceEventsDto,
+  FetchAttendanceEventsResponseDto,
+  GetEventsDto,
+} from '../dto/fetch-attendance-events.dto';
+import { HcAttendanceFetchService } from '../services/hc-attendance-fetch.service';
 
 import { AuthGuard } from '@/common/guards/auth.guard';
 import { RolesGuard } from '@/common/guards/roles.guard';
@@ -37,16 +39,38 @@ import { HcApiResponse } from '@/modules/hc/interfaces/hc-api.interface';
 @Controller('attendance/events')
 @UseInterceptors(ClassSerializerInterceptor)
 export class AttendanceEventsController {
-  constructor(private readonly eventsService: AttendanceEventsService) {}
+  constructor(
+    private readonly eventsService: AttendanceEventsService,
+    private readonly hcAttendanceFetchService: HcAttendanceFetchService,
+  ) {}
 
   @Post('subscribe')
   async subscribe(@Body() subscribeType: number): Promise<HcApiResponse<any>> {
     return await this.eventsService.subscribeService(subscribeType);
   }
 
+  @Get('write-event')
+  async writeEvent(@Query('maxNumberPerTime') maxNumberPerTime: number) {
+    return await this.eventsService.writeEvent(maxNumberPerTime);
+  }
+
+  /**
+   * Fetch attendance events from HC with pagination
+   * Fetches certificate records from HC, processes them, and returns formatted attendance data
+   *
+   * @param dto - Query parameters for fetching events
+   * @returns Formatted attendance events with pagination
+   */
   @Get('get-events')
-  async getEvents(@Query('maxNumberPerTime') maxNumberPerTime: number) {
-    return await this.eventsService.getAllEvents(maxNumberPerTime);
+  @UseGuards(AuthGuard, RolesGuard)
+  @Roles(
+    UserRole.SUPER_ADMIN,
+    UserRole.COMPANY_OWNER,
+    UserRole.ADMIN,
+    UserRole.HR_MANAGER,
+  )
+  async getEvents(@Query() dto: GetEventsDto) {
+    return await this.eventsService.getEvents(dto);
   }
 
   /**

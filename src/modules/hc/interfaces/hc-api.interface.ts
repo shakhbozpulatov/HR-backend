@@ -42,6 +42,87 @@ export interface HcApiRequestOptions {
 }
 
 /**
+ * HC Certificate Record Search Request
+ */
+export interface HcCertificateRecordSearchRequest {
+  pageIndex: number;
+  pageSize: number;
+  searchCreteria: {
+    beginTime: string; // ISO format: 2025-11-01T01:52:03Z
+    endTime: string; // ISO format: 2025-11-01T01:53:03Z
+  };
+}
+
+/**
+ * HC Certificate Record Response
+ */
+export interface HcCertificateRecord {
+  recordGuid: string;
+  elementId: string;
+  elementName: string;
+  deviceId: string;
+  deviceName: string;
+  occurTime: string; // ISO format
+  deviceTime: string;
+  eventType: number; // 80093 = success, 80094 = denied
+  swipeAuthResult: number; // 1 = success
+  attendanceStatus: number;
+  personInfo?: {
+    id: string;
+    baseInfo: {
+      fullPath?: string;
+      firstName?: string;
+      lastName?: string;
+      personCode: string; // Maps to our hcPersonId
+      phoneNum?: string;
+      photoUrl?: string;
+      gender?: string;
+      email?: string;
+    };
+  };
+  acsSnapPicList?: Array<{
+    snapPicUrl: string;
+    snapPicType: number;
+  }>;
+  temperatureInfo?: {
+    temperatureData: string;
+    temperatureStatus: number;
+    temperatureUnit: number;
+  };
+  direction: number;
+  recordTime: string;
+}
+
+export interface HcCertificateRecordSearchResponse {
+  totalNum: number;
+  pageIndex: number;
+  pageSize: number;
+  recordList: HcCertificateRecord[];
+}
+
+/**
+ * HC Token Authentication Interfaces
+ */
+export interface HcTokenRequest {
+  appKey: string;
+  secretKey: string;
+}
+
+export interface HcTokenResponse {
+  accessToken: string;
+  expireTime: number; // Unix timestamp in seconds
+  userId: string;
+  areaDomain: string;
+}
+
+export interface HcTokenData {
+  token: string;
+  expiresAt: number; // Unix timestamp in milliseconds
+  userId: string;
+  areaDomain: string;
+}
+
+/**
  * HC Service Interface
  * Defines the contract for HC service implementations
  * (Dependency Inversion Principle)

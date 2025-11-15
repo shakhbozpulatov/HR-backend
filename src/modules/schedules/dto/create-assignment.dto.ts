@@ -1,16 +1,18 @@
 import {
   IsString,
-  IsDateString,
   IsOptional,
   IsArray,
   IsDate,
+  ArrayMinSize,
 } from 'class-validator';
 import { ScheduleException } from '../entities/employee-schedule-assignment.entity';
 import { Type } from 'class-transformer';
 
 export class CreateAssignmentDto {
-  @IsString()
-  user_id: string;
+  @IsArray()
+  @ArrayMinSize(1, { message: 'At least one user ID is required' })
+  @IsString({ each: true })
+  user_id: string[];
 
   @IsString()
   default_template_id: string;

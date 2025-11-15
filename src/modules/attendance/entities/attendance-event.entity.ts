@@ -3,13 +3,9 @@ import {
   PrimaryGeneratedColumn,
   Column,
   CreateDateColumn,
-  ManyToOne,
-  JoinColumn,
   Index,
   UpdateDateColumn,
 } from 'typeorm';
-import { TerminalDevice } from '@/modules/terminals/entities/terminal-device.entity';
-import { User } from '@/modules/users/entities/user.entity';
 
 export enum EventType {
   CLOCK_IN = 'clock_in',
@@ -32,7 +28,6 @@ export enum ProcessingStatus {
 }
 
 @Entity('attendance_events')
-@Index(['ingestion_idempotency_key'], { unique: true })
 @Index(['user_id', 'ts_local'])
 @Index(['device_id', 'ts_local'])
 @Index(['processing_status', 'created_at'])
@@ -41,13 +36,13 @@ export class AttendanceEvent {
   @PrimaryGeneratedColumn('uuid')
   event_id: string;
 
-  @Column({ type: 'uuid', nullable: true })
+  @Column({ type: 'varchar', nullable: true })
   user_id?: string;
 
   @Column({ nullable: true })
   terminal_user_id?: string;
 
-  @Column({ type: 'uuid' })
+  @Column({ type: 'varchar' })
   device_id: string;
 
   @Column({ type: 'enum', enum: EventType })
@@ -68,9 +63,6 @@ export class AttendanceEvent {
 
   @Column({ type: 'json', nullable: true })
   source_payload?: any;
-
-  @Column({ unique: true })
-  ingestion_idempotency_key: string;
 
   @Column({ type: 'boolean', default: true })
   signature_valid: boolean;
@@ -100,21 +92,12 @@ export class AttendanceEvent {
   @Column({ type: 'timestamptz', nullable: true })
   resolved_at?: Date;
 
-  @CreateDateColumn()
+  @CreateDateColumn({ type: 'timestamptz' })
   created_at: Date;
 
-  @UpdateDateColumn()
+  @UpdateDateColumn({ type: 'timestamptz' })
   updated_at: Date;
 
-  // Relations
-  @ManyToOne(() => User, (user) => user.attendance_events, {
-    nullable: true,
-    onDelete: 'SET NULL',
-  })
-  @JoinColumn({ name: 'user_id' })
-  user?: User;
-
-  @ManyToOne(() => TerminalDevice, { onDelete: 'CASCADE' })
-  @JoinColumn({ name: 'device_id' })
-  device: TerminalDevice;
+  // Note: user_id and device_id are now string IDs from HC system
+  // Relations removed to allow non-UUID foreign keys
 }

@@ -11,6 +11,16 @@ import { ConfigService } from '@nestjs/config';
 import * as moment from 'moment-timezone';
 
 import { AttendanceEventsService } from '@/modules/attendance';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { User } from '@/modules/users/entities/user.entity';
+import {
+  AttendanceEvent,
+  EventType,
+  EventSource,
+  ProcessingStatus,
+} from '@/modules/attendance';
+import { UserScheduleAssignment } from '@/modules/schedules/entities/employee-schedule-assignment.entity';
 
 @Injectable()
 export class AttendanceCronService {
@@ -26,6 +36,12 @@ export class AttendanceCronService {
     private readonly eventsService: AttendanceEventsService,
     private readonly configService: ConfigService,
     private readonly schedulerRegistry: SchedulerRegistry,
+    @InjectRepository(User)
+    private readonly userRepository: Repository<User>,
+    @InjectRepository(AttendanceEvent)
+    private readonly attendanceEventRepository: Repository<AttendanceEvent>,
+    @InjectRepository(UserScheduleAssignment)
+    private readonly scheduleAssignmentRepository: Repository<UserScheduleAssignment>,
   ) {
     this.timezone = this.configService.get('DEFAULT_TIMEZONE', 'Asia/Tashkent');
     this.enableDailyProcessing = this.configService.get(
@@ -352,11 +368,166 @@ export class AttendanceCronService {
   }
 
   /**
-   * Auto-approve old records
+   * Automatic Clock-Out at End of Day
    * Runs daily at 11:00 PM
-   * Auto-approve records older than X days if configured
+   * Automatically creates clock-out events for users who forgot to clock out
    */
   @Cron('0 23 * * *', {
+    name: 'auto-clock-out',
+    timeZone: 'Asia/Tashkent',
+  })
+  async handleAutoClockOut() {
+    const autoClockOutEnabled = this.configService.get(
+      'AUTO_CLOCK_OUT_ENABLED',
+      true,
+    );
+
+    if (!autoClockOutEnabled) {
+      this.logger.log('Auto clock-out is disabled. Skipping.');
+      return;
+    }
+
+    const today = moment.tz(this.timezone).format('YYYY-MM-DD');
+    this.logger.log(`Starting automatic clock-out for ${today}`);
+
+    try {
+      // Find all users who have clock_in as their last event for today
+      const usersNeedingClockOut = await this.userRepository.find({
+        where: {
+          last_event_type: 'clock_in',
+          last_event_date: new Date(today),
+        },
+        relations: ['schedule_assignments'],
+      });
+
+      this.logger.log(
+        `Found ${usersNeedingClockOut.length} users needing automatic clock-out`,
+      );
+
+      let successCount = 0;
+      let errorCount = 0;
+
+      for (const user of usersNeedingClockOut) {
+        try {
+          // Get user's schedule for today
+          const dayOfWeek = moment.tz(this.timezone).isoWeekday(); // 1 = Monday, 7 = Sunday
+          const scheduleAssignment = user.schedule_assignments?.[0];
+
+          if (!scheduleAssignment) {
+            this.logger.warn(
+              `No schedule found for user ${user.id}. Using default end time.`,
+            );
+            // Use default end time if no schedule
+            await this.createAutoClockOutEvent(user, today, '18:00:00');
+            successCount++;
+            continue;
+          }
+
+          // Get the schedule template (would need to fetch from schedules module)
+          // For now, we'll use a default end time
+          const endTime = '18:00:00'; // Default 6 PM
+
+          await this.createAutoClockOutEvent(user, today, endTime);
+          successCount++;
+        } catch (error) {
+          this.logger.error(
+            `Failed to create auto clock-out for user ${user.id}: ${error.message}`,
+          );
+          errorCount++;
+        }
+      }
+
+      this.logger.log(
+        `Auto clock-out completed. Success: ${successCount}, Errors: ${errorCount}`,
+      );
+    } catch (error) {
+      this.logger.error(
+        `Auto clock-out job failed: ${error.message}`,
+        error.stack,
+      );
+      await this.sendCronAlert('auto-clock-out', error);
+    }
+  }
+
+  /**
+   * Create automatic clock-out event for a user
+   */
+  private async createAutoClockOutEvent(
+    user: User,
+    date: string,
+    endTime: string,
+  ): Promise<void> {
+    const clockOutTime = moment
+      .tz(`${date} ${endTime}`, this.timezone)
+      .toDate();
+
+    // Create idempotency key
+    // const idempotencyKey = `auto-clock-out-${user.id}-${date}`;
+
+    // Check if auto clock-out already exists
+    // const existingEvent = await this.attendanceEventRepository.findOne({
+    //   where: { ingestion_idempotency_key: idempotencyKey },
+    // });
+
+    // if (existingEvent) {
+    //   this.logger.debug(
+    //     `Auto clock-out already exists for user ${user.id} on ${date}`,
+    //   );
+    //   return;
+    // }
+
+    // Get the user's device (first one if multiple)
+    const lastEvent = await this.attendanceEventRepository.findOne({
+      where: {
+        user_id: user.id,
+        event_type: EventType.CLOCK_IN,
+      },
+      order: { ts_local: 'DESC' },
+    });
+
+    if (!lastEvent) {
+      this.logger.warn(
+        `No recent clock-in event found for user ${user.id}. Skipping auto clock-out.`,
+      );
+      return;
+    }
+
+    // Create automatic clock-out event
+    const autoClockOutEvent = this.attendanceEventRepository.create({
+      user_id: user.id,
+      device_id: lastEvent.device_id,
+      event_type: EventType.CLOCK_OUT,
+      event_source: EventSource.MANUAL_ENTRY, // Mark as manual since it's automatic
+      ts_utc: clockOutTime,
+      ts_local: clockOutTime,
+      source_payload: {
+        auto_generated: true,
+        reason: 'End of work day - automatic clock-out',
+        schedule_end_time: endTime,
+      },
+      signature_valid: true,
+      processing_status: ProcessingStatus.PENDING,
+    });
+
+    await this.attendanceEventRepository.save(autoClockOutEvent);
+
+    // Update user's last event
+    await this.userRepository.update(user.id, {
+      last_event_type: EventType.CLOCK_OUT,
+      last_event_date: new Date(date),
+    });
+
+    this.logger.log(
+      `Created auto clock-out for user ${user.first_name} ${user.last_name} at ${endTime}`,
+    );
+  }
+
+  /**
+   * Auto-approve old records
+   * Runs daily at 11:30 PM
+   * Auto-approve records older than X days if configured
+   */
+  @Cron('30 23 * * *', {
     name: 'auto-approve-old-records',
     timeZone: 'Asia/Tashkent',
   })

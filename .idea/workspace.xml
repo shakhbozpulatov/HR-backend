@@ -5,13 +5,31 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="f223feb0-6502-4a9b-9c03-44f93ba47b8c" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/.env.example" beforeDir="false" afterPath="$PROJECT_DIR$/.env.example" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/migrations/1762600472686-init.ts" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/migrations/1762633552805-init.ts" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/migrations/1762680456197-init.ts" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/src/modules/attendance/attendance.module.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/modules/attendance/attendance.module.ts" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/modules/attendance/controllers/attendance-events.controller.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/modules/attendance/controllers/attendance-events.controller.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/modules/attendance/dto/webhook-event.dto.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/modules/attendance/dto/webhook-event.dto.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/modules/attendance/cron/attendance-cron.service.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/modules/attendance/cron/attendance-cron.service.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/modules/attendance/entities/attendance-event.entity.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/modules/attendance/entities/attendance-event.entity.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/modules/attendance/entities/attendance-record.entity.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/modules/attendance/entities/attendance-record.entity.ts" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/modules/attendance/services/attendance-events.service.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/modules/attendance/services/attendance-events.service.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/modules/auth/auth.module.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/modules/auth/auth.module.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/modules/auth/services/password.service.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/modules/auth/services/password.service.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/modules/auth/services/permission.service.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/modules/auth/services/permission.service.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/modules/hc/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/src/modules/hc/README.md" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/modules/hc/config/hc-api.config.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/modules/hc/config/hc-api.config.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/modules/hc/hc.module.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/modules/hc/hc.module.ts" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/modules/hc/hc.service.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/modules/hc/hc.service.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/modules/hc/interfaces/hc-api.interface.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/modules/hc/interfaces/hc-api.interface.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/modules/hc/services/hc-api-client.service.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/modules/hc/services/hc-api-client.service.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/modules/hc/utils/hc-date.util.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/modules/hc/utils/hc-date.util.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/modules/schedules/dto/create-assignment.dto.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/modules/schedules/dto/create-assignment.dto.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/modules/schedules/schedule-assignments.service.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/modules/schedules/schedule-assignments.service.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/modules/terminals/entities/terminal-device.entity.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/modules/terminals/entities/terminal-device.entity.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/modules/users/entities/user.entity.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/modules/users/entities/user.entity.ts" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -95,6 +113,10 @@
       <workItem from="1762320726092" duration="3322000" />
       <workItem from="1762593728645" duration="22933000" />
       <workItem from="1762696889178" duration="4687000" />
+      <workItem from="1762974015523" duration="73000" />
+      <workItem from="1763015566008" duration="6147000" />
+      <workItem from="1763087015101" duration="7024000" />
+      <workItem from="1763192405344" duration="15408000" />
     </task>
     <servers />
   </component>

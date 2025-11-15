@@ -11,26 +11,32 @@ HC Module provides integration with HikCentral API for managing persons, termina
 ### SOLID Principles Applied
 
 #### 1. **Single Responsibility Principle (SRP)**
+
 Each class has one reason to change:
+
 - `HcApiConfig` - Configuration management only
 - `HcApiClient` - HTTP communication only
 - `HcDateFormatter` - Date formatting only
 - `HcService` - Business logic only
 
 #### 2. **Open/Closed Principle (OCP)**
+
 - Easy to add new HC API methods without modifying existing code
 - Extend `HcService` with new methods following the same pattern
 - Add new endpoints in `HcApiConfig.getEndpoints()`
 
 #### 3. **Liskov Substitution Principle (LSP)**
+
 - `HcService` implements `IHcService` interface
 - Can be replaced with mock implementations for testing
 
 #### 4. **Interface Segregation Principle (ISP)**
+
 - Focused interfaces (`IHcService`, `HcApiResponse`, etc.)
 - Clients don't depend on methods they don't use
 
 #### 5. **Dependency Inversion Principle (DIP)**
+
 - High-level `HcService` depends on abstractions (`HcApiClient`, `HcApiConfig`)
 - Easy to mock dependencies for unit testing
 
@@ -60,20 +66,23 @@ src/modules/hc/
 ## 🔧 Components
 
 ### 1. HcApiConfig (`config/hc-api.config.ts`)
+
 **Responsibility:** Centralized configuration
 
 ```typescript
 const config = new HcApiConfig();
-config.getBaseUrl();           // HC API base URL
-config.getAccessToken();       // Access token
-config.getEndpoints();         // All API endpoints
-config.validate();             // Validate configuration
+config.getBaseUrl(); // HC API base URL
+config.getAccessToken(); // Access token
+config.getEndpoints(); // All API endpoints
+config.validate(); // Validate configuration
 ```
 
 ### 2. HcApiClient (`services/hc-api-client.service.ts`)
+
 **Responsibility:** HTTP communication with HC API
 
 **Features:**
+
 - Automatic request/response logging
 - Error handling with detailed messages
 - HC API response validation (errorCode checking)
@@ -88,6 +97,7 @@ await apiClient.post<HcPersonData>({
 ```
 
 ### 3. HcDateFormatter (`utils/hc-date.util.ts`)
+
 **Responsibility:** Date formatting for HC API
 
 ```typescript
@@ -103,6 +113,7 @@ HcDateFormatter.formatDates({
 ```
 
 ### 4. HcService (`hc.service.ts`)
+
 **Responsibility:** Business logic for HC operations
 
 **Available Methods:**
@@ -193,6 +204,7 @@ async listPersons(groupId: string): Promise<HcApiResponse<HcPersonData[]>> {
 ```
 
 **That's it!** No need to:
+
 - ❌ Duplicate HTTP logic
 - ❌ Duplicate error handling
 - ❌ Duplicate logging
@@ -258,6 +270,7 @@ describe('HcService', () => {
 ### Error Types
 
 1. **HC API Errors** (errorCode !== "0"):
+
 ```json
 {
   "message": "HC API returned an error",
@@ -268,6 +281,7 @@ describe('HcService', () => {
 ```
 
 2. **Network Errors**:
+
 ```json
 {
   "message": "Failed to communicate with HC system",
@@ -277,6 +291,7 @@ describe('HcService', () => {
 ```
 
 3. **Configuration Errors**:
+
 ```
 Error: HC_API_URL environment variable is required
 ```
@@ -286,26 +301,31 @@ Error: HC_API_URL environment variable is required
 ## 🌟 Benefits of This Architecture
 
 ### ✅ Maintainability
+
 - Clear separation of concerns
 - Easy to understand code structure
 - Single source of truth for configuration
 
 ### ✅ Testability
+
 - Easy to mock dependencies
 - Unit test without HTTP calls
 - Test business logic in isolation
 
 ### ✅ Extensibility
+
 - Add new methods in minutes
 - No code duplication
 - Consistent error handling
 
 ### ✅ Reusability
+
 - `HcApiClient` can be reused for any HC API endpoint
 - `HcDateFormatter` utility works everywhere
 - Configuration centralized
 
 ### ✅ Debugging
+
 - Automatic request/response logging
 - Detailed error messages
 - Easy to trace issues
