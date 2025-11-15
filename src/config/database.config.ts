@@ -28,8 +28,8 @@ export class DatabaseConfig implements TypeOrmOptionsFactory {
 
       // 🧱 Migrations (different for prod/dev)
       migrations: isProd
-        ? [__dirname + '/../migrations/*.js']
-        : [__dirname + '/../migrations/*.ts'],
+        ? [__dirname + '/../database/migrations/*.js']
+        : [__dirname + '/../database/migrations/*.ts'],
 
       synchronize: false, // never true in production
       logging: !isProd,
@@ -52,7 +52,9 @@ export const dataSourceOptions: DataSourceOptions = {
   // ⚙️ CLI uchun to‘g‘ri yo‘llar
   entities: isProd ? ['dist/**/*.entity.js'] : ['src/**/*.entity.ts'],
 
-  migrations: isProd ? ['dist/migrations/*.js'] : ['src/migrations/*.ts'],
+  migrations: isProd
+    ? ['dist/database/migrations/*.js']
+    : ['src/database/migrations/*.ts'],
 
   synchronize: false,
   logging: !isProd,
