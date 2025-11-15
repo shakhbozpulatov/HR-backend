@@ -5,13 +5,16 @@ import {
   Param,
   Post,
   Patch,
+  Delete,
   UseGuards,
   Req,
 } from '@nestjs/common';
 import { ScheduleAssignmentsService } from './schedule-assignments.service';
 import { CreateAssignmentDto } from './dto/create-assignment.dto';
-import { UpdateUserAssignmentDto } from './dto/update-user-assignment.dto';
+import { BulkUpdateAssignmentDto } from './dto/bulk-update-assignment.dto';
+import { BulkDeleteAssignmentDto } from './dto/bulk-delete-assignment.dto';
 import { CreateExceptionDto } from './dto/create-exception.dto';
+import { DeleteExceptionDto } from './dto/delete-exception.dto';
 import { AuthGuard } from '@/common/guards/auth.guard';
 import { RolesGuard } from '@/common/guards/roles.guard';
 import { Roles } from '@/common/decorators/roles.decorator';
@@ -56,6 +59,23 @@ export class ScheduleAssignmentsController {
     );
   }
 
+  // @Patch('update-user-assignment')
+  // @Roles(
+  //   UserRole.SUPER_ADMIN,
+  //   UserRole.COMPANY_OWNER,
+  //   UserRole.ADMIN,
+  //   UserRole.HR_MANAGER,
+  // )
+  // async updateTemplate(
+  //   @Body() updateTemplateDto: UpdateUserAssignmentDto,
+  //   @Req() req,
+  // ) {
+  //   return await this.assignmentsService.updateTemplate(
+  //     updateTemplateDto,
+  //     req.user,
+  //   );
+  // }
+
   @Patch('update-user-assignment')
   @Roles(
     UserRole.SUPER_ADMIN,
@@ -63,12 +83,29 @@ export class ScheduleAssignmentsController {
     UserRole.ADMIN,
     UserRole.HR_MANAGER,
   )
-  async updateTemplate(
-    @Body() updateTemplateDto: UpdateUserAssignmentDto,
+  async bulkUpdateTemplate(
+    @Body() bulkUpdateDto: BulkUpdateAssignmentDto,
     @Req() req,
   ) {
-    return await this.assignmentsService.updateTemplate(
-      updateTemplateDto,
+    return await this.assignmentsService.bulkUpdateTemplate(
+      bulkUpdateDto,
+      req.user,
+    );
+  }
+
+  @Delete('delete-user-assignment')
+  @Roles(
+    UserRole.SUPER_ADMIN,
+    UserRole.COMPANY_OWNER,
+    UserRole.ADMIN,
+    UserRole.HR_MANAGER,
+  )
+  async bulkDeleteAssignments(
+    @Body() bulkDeleteDto: BulkDeleteAssignmentDto,
+    @Req() req,
+  ) {
+    return await this.assignmentsService.bulkDeleteAssignments(
+      bulkDeleteDto,
       req.user,
     );
   }
@@ -86,6 +123,25 @@ export class ScheduleAssignmentsController {
     @Req() req,
   ) {
     return await this.assignmentsService.addException(
+      assignmentId,
+      exception,
+      req.user,
+    );
+  }
+
+  @Delete(':assignmentId/exceptions')
+  @Roles(
+    UserRole.SUPER_ADMIN,
+    UserRole.COMPANY_OWNER,
+    UserRole.ADMIN,
+    UserRole.HR_MANAGER,
+  )
+  async deleteException(
+    @Param('assignmentId') assignmentId: string,
+    @Body() exception: DeleteExceptionDto,
+    @Req() req,
+  ) {
+    return await this.assignmentsService.deleteException(
       assignmentId,
       exception,
       req.user,

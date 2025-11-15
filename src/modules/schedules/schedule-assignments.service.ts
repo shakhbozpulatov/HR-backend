@@ -9,7 +9,10 @@ import { LessThanOrEqual, MoreThanOrEqual, Repository, IsNull } from 'typeorm';
 import { UserScheduleAssignment } from './entities/employee-schedule-assignment.entity';
 import { CreateAssignmentDto } from './dto/create-assignment.dto';
 import { UpdateUserAssignmentDto } from './dto/update-user-assignment.dto';
+import { BulkUpdateAssignmentDto } from './dto/bulk-update-assignment.dto';
+import { BulkDeleteAssignmentDto } from './dto/bulk-delete-assignment.dto';
 import { CreateExceptionDto } from './dto/create-exception.dto';
+import { DeleteExceptionDto } from './dto/delete-exception.dto';
 import { User } from '@/modules/users/entities/user.entity';
 import { UserRole } from '@/modules/users/entities/user.entity';
 
@@ -58,7 +61,27 @@ export class ScheduleAssignmentsService {
         );
       }
 
-      // 3️⃣ Mavjud assignment ni tekshiramiz (user_id + effective_from unique constraint)
+      // 3️⃣ Aktiv assignmentni topamiz (effective_to = null)
+      // Bir user uchun faqat bitta aktiv template bo'lishi kerak
+      const activeAssignment = await this.assignmentRepository.findOne({
+        where: {
+          user_id: userId,
+          effective_to: IsNull(),
+        },
+        order: { effective_from: 'DESC' },
+      });
+
+      // 4️⃣ Agar aktiv assignment bo'lsa, uni yangi assignment boshlanish sanasidan bir kun oldin tugatamiz
+      if (activeAssignment) {
+        const dayBeforeNewEffective = new Date(
+          createAssignmentDto.effective_from,
+        );
+        dayBeforeNewEffective.setDate(dayBeforeNewEffective.getDate() - 1);
+        activeAssignment.effective_to = dayBeforeNewEffective;
+        await this.assignmentRepository.save(activeAssignment);
+      }
+
+      // 5️⃣ Bir xil effective_from bilan assignmentni tekshiramiz
       const existingAssignment = await this.assignmentRepository.findOne({
         where: {
           user_id: userId,
@@ -184,6 +207,94 @@ export class ScheduleAssignmentsService {
   }
 
   /**
+   * Delete schedule exception — only from same company employee
+   * Matches exception by type, date/date range, and template_id (if applicable)
+   */
+  async deleteException(
+    assignmentId: string,
+    exceptionToDelete: DeleteExceptionDto,
+    actor: any,
+  ): Promise<UserScheduleAssignment> {
+    const assignment = await this.assignmentRepository.findOne({
+      where: { assignment_id: assignmentId },
+      relations: ['user'],
+    });
+
+    if (!assignment) {
+      throw new NotFoundException('Assignment not found');
+    }
+
+    // company check
+    if (
+      actor.role !== UserRole.SUPER_ADMIN &&
+      assignment.user?.company_id !== actor.company_id
+    ) {
+      throw new ForbiddenException(
+        'You can only edit your own company assignments',
+      );
+    }
+
+    // Initialize exceptions array if not exists
+    if (!assignment.exceptions || !Array.isArray(assignment.exceptions)) {
+      throw new NotFoundException('No exceptions found for this assignment');
+    }
+
+    // Filter out any invalid entries (like empty arrays or non-objects)
+    assignment.exceptions = assignment.exceptions.filter(
+      (exc) => exc && typeof exc === 'object' && !Array.isArray(exc),
+    );
+
+    // Find and remove matching exception
+    const initialLength = assignment.exceptions.length;
+
+    assignment.exceptions = assignment.exceptions.filter((exc) => {
+      // Type must match
+      if (exc.type !== exceptionToDelete.type) {
+        return true; // Keep this exception
+      }
+
+      // For single day exceptions, match by date
+      if (exceptionToDelete.date) {
+        return exc.date !== exceptionToDelete.date;
+      }
+
+      // For date range exceptions, match by start_date and end_date
+      if (exceptionToDelete.start_date && exceptionToDelete.end_date) {
+        if (
+          exc.start_date !== exceptionToDelete.start_date ||
+          exc.end_date !== exceptionToDelete.end_date
+        ) {
+          return true; // Keep this exception
+        }
+      } else {
+        // If we're looking for a range but this exception doesn't have matching dates, keep it
+        if (!exc.start_date || !exc.end_date) {
+          return true; // Keep this exception
+        }
+      }
+
+      // For ALTERNATE_TEMPLATE type, also match by template_id
+      if (exceptionToDelete.type === 'ALTERNATE_TEMPLATE') {
+        if (exc.template_id !== exceptionToDelete.template_id) {
+          return true; // Keep this exception
+        }
+      }
+
+      // All conditions matched, remove this exception
+      return false;
+    });
+
+    // Check if any exception was actually removed
+    if (assignment.exceptions.length === initialLength) {
+      throw new NotFoundException(
+        'Exception not found. Please check the provided parameters.',
+      );
+    }
+
+    return await this.assignmentRepository.save(assignment);
+  }
+
+  /**
    * Update employee's schedule template
    * This closes the current assignment and creates a new one with the new template
    */
@@ -248,6 +359,201 @@ export class ScheduleAssignmentsService {
     });
 
     return await this.assignmentRepository.save(newAssignment);
+  }
+
+  /**
+   * Bulk update schedule templates for multiple employees
+   * Updates active assignments for all provided user IDs
+   */
+  async bulkUpdateTemplate(
+    bulkUpdateDto: BulkUpdateAssignmentDto,
+    actor: any,
+  ): Promise<UserScheduleAssignment[]> {
+    // Filter out empty strings and validate
+    const userIds = bulkUpdateDto.user_id.filter(
+      (id) => id && id.trim() !== '',
+    );
+
+    if (userIds.length === 0) {
+      throw new BadRequestException('At least one valid user ID is required');
+    }
+
+    // Validate template_id
+    if (
+      !bulkUpdateDto.new_template_id ||
+      bulkUpdateDto.new_template_id.trim() === ''
+    ) {
+      throw new BadRequestException('new_template_id cannot be empty');
+    }
+
+    const updatedAssignments: UserScheduleAssignment[] = [];
+
+    for (const userId of userIds) {
+      // Validate UUID format
+      if (!userId || userId.trim() === '') {
+        continue;
+      }
+
+      // 1️⃣ Xodimni topamiz
+      const employee = await this.userRepository.findOne({
+        where: { id: userId },
+        select: ['id', 'company_id', 'first_name', 'last_name'],
+      });
+
+      if (!employee) {
+        throw new NotFoundException(`Employee with ID ${userId} not found`);
+      }
+
+      // 2️⃣ SUPER_ADMIN bo'lmasa — faqat o'z company'ga tegishli xodimni o'zgartira oladi
+      if (
+        actor.role !== UserRole.SUPER_ADMIN &&
+        employee.company_id !== actor.company_id
+      ) {
+        throw new ForbiddenException(
+          `You can only update schedules for your own company employees (failed for user ${userId})`,
+        );
+      }
+
+      // 3️⃣ Aktiv assignmentni topamiz (effective_to = null)
+      // Bir user uchun faqat bitta aktiv template bo'lishi kerak
+      const activeAssignment = await this.assignmentRepository.findOne({
+        where: {
+          user_id: userId,
+          effective_to: IsNull(),
+        },
+        order: { effective_from: 'DESC' },
+      });
+
+      // 4️⃣ Agar aktiv assignment bo'lsa, faqat template ni almashtiramiz
+      if (activeAssignment) {
+        // Faqat template ni almashtiramiz, yangi assignment yaratmaymiz
+        activeAssignment.default_template_id = bulkUpdateDto.new_template_id;
+        const savedAssignment =
+          await this.assignmentRepository.save(activeAssignment);
+        updatedAssignments.push(savedAssignment);
+      } else {
+        // Agar aktiv assignment bo'lmasa, xatolik qaytaramiz
+        throw new NotFoundException(
+          `No active assignment found for user ${userId}. Please create an assignment first.`,
+        );
+      }
+    }
+
+    return updatedAssignments;
+  }
+
+  /**
+   * Bulk delete schedule assignments for multiple employees
+   * Can delete all assignments or only active assignments based on delete_all flag
+   */
+  async bulkDeleteAssignments(
+    bulkDeleteDto: BulkDeleteAssignmentDto,
+    actor: any,
+  ): Promise<{
+    deletedCount: number;
+    userIds: string[];
+    errors: string[];
+    notFound: string[];
+  }> {
+    // Filter out empty strings and validate
+    const userIds = bulkDeleteDto.user_id.filter(
+      (id) => id && id.trim() !== '',
+    );
+
+    if (userIds.length === 0) {
+      throw new BadRequestException('At least one valid user ID is required');
+    }
+
+    const deletedUserIds: string[] = [];
+    const errors: string[] = [];
+    const notFound: string[] = [];
+    let totalDeleted = 0;
+
+    for (const userId of userIds) {
+      // Validate UUID format
+      if (!userId || userId.trim() === '') {
+        continue;
+      }
+      try {
+        // 1️⃣ Xodimni topamiz
+        const employee = await this.userRepository.findOne({
+          where: { id: userId },
+          select: ['id', 'company_id'],
+        });
+
+        if (!employee) {
+          errors.push(`Employee with ID ${userId} not found`);
+          notFound.push(userId);
+          continue;
+        }
+
+        // 2️⃣ SUPER_ADMIN bo'lmasa — faqat o'z company'ga tegishli xodimni o'chira oladi
+        if (
+          actor.role !== UserRole.SUPER_ADMIN &&
+          employee.company_id !== actor.company_id
+        ) {
+          errors.push(
+            `You can only delete schedules for your own company employees (failed for user ${userId})`,
+          );
+          continue;
+        }
+
+        // 3️⃣ Assignmentlarni topamiz va o'chiramiz
+        // Agar delete_all false bo'lsa, faqat aktiv assignmentlarni o'chiramiz
+        // Aks holda (undefined yoki true), barcha assignmentlarni o'chiramiz
+        if (bulkDeleteDto.delete_all === false) {
+          // Delete only active assignments (effective_to = null)
+          // First check if there are any active assignments
+          const activeAssignments = await this.assignmentRepository.find({
+            where: {
+              user_id: userId,
+              effective_to: IsNull(),
+            },
+          });
+
+          if (activeAssignments.length === 0) {
+            errors.push(
+              `No active assignments found for user ${userId} (effective_to is null)`,
+            );
+            continue;
+          }
+
+          const result = await this.assignmentRepository.delete({
+            user_id: userId,
+            effective_to: IsNull(),
+          });
+
+          if (result.affected && result.affected > 0) {
+            totalDeleted += result.affected;
+            deletedUserIds.push(userId);
+          } else {
+            errors.push(
+              `Failed to delete active assignments for user ${userId}`,
+            );
+          }
+        } else {
+          // Delete all assignments for this user (default behavior)
+          const result = await this.assignmentRepository.delete({
+            user_id: userId,
+          });
+          if (result.affected && result.affected > 0) {
+            totalDeleted += result.affected;
+            deletedUserIds.push(userId);
+          } else {
+            errors.push(`No assignments found to delete for user ${userId}`);
+          }
+        }
+      } catch (error) {
+        errors.push(`Error processing user ${userId}: ${error.message}`);
+      }
+    }
+
+    return {
+      deletedCount: totalDeleted,
+      userIds: deletedUserIds,
+      errors: errors,
+      notFound: notFound,
+    };
   }
 
   async getEffectiveSchedule(
