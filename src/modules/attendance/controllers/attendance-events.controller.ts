@@ -55,11 +55,27 @@ export class AttendanceEventsController {
   }
 
   /**
-   * Fetch attendance events from HC with pagination
-   * Fetches certificate records from HC, processes them, and returns formatted attendance data
+   * Get attendance events grouped by employees
+   * Returns attendance data for each employee with all dates in the given range
+   * Each employee includes daily attendance records with start and end times
    *
-   * @param dto - Query parameters for fetching events
-   * @returns Formatted attendance events with pagination
+   * @param dto - Query parameters (startTime, endTime, page, limit, userId)
+   * @returns Object with employees array and pagination metadata
+   * @example
+   * Response format:
+   * {
+   *   employees: [{
+   *     id: "user-uuid",
+   *     name: "John Doe",
+   *     personCode: "HC123",
+   *     phone: "+998901234567",
+   *     attendance: [
+   *       { date: "2025-01-01", startTime: "09:00", endTime: "18:00" },
+   *       { date: "2025-01-02", startTime: null, endTime: null }
+   *     ]
+   *   }],
+   *   pagination: { page: 1, limit: 20, total: 100, totalPages: 5 }
+   * }
    */
   @Get('get-events')
   @UseGuards(AuthGuard, RolesGuard)

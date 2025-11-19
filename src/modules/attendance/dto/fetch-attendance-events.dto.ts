@@ -97,3 +97,38 @@ export class GetEventsDto {
   @IsOptional()
   userId?: string; // Filter by user_id (HC person ID from events table, matches hcPersonId in users table)
 }
+
+/**
+ * Daily attendance record for an employee
+ */
+export class DailyAttendanceDto {
+  date: string; // Format: YYYY-MM-DD
+
+  startTime: string | null; // Format: HH:mm
+
+  endTime: string | null; // Format: HH:mm
+}
+
+/**
+ * Employee attendance data with all dates in range
+ */
+export class EmployeeAttendanceDto {
+  id: string; // User ID
+
+  name: string; // Full name
+
+  personId: string; // HC person ID
+
+  phone: string | null; // Phone number
+
+  attendance: DailyAttendanceDto[]; // Array of daily attendance for date range
+}
+
+/**
+ * Response DTO for get-events endpoint grouped by employees
+ */
+export class GetEventsResponseDto {
+  employees: EmployeeAttendanceDto[];
+
+  pagination: PaginationMetadataDto;
+}

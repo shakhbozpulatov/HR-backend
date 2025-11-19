@@ -66,6 +66,38 @@ export class AttendanceCronService {
   }
 
   /**
+   * Daily Subscribe to HC Events
+   * Runs at 6:00 AM every day
+   * Subscribes to HC event messages for attendance tracking
+   */
+  @Cron('0 6 * * *', {
+    name: 'daily-subscribe-events',
+    timeZone: 'Asia/Tashkent',
+  })
+  async handleDailySubscribe() {
+    this.logger.log('Starting daily HC events subscription');
+
+    try {
+      const subscribeType = 1; // Subscribe to attendance events
+      const result = await this.eventsService.subscribeService(subscribeType);
+
+      if (result.errorCode === '0' || result.errorCode === 0) {
+        this.logger.log('Successfully subscribed to HC events');
+      } else {
+        this.logger.warn(
+          `HC subscription returned error code: ${result.errorCode} - ${result.message}`,
+        );
+      }
+    } catch (error) {
+      this.logger.error(
+        `Failed to subscribe to HC events: ${error.message}`,
+        error.stack,
+      );
+      await this.sendCronAlert('daily-subscribe-events', error);
+    }
+  }
+
+  /**
    * Daily Attendance Processing
    * Runs at 1:00 AM every day
    * Processes previous day's attendance for all employees

@@ -10,7 +10,7 @@ import { ConfigService } from '@nestjs/config';
 import { InjectQueue } from '@nestjs/bull';
 import { Queue } from 'bull';
 import * as crypto from 'crypto';
-import moment from 'moment-timezone';
+import * as moment from 'moment-timezone';
 
 import {
   AttendanceEvent,
@@ -29,6 +29,7 @@ import {
   FetchAttendanceEventsDto,
   GetEventsDto,
 } from '@/modules/attendance/dto/fetch-attendance-events.dto';
+import { ScheduleTemplate } from '@/modules/schedules/entities/schedule-template.entity';
 
 @Injectable()
 export class AttendanceEventsService {
@@ -716,9 +717,15 @@ export class AttendanceEventsService {
   }
 
   /**
-   * Get attendance events with time range filter
+   * Get attendance events grouped by employees with date range
    * If no time range provided, returns last 7 days events
-   * Filters by created_at (when event was saved to database)
+   * Returns attendance data for each employee with all dates in range
+   * Can filter by userId (HC person ID - links events.user_id with users.hcPersonId)
+   */
+  /**
+   * Get attendance events grouped by employees with date range
+   * If no time range provided, returns last 7 days events
+   * Returns attendance data for each employee with all dates in range
    * Can filter by userId (HC person ID - links events.user_id with users.hcPersonId)
    */
   async getEvents(dto: {
@@ -728,8 +735,17 @@ export class AttendanceEventsService {
     limit?: number;
     userId?: string;
   }): Promise<{
-    data: AttendanceEvent[];
-    total: number;
+    employees: Array<{
+      id: string;
+      name: string;
+      personId: string;
+      phone: string | null;
+      attendance: Array<{
+        date: string;
+        startTime: string | null;
+        endTime: string | null;
+      }>;
+    }>;
     pagination: {
       page: number;
       limit: number;
@@ -741,56 +757,144 @@ export class AttendanceEventsService {
     const limit = dto.limit || 20;
 
     // Set default time range to last 7 days if not provided (UTC)
-    let endTime = dto.endTime ? new Date(dto.endTime) : new Date(); // Current time UTC
+    const endTime = dto.endTime ? new Date(dto.endTime) : new Date();
     const startTime = dto.startTime
       ? new Date(dto.startTime)
-      : new Date(Date.now() - 7 * 24 * 60 * 60 * 1000); // 7 days ago UTC
-
-    // Add 1 second buffer to endTime to handle microsecond precision issues
-    // PostgreSQL stores timestamps with microsecond precision, but JS only has millisecond
-    // Without this, events at exact endTime might be excluded due to microsecond differences
-    endTime = new Date(endTime.getTime() + 1000);
+      : new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
 
     this.logger.log(
-      `Fetching events from ${startTime.toISOString()} to ${endTime.toISOString()} (UTC), page ${page}, limit ${limit}${dto.userId ? `, userId=${dto.userId}` : ''}`,
+      `Fetching employee attendance from ${startTime.toISOString()} to ${endTime.toISOString()}, page ${page}, limit ${limit}${dto.userId ? `, userId=${dto.userId}` : ''}`,
     );
 
-    // Filter by created_at (when event was saved to database)
-    const queryBuilder = this.eventRepository
-      .createQueryBuilder('event')
-      .where('event.created_at >= :startTime', { startTime })
-      .andWhere('event.created_at < :endTime', { endTime })
-      .orderBy('event.created_at', 'DESC')
-      .skip((page - 1) * limit)
-      .take(limit);
+    // Get users with their attendance events and schedule assignments
+    let usersQuery = this.userRepository
+      .createQueryBuilder('user')
+      .leftJoinAndSelect('user.schedule_assignments', 'assignment')
+      .leftJoinAndSelect('assignment.default_template', 'template')
+      .where('user.hcPersonId IS NOT NULL');
 
-    // Filter by userId if provided
-    // Note: events.user_id stores HC person ID, which matches users.hcPersonId
+    // Filter by specific user if userId is provided
     if (dto.userId) {
-      queryBuilder.andWhere('event.user_id = :userId', { userId: dto.userId });
+      usersQuery = usersQuery.andWhere('user.hcPersonId = :userId', {
+        userId: dto.userId,
+      });
     }
 
-    // Debug: log the query
-    const sql = queryBuilder.getSql();
-    this.logger.debug(`SQL Query: ${sql}`);
-    this.logger.debug(
-      `Parameters: startTime=${startTime.toISOString()}, endTime=${endTime.toISOString()}${dto.userId ? `, userId=${dto.userId}` : ''}`,
+    // Get total count for pagination
+    const total = await usersQuery.getCount();
+
+    // Apply pagination
+    const users = await usersQuery
+      .skip((page - 1) * limit)
+      .take(limit)
+      .getMany();
+
+    this.logger.log(`Found ${total} users, processing ${users.length} users`);
+
+    // Generate all dates in the range
+    const dates: string[] = [];
+    const currentDate = moment.utc(startTime);
+    const endDate = moment.utc(endTime);
+
+    while (currentDate.isSameOrBefore(endDate, 'day')) {
+      dates.push(currentDate.format('YYYY-MM-DD'));
+      currentDate.add(1, 'day');
+    }
+
+    // Process each user's attendance
+    const employees = await Promise.all(
+      users.map(async (user) => {
+        // Fetch all events for this user in the date range based on created_at
+        const events = await this.eventRepository
+          .createQueryBuilder('event')
+          .where('event.user_id = :userId', { userId: user.hcPersonId })
+          .andWhere('event.created_at >= :startTime', { startTime })
+          .andWhere('event.created_at <= :endTime', { endTime })
+          .orderBy('event.created_at', 'ASC')
+          .getMany();
+
+        // Get user's active schedule template
+        const activeAssignment = user.schedule_assignments?.find(
+          (assignment) => {
+            const now = new Date();
+            const effectiveFrom = new Date(assignment.effective_from);
+            const effectiveTo = assignment.effective_to
+              ? new Date(assignment.effective_to)
+              : null;
+
+            return effectiveFrom <= now && (!effectiveTo || effectiveTo >= now);
+          },
+        );
+        const scheduleTemplate = activeAssignment?.default_template;
+
+        // Group events by date (based on created_at in UTC+5)
+        const eventsByDate = new Map<string, AttendanceEvent[]>();
+        events.forEach((event) => {
+          // Convert to UTC+5 timezone for date grouping
+          const dateStr = moment
+            .utc(event.created_at)
+            .utcOffset(5)
+            .format('YYYY-MM-DD');
+          if (!eventsByDate.has(dateStr)) {
+            eventsByDate.set(dateStr, []);
+          }
+          eventsByDate.get(dateStr)!.push(event);
+        });
+
+        // Build attendance array for all dates
+        const attendance = dates.map((date) => {
+          const dayEvents = eventsByDate.get(date) || [];
+
+          // Find first CLOCK_IN and last CLOCK_OUT based on created_at
+          const clockInEvents = dayEvents.filter(
+            (e) => e.event_type === EventType.CLOCK_IN,
+          );
+          const clockOutEvents = dayEvents.filter(
+            (e) => e.event_type === EventType.CLOCK_OUT,
+          );
+
+          // Calculate startTime from first clock_in's created_at (in UTC+5)
+          const startTime = clockInEvents.length
+            ? moment
+                .utc(clockInEvents[0].created_at)
+                .utcOffset(5)
+                .format('HH:mm')
+            : null;
+
+          // Calculate endTime with template fallback logic
+          let endTime: string | null = null;
+          if (clockOutEvents.length > 0) {
+            // If there are clock_out events, use the last one's created_at (in UTC+5)
+            endTime = moment
+              .utc(clockOutEvents[clockOutEvents.length - 1].created_at)
+              .utcOffset(5)
+              .format('HH:mm');
+          } else if (startTime && scheduleTemplate) {
+            // If clock_in exists but no clock_out, use template end_time
+            endTime = scheduleTemplate.end_time;
+          }
+
+          return {
+            date,
+            startTime,
+            endTime,
+          };
+        });
+
+        return {
+          id: user.id,
+          name: `${user.first_name} ${user.last_name}`,
+          personId: user.hcPersonId || '',
+          phone: user.phone || null,
+          attendance,
+        };
+      }),
     );
 
-    const [data, total] = await queryBuilder.getManyAndCount();
-
-    this.logger.log(`Found ${total} events, returning page ${page}`);
-
-    // Debug: log first event if exists
-    if (data.length > 0) {
-      this.logger.debug(
-        `First event created_at: ${data[0].created_at.toISOString()}, user_id: ${data[0].user_id || 'null'}`,
-      );
-    }
+    this.logger.log(`Processed attendance for ${employees.length} employees`);
 
     return {
-      data,
-      total,
+      employees,
       pagination: {
         page,
         limit,

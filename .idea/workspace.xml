@@ -6,8 +6,10 @@
   <component name="ChangeListManager">
     <list default="true" id="f223feb0-6502-4a9b-9c03-44f93ba47b8c" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/modules/schedules/schedule-assignments.controller.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/modules/schedules/schedule-assignments.controller.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/modules/schedules/schedule-assignments.service.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/modules/schedules/schedule-assignments.service.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/modules/attendance/controllers/attendance-events.controller.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/modules/attendance/controllers/attendance-events.controller.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/modules/attendance/cron/attendance-cron.service.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/modules/attendance/cron/attendance-cron.service.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/modules/attendance/dto/fetch-attendance-events.dto.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/modules/attendance/dto/fetch-attendance-events.dto.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/modules/attendance/services/attendance-events.service.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/modules/attendance/services/attendance-events.service.ts" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -53,7 +55,7 @@
     &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
     &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
     &quot;prettierjs.PrettierConfiguration.Package&quot;: &quot;/Users/shaxbozbekpulatov/Documents/Back/HR-back/hr-platform/node_modules/prettier&quot;,
-    &quot;settings.editor.selected.configurable&quot;: &quot;settings.javascript.prettier&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;terminal&quot;,
     &quot;ts.external.directory.path&quot;: &quot;/Users/shaxbozbekpulatov/Documents/Back/HR-back/hr-platform/node_modules/typescript/lib&quot;,
     &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
   }
@@ -95,6 +97,9 @@
       <workItem from="1763015566008" duration="6147000" />
       <workItem from="1763087015101" duration="7024000" />
       <workItem from="1763192405344" duration="16530000" />
+      <workItem from="1763349731194" duration="70000" />
+      <workItem from="1763349807414" duration="802000" />
+      <workItem from="1763489759854" duration="5356000" />
     </task>
     <servers />
   </component>
