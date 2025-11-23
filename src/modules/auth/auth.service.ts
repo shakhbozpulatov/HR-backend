@@ -30,6 +30,8 @@ import { HcService } from '@/modules/hc/hc.service';
 import { PasswordService } from './services/password.service';
 import { PermissionService } from './services/permission.service';
 import { CompanyService } from './services/company.service';
+import { PhotoUploadService } from './services/photo-upload.service';
+import { PhotoUploadJobDto } from './dto/photo-upload-job.dto';
 
 /**
  * Auth Service
@@ -43,6 +45,7 @@ import { CompanyService } from './services/company.service';
  * - PasswordService: Password operations
  * - PermissionService: Permission validation
  * - CompanyService: Company operations
+ * - PhotoUploadService: Background photo upload processing
  */
 @Injectable()
 export class AuthService {
@@ -59,6 +62,7 @@ export class AuthService {
     private passwordService: PasswordService,
     private permissionService: PermissionService,
     private companyService: CompanyService,
+    private photoUploadService: PhotoUploadService,
   ) {}
 
   /**
@@ -291,10 +295,13 @@ export class AuthService {
    * ADMIN USER CREATION
    * Used by privileged roles to create other users
    * Permission hierarchy enforced
+   * Photo upload is queued for background processing
    */
   async createUserByAdmin(
     createUserDto: AdminCreateUserDto,
     actorUserId: string,
+    photoBuffer?: Buffer,
+    photoMimetype?: string,
   ): Promise<{
     user: User;
     temporary_password: string;
@@ -302,6 +309,7 @@ export class AuthService {
     hcError?: any;
     syncStatus?: string;
     warning?: string;
+    photoUploadJobId?: string;
   }> {
     // Get actor user with relations
     const actor = await this.userRepository.findOne({
@@ -333,16 +341,27 @@ export class AuthService {
 
         try {
           const hcPersonCode = this.cryptoUtils.generateHcPersonId();
-          const hcResponse = await this.hcService.createUserOnCabinet({
+
+          // Build HC user data - only include fields with values
+          const hcResyncData: any = {
             groupId: createUserDto.groupId || '1',
             personCode: hcPersonCode,
             firstName: createUserDto.first_name,
             lastName: createUserDto.last_name,
             gender: createUserDto.gender,
-            phone: createUserDto.phone,
             startDate: createUserDto.start_date,
-            endDate: createUserDto.end_date,
-          });
+          };
+
+          if (createUserDto.phone) {
+            hcResyncData.phone = createUserDto.phone;
+          }
+
+          if (createUserDto.end_date) {
+            hcResyncData.endDate = createUserDto.end_date;
+          }
+
+          const hcResponse =
+            await this.hcService.createUserOnCabinet(hcResyncData);
 
           // Update existing user with HC data
           existingUser.hcPersonId = hcResponse.data?.personId || hcPersonCode;
@@ -353,11 +372,39 @@ export class AuthService {
             `✅ Existing user re-synced with HC: ${existingUser.email}`,
           );
 
+          // Queue photo upload for re-synced user (if photo provided)
+          let photoUploadJobId: string | undefined;
+          if (photoBuffer && photoMimetype && existingUser.hcPersonId) {
+            try {
+              const photoJobData: PhotoUploadJobDto = {
+                userId: existingUser.id,
+                hcPersonId: existingUser.hcPersonId,
+                photoData: photoBuffer.toString('base64'),
+                mimetype: photoMimetype,
+                userEmail: existingUser.email,
+                createdAt: new Date(),
+              };
+
+              photoUploadJobId =
+                await this.photoUploadService.queuePhotoUpload(photoJobData);
+
+              console.log(
+                `📸 Photo upload queued for re-synced user: ${existingUser.email} (Job ID: ${photoUploadJobId})`,
+              );
+            } catch (photoQueueError) {
+              console.warn(
+                `⚠️ Failed to queue photo upload for re-synced user: ${existingUser.email}`,
+                photoQueueError.message,
+              );
+            }
+          }
+
           return {
             user: existingUser,
             hcUser: hcResponse,
             temporary_password:
               'N/A - User already exists (re-synced with HC system)',
+            photoUploadJobId,
           };
         } catch (err) {
           existingUser.status = UserStatus.FAILED_SYNC;
@@ -422,119 +469,113 @@ export class AuthService {
     const temporaryPassword = this.passwordService.generateTemporaryPassword();
     const hashedPassword = this.passwordService.hashPassword(temporaryPassword);
 
-    // Create user with proper initial status
-    const newUser = this.userRepository.create({
-      password_hash: hashedPassword,
-      company_id: targetCompanyId,
-      status: UserStatus.ACTIVE,
-      active: true,
-      ...createUserDto,
-    });
-
     let savedUser: User;
     let hcResponse: any;
 
     try {
-      // Save user to database
+      // First, create user in HC system (atomic operation)
+      const hcPersonCode = this.cryptoUtils.generateHcPersonId();
+      const hcUserData: any = {
+        groupId: createUserDto.groupId || '1',
+        personCode: hcPersonCode,
+        firstName: createUserDto.first_name,
+        lastName: createUserDto.last_name,
+        gender: createUserDto.gender,
+        startDate: createUserDto.start_date,
+      };
+
+      // Only include optional fields if they have values
+      if (createUserDto.phone) {
+        hcUserData.phone = createUserDto.phone;
+      }
+
+      if (createUserDto.end_date) {
+        hcUserData.endDate = createUserDto.end_date;
+      }
+
+      console.log('📝 Prepared HC user data:', {
+        firstName: createUserDto.first_name,
+        lastName: createUserDto.last_name,
+        hasPhone: !!createUserDto.phone,
+        hasEndDate: !!createUserDto.end_date,
+        hcUserData,
+      });
+
+      // Step 1: Create user in HC system first
+      console.log(`🔄 Creating user in HC system: ${createUserDto.email}`);
+
+      hcResponse = await this.hcService.createUserOnCabinet(hcUserData);
+
+      console.log(
+        `✅ User created in HC system: ${createUserDto.email} (HC Person ID: ${hcResponse.data?.personId || hcPersonCode})`,
+      );
+
+      // Step 2: Only if HC creation succeeds, save to database
+      const newUser = this.userRepository.create({
+        password_hash: hashedPassword,
+        company_id: targetCompanyId,
+        status: UserStatus.SYNCED,
+        active: true,
+        hcPersonId: hcResponse.data?.personId || hcPersonCode,
+        ...createUserDto,
+      });
+
       savedUser = await this.userRepository.save(newUser);
 
       console.log(
-        `✅ User created by ${actor.email}: ${savedUser.email} (${savedUser.role})`,
+        `✅ User saved to database: ${savedUser.email} (${savedUser.role})`,
       );
 
-      // Prepare HC user data
-      const hcPersonCode = this.cryptoUtils.generateHcPersonId();
-      const hcUserData = {
-        groupId: createUserDto.groupId || '1',
-        personCode: hcPersonCode,
-        firstName: savedUser.first_name,
-        lastName: savedUser.last_name,
-        gender: createUserDto.gender,
-        phone: savedUser.phone,
-        startDate: createUserDto.start_date,
-        endDate: createUserDto.end_date,
-      };
+      // Step 3: Bind user to terminal if accessLevelIdList is provided
+      if (
+        createUserDto.accessLevelIdList &&
+        createUserDto.accessLevelIdList.length > 0
+      ) {
+        try {
+          await this.hcService.bindUserWithTerminal(
+            savedUser.hcPersonId,
+            createUserDto.accessLevelIdList,
+          );
 
-      // Attempt to sync with HC system
-      try {
-        hcResponse = await this.hcService.createUserOnCabinet(hcUserData);
-
-        // Update user with HC person ID and sync status
-        savedUser.hcPersonId = hcResponse.data?.personId || hcPersonCode;
-        savedUser.status = UserStatus.SYNCED;
-        await this.userRepository.save(savedUser);
-
-        console.log(
-          `✅ User synced with HC system: ${savedUser.email} (HC Person ID: ${savedUser.hcPersonId})`,
-        );
-
-        // Bind user to terminal if accessLevelIdList is provided
-        if (
-          createUserDto.accessLevelIdList &&
-          createUserDto.accessLevelIdList.length > 0
-        ) {
-          try {
-            await this.hcService.bindUserWithTerminal(
-              savedUser.hcPersonId,
-              createUserDto.accessLevelIdList,
-            );
-
-            console.log(
-              `✅ User bound to terminal: ${savedUser.email} (Access Levels: ${createUserDto.accessLevelIdList.join(', ')})`,
-            );
-          } catch (bindError) {
-            console.warn(
-              `⚠️ User synced but terminal binding failed: ${savedUser.email}`,
-              bindError.message,
-            );
-            // Don't fail the entire operation if binding fails
-            // User is already created and synced
-          }
+          console.log(
+            `✅ User bound to terminal: ${savedUser.email} (Access Levels: ${createUserDto.accessLevelIdList.join(', ')})`,
+          );
+        } catch (bindError) {
+          console.warn(
+            `⚠️ User created but terminal binding failed: ${savedUser.email}`,
+            bindError.message,
+          );
+          // Don't fail - user is already created in both systems
         }
-      } catch (hcError) {
-        // HC sync failed, mark user as failed sync but keep the user in DB
-        savedUser.status = UserStatus.FAILED_SYNC;
-        await this.userRepository.save(savedUser);
+      }
 
-        console.warn(
-          `⚠️ User created but HC sync failed: ${savedUser.email}`,
-          hcError.message,
-        );
+      // SOLID: Use PhotoUploadService to queue photo upload (if provided)
+      let photoUploadJobId: string | undefined;
+      if (photoBuffer && photoMimetype && savedUser.hcPersonId) {
+        try {
+          const photoJobData: PhotoUploadJobDto = {
+            userId: savedUser.id,
+            hcPersonId: savedUser.hcPersonId,
+            photoData: photoBuffer.toString('base64'),
+            mimetype: photoMimetype,
+            userEmail: savedUser.email,
+            createdAt: new Date(),
+          };
 
-        // Extract HC error details from HttpException
-        let hcErrorDetails: any = {
-          message: hcError.message || 'HC sync failed',
-          errorCode: null,
-          details: null,
-        };
+          photoUploadJobId =
+            await this.photoUploadService.queuePhotoUpload(photoJobData);
 
-        // If it's a NestJS HttpException, extract the response
-        if (hcError.getResponse && typeof hcError.getResponse === 'function') {
-          const errorResponse = hcError.getResponse();
-
-          // errorResponse structure from HcApiClient:
-          // { message, error, errorCode, details }
-          if (typeof errorResponse === 'object') {
-            hcErrorDetails = {
-              message: errorResponse.message || hcError.message,
-              errorCode: errorResponse.errorCode || null,
-              error: errorResponse.error || null,
-              details: errorResponse.details || null,
-            };
-          }
+          console.log(
+            `📸 Photo upload queued for user: ${savedUser.email} (Job ID: ${photoUploadJobId})`,
+          );
+        } catch (photoQueueError) {
+          console.warn(
+            `⚠️ Failed to queue photo upload for user: ${savedUser.email}`,
+            photoQueueError.message,
+          );
+          // Don't fail user creation if photo queue fails
+          // Photo can be uploaded manually later
         }
-
-        console.error('❌ HC Error Details for API Response:', hcErrorDetails);
-
-        // Return user with failed sync status and HC error details
-        return {
-          user: savedUser,
-          hcUser: null,
-          temporary_password: temporaryPassword,
-          hcError: hcErrorDetails,
-          syncStatus: 'FAILED_SYNC',
-          warning: 'User created successfully but HC sync failed',
-        };
       }
 
       // TODO: Send email to new user with temporary password
@@ -544,6 +585,7 @@ export class AuthService {
         user: savedUser,
         hcUser: hcResponse,
         temporary_password: temporaryPassword,
+        photoUploadJobId,
       };
     } catch (error) {
       console.error('❌ Failed to create user:', error.message);

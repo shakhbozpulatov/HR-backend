@@ -25,11 +25,6 @@ import {
 import { HcService } from '@/modules/hc/hc.service';
 import { HcApiResponse } from '@/modules/hc/interfaces/hc-api.interface';
 import { User } from '@/modules/users/entities/user.entity';
-import {
-  FetchAttendanceEventsDto,
-  GetEventsDto,
-} from '@/modules/attendance/dto/fetch-attendance-events.dto';
-import { ScheduleTemplate } from '@/modules/schedules/entities/schedule-template.entity';
 
 @Injectable()
 export class AttendanceEventsService {
@@ -73,8 +68,43 @@ export class AttendanceEventsService {
     await queryRunner.startTransaction();
 
     try {
-      // Fetch events from HC
-      const events = await this.hcService.getAllEvents(maxNumberPerTime);
+      // Fetch events from HC with auto-resubscribe on OPEN000016 error
+      let events: HcApiResponse;
+      try {
+        events = await this.hcService.getAllEvents(maxNumberPerTime);
+      } catch (error) {
+        // Check if error is OPEN000016 (subscription required)
+        // For HttpException, we need to get the response object
+        const errorResponse =
+          typeof error.getResponse === 'function' ? error.getResponse() : error;
+
+        const isOpen000016Error =
+          errorResponse?.errorCode === 'OPEN000016' ||
+          errorResponse?.details?.errorCode === 'OPEN000016' ||
+          (errorResponse?.error &&
+            typeof errorResponse.error === 'string' &&
+            errorResponse.error.includes('OPEN000016')) ||
+          (errorResponse?.message &&
+            typeof errorResponse.message === 'string' &&
+            errorResponse.message.includes('OPEN000016'));
+
+        if (isOpen000016Error) {
+          this.logger.warn(
+            'OPEN000016 error detected - resubscribing to HC events',
+          );
+
+          // Resubscribe to events (subscribeType 1 is for alarm events)
+          await this.hcService.subscribeEvent(1);
+          this.logger.log('Successfully resubscribed to HC events');
+
+          // Retry fetching events
+          events = await this.hcService.getAllEvents(maxNumberPerTime);
+          this.logger.log('Successfully fetched events after resubscription');
+        } else {
+          throw error;
+        }
+      }
+
       this.logger.log(
         `Fetched ${events.data?.events?.length || 0} events from HC`,
       );
@@ -717,11 +747,78 @@ export class AttendanceEventsService {
   }
 
   /**
-   * Get attendance events grouped by employees with date range
-   * If no time range provided, returns last 7 days events
-   * Returns attendance data for each employee with all dates in range
-   * Can filter by userId (HC person ID - links events.user_id with users.hcPersonId)
+   * Get user attendance by user_id with optional date filters
+   * Returns all clock in/out events for a specific user
+   * @param userId - HC person ID (user_id from attendance_events table)
+   * @param startTime - Optional start time filter
+   * @param endTime - Optional end time filter
    */
+  async getUserAttendance(
+    userId: string,
+    startTime?: string,
+    endTime?: string,
+  ): Promise<{
+    userId: string;
+    userName: string;
+    attendance: Array<{
+      eventId: string;
+      eventType: 'CLOCK_IN' | 'CLOCK_OUT';
+      timestamp: string;
+      timestampLocal: string;
+    }>;
+  }> {
+    // Find the user by HC person ID
+    const user = await this.userRepository.findOne({
+      where: { hcPersonId: userId },
+    });
+
+    if (!user) {
+      throw new NotFoundException(`User with ID ${userId} not found`);
+    }
+
+    // Build query for attendance events
+    const queryBuilder = this.eventRepository
+      .createQueryBuilder('event')
+      .where('event.user_id = :userId', { userId })
+      .orderBy('event.created_at', 'ASC');
+
+    // Apply date filters if provided
+    if (startTime) {
+      queryBuilder.andWhere('event.created_at >= :startTime', {
+        startTime: new Date(startTime),
+      });
+    }
+
+    if (endTime) {
+      queryBuilder.andWhere('event.created_at <= :endTime', {
+        endTime: new Date(endTime),
+      });
+    }
+
+    const events = await queryBuilder.getMany();
+
+    // Map events to response format
+    const attendance: Array<{
+      eventId: string;
+      eventType: 'CLOCK_IN' | 'CLOCK_OUT';
+      timestamp: string;
+      timestampLocal: string;
+    }> = events.map((event) => ({
+      eventId: event.event_id,
+      eventType: (event.event_type === EventType.CLOCK_IN
+        ? 'CLOCK_IN'
+        : 'CLOCK_OUT') as 'CLOCK_IN' | 'CLOCK_OUT',
+      timestamp: event.ts_utc.toISOString(),
+      timestampLocal: event.ts_local.toISOString(),
+    }));
+
+    return {
+      userId: user.hcPersonId || '',
+      userName: `${user.first_name} ${user.last_name}`,
+      attendance,
+    };
+  }
+
   /**
    * Get attendance events grouped by employees with date range
    * If no time range provided, returns last 7 days events

@@ -7,9 +7,12 @@
     <list default="true" id="f223feb0-6502-4a9b-9c03-44f93ba47b8c" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/modules/attendance/controllers/attendance-events.controller.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/modules/attendance/controllers/attendance-events.controller.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/modules/attendance/cron/attendance-cron.service.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/modules/attendance/cron/attendance-cron.service.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/modules/attendance/dto/fetch-attendance-events.dto.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/modules/attendance/dto/fetch-attendance-events.dto.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/modules/attendance/dto/index.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/modules/attendance/dto/index.ts" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/modules/attendance/services/attendance-events.service.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/modules/attendance/services/attendance-events.service.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/modules/auth/auth.controller.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/modules/auth/auth.controller.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/modules/auth/auth.module.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/modules/auth/auth.module.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/modules/auth/auth.service.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/modules/auth/auth.service.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/modules/hc/hc.service.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/modules/hc/hc.service.ts" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -99,7 +102,8 @@
       <workItem from="1763192405344" duration="16530000" />
       <workItem from="1763349731194" duration="70000" />
       <workItem from="1763349807414" duration="802000" />
-      <workItem from="1763489759854" duration="5356000" />
+      <workItem from="1763489759854" duration="6844000" />
+      <workItem from="1763839647309" duration="9100000" />
     </task>
     <servers />
   </component>

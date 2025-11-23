@@ -52,8 +52,9 @@ export class AuthController {
   }
 
   /**
-   * PROTECTED: Admin creates users
+   * PROTECTED: Admin creates users with mandatory photo
    * Requires appropriate role permissions
+   * Photo is uploaded to background queue for processing
    */
   @Post('create-user')
   @UseGuards(AuthGuard, RolesGuard)
@@ -63,14 +64,40 @@ export class AuthController {
     UserRole.ADMIN,
     UserRole.HR_MANAGER,
   )
+  @UseInterceptors(
+    FileInterceptor('photo', {
+      limits: {
+        fileSize: 5 * 1024 * 1024, // 5MB max file size
+      },
+      fileFilter: (_req, file, callback) => {
+        if (!file.mimetype.match(/\/(jpg|jpeg|png)$/)) {
+          return callback(
+            new BadRequestException(
+              'Only JPG, JPEG, and PNG files are allowed',
+            ),
+            false,
+          );
+        }
+        callback(null, true);
+      },
+    }),
+  )
   @HttpCode(HttpStatus.CREATED)
   async createUserByAdmin(
     @Body() createUserDto: AdminCreateUserDto,
+    @UploadedFile() photo: Express.Multer.File,
     @Req() req,
   ) {
+    // Validate photo is provided (mandatory)
+    if (!photo) {
+      throw new BadRequestException('User photo is required');
+    }
+
     const result = await this.authService.createUserByAdmin(
       createUserDto,
       req.user.user_id,
+      photo.buffer,
+      photo.mimetype,
     );
 
     // Base response
@@ -85,6 +112,13 @@ export class AuthController {
       },
       temporary_password: result.temporary_password,
       note: 'Please share this temporary password securely with the new user',
+      photoUpload: {
+        status: result.photoUploadJobId ? 'QUEUED' : 'PENDING',
+        jobId: result.photoUploadJobId,
+        message: result.photoUploadJobId
+          ? 'Photo upload queued for background processing'
+          : 'Photo will be uploaded when HC sync completes',
+      },
     };
 
     // If HC sync failed, add error details to response

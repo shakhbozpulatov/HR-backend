@@ -21,11 +21,7 @@ import { Throttle } from '@nestjs/throttler';
 
 import { AttendanceEventsService } from '@/modules/attendance';
 import { WebhookEventDto, ResolveQuarantineDto } from '../dto';
-import {
-  FetchAttendanceEventsDto,
-  FetchAttendanceEventsResponseDto,
-  GetEventsDto,
-} from '../dto/fetch-attendance-events.dto';
+import { GetEventsDto } from '../dto/fetch-attendance-events.dto';
 import { HcAttendanceFetchService } from '../services/hc-attendance-fetch.service';
 
 import { AuthGuard } from '@/common/guards/auth.guard';
@@ -194,6 +190,35 @@ export class AttendanceEventsController {
     return {
       success: true,
       message: 'Failed events queued for retry',
+    };
+  }
+
+  /**
+   * Get user attendance by user_id
+   * Returns all clock in/out events for a specific user with optional date filters
+   */
+  @Get('user/:userId')
+  @UseGuards(AuthGuard, RolesGuard)
+  @Roles(
+    UserRole.SUPER_ADMIN,
+    UserRole.COMPANY_OWNER,
+    UserRole.ADMIN,
+    UserRole.HR_MANAGER,
+  )
+  async getUserAttendance(
+    @Param('userId') userId: string,
+    @Query('startTime') startTime?: string,
+    @Query('endTime') endTime?: string,
+  ) {
+    const data = await this.eventsService.getUserAttendance(
+      userId,
+      startTime,
+      endTime,
+    );
+
+    return {
+      success: true,
+      data,
     };
   }
 

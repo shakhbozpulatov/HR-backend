@@ -28,14 +28,34 @@ export class HcService implements IHcService, OnModuleInit {
   ): Promise<HcApiResponse<HcPersonData>> {
     const endpoint = this.config.getEndpoints().person.add;
 
-    // Format dates using utility
-    const formattedDto = {
-      ...dto,
+    // Build request data - only include fields that have values
+    // HC API doesn't accept undefined/null values
+    const formattedDto: any = {
+      groupId: dto.groupId,
+      personCode: dto.personCode,
+      firstName: dto.firstName,
+      lastName: dto.lastName,
+      gender: dto.gender,
       startDate: HcDateFormatter.toHcFormat(dto.startDate),
-      endDate: dto.endDate
-        ? HcDateFormatter.toHcFormat(dto.endDate)
-        : undefined,
     };
+
+    // Only include optional fields if they have values
+    if (dto.phone) {
+      formattedDto.phone = dto.phone;
+    }
+
+    if (dto.endDate) {
+      formattedDto.endDate = HcDateFormatter.toHcFormat(dto.endDate);
+    }
+
+    console.log('👤 Creating user on HC Cabinet:', {
+      personCode: dto.personCode,
+      firstName: dto.firstName,
+      lastName: dto.lastName,
+      hasPhone: !!dto.phone,
+      hasEndDate: !!dto.endDate,
+      requestData: formattedDto,
+    });
 
     // Use API client for request (handles logging, validation, errors)
     return this.apiClient.post<HcPersonData>({
@@ -172,20 +192,26 @@ export class HcService implements IHcService, OnModuleInit {
     const endpoint = this.config.getEndpoints().mq.subscribe;
     return this.apiClient.post({
       endpoint,
-      data: subscribeType,
+      data: { subscribeType },
     });
   }
 
   async getAllEvents(maxNumberPerTime: number) {
     const endpoint = this.config.getEndpoints().mq.messages;
 
-    return this.apiClient.post({ endpoint, data: maxNumberPerTime });
+    return this.apiClient.post({
+      endpoint,
+      data: { maxNumberPerTime },
+    });
   }
 
   async completeEvent(batchId: string) {
     const endpoint = this.config.getEndpoints().mq.complete;
 
-    return this.apiClient.post({ endpoint, data: batchId });
+    return this.apiClient.post({
+      endpoint,
+      data: { batchId },
+    });
   }
 
   /**
