@@ -16,8 +16,11 @@ import {
   ValidationPipe,
   UseInterceptors,
   ClassSerializerInterceptor,
+  Res,
+  StreamableFile,
 } from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
+import { Response } from 'express';
 
 import { AttendanceEventsService } from '@/modules/attendance';
 import { WebhookEventDto, ResolveQuarantineDto } from '../dto';
@@ -83,6 +86,47 @@ export class AttendanceEventsController {
   )
   async getEvents(@Query() dto: GetEventsDto) {
     return await this.eventsService.getEvents(dto);
+  }
+
+  /**
+   * Export attendance events to Excel
+   * Downloads Excel file with attendance data for all employees or specific user
+   *
+   * @param dto - Query parameters (startTime, endTime, userId)
+   * @param res - Express response object for setting headers
+   * @returns Excel file download
+   * @example
+   * GET /attendance/events/export-excel?startTime=2025-11-14T00:00:00.000Z&endTime=2025-11-20T20:00:00.000Z&userId=645164122568532992
+   */
+  @Get('export-excel')
+  @UseGuards(AuthGuard, RolesGuard)
+  @Roles(
+    UserRole.SUPER_ADMIN,
+    UserRole.COMPANY_OWNER,
+    UserRole.ADMIN,
+    UserRole.HR_MANAGER,
+  )
+  async exportToExcel(@Query() dto: GetEventsDto, @Res() res: Response) {
+    const buffer = await this.eventsService.exportToExcel(dto);
+
+    // Generate filename with date range
+    const startDate = dto.startTime
+      ? new Date(dto.startTime).toISOString().split('T')[0]
+      : 'last-7-days';
+    const endDate = dto.endTime
+      ? new Date(dto.endTime).toISOString().split('T')[0]
+      : 'now';
+    const filename = `attendance-report_${startDate}_to_${endDate}.xlsx`;
+
+    // Set response headers for file download
+    res.set({
+      'Content-Type':
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      'Content-Disposition': `attachment; filename="${filename}"`,
+      'Content-Length': buffer.length,
+    });
+
+    res.send(buffer);
   }
 
   /**

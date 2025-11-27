@@ -1,5 +1,5 @@
 import { IsOptional, IsDateString, IsInt, Min, Max } from 'class-validator';
-import { Type } from 'class-transformer';
+import { Type, Transform } from 'class-transformer';
 
 /**
  * DTO for fetching attendance events from HC
@@ -74,10 +74,12 @@ export class FetchAttendanceEventsResponseDto {
 
 export class GetEventsDto {
   @IsOptional()
+  @Transform(({ value }) => (value === '' ? undefined : value))
   @IsDateString()
   startTime?: string;
 
   @IsOptional()
+  @Transform(({ value }) => (value === '' ? undefined : value))
   @IsDateString()
   endTime?: string;
 
@@ -95,6 +97,7 @@ export class GetEventsDto {
   limit?: number = 20;
 
   @IsOptional()
+  @Transform(({ value }) => (value === '' ? undefined : value))
   userId?: string; // Filter by user_id (HC person ID from events table, matches hcPersonId in users table)
 }
 

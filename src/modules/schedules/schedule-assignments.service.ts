@@ -5,7 +5,13 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { LessThanOrEqual, MoreThanOrEqual, Repository, IsNull } from 'typeorm';
+import {
+  LessThanOrEqual,
+  MoreThanOrEqual,
+  Repository,
+  IsNull,
+  In,
+} from 'typeorm';
 import { UserScheduleAssignment } from './entities/employee-schedule-assignment.entity';
 import { CreateAssignmentDto } from './dto/create-assignment.dto';
 import { UpdateUserAssignmentDto } from './dto/update-user-assignment.dto';
@@ -166,44 +172,115 @@ export class ScheduleAssignmentsService {
   }
 
   /**
-   * Add schedule exception — only to same company employee
+   * Add schedule exception
+   * If assignmentId is provided: adds to specific assignment
+   * If assignmentId is null: adds to ALL active assignments (for company-wide holidays)
+   * Can optionally filter by default_template_id
    */
   async addException(
-    assignmentId: string,
+    assignmentId: string | null,
     exception: CreateExceptionDto,
     actor: any,
-  ): Promise<UserScheduleAssignment> {
-    const assignment = await this.assignmentRepository.findOne({
-      where: { assignment_id: assignmentId },
+  ): Promise<UserScheduleAssignment | UserScheduleAssignment[]> {
+    // SCENARIO 1: Add exception to specific assignment
+    if (assignmentId) {
+      const assignment = await this.assignmentRepository.findOne({
+        where: { assignment_id: assignmentId },
+        relations: ['user'],
+      });
+
+      if (!assignment) {
+        throw new NotFoundException('Assignment not found');
+      }
+
+      // company check
+      if (
+        actor.role !== UserRole.SUPER_ADMIN &&
+        assignment.user?.company_id !== actor.company_id
+      ) {
+        throw new ForbiddenException(
+          'You can only edit your own company assignments',
+        );
+      }
+
+      // Initialize exceptions array if not exists
+      if (!assignment.exceptions || !Array.isArray(assignment.exceptions)) {
+        assignment.exceptions = [];
+      }
+
+      // Filter out any invalid entries (like empty arrays or non-objects)
+      assignment.exceptions = assignment.exceptions.filter(
+        (exc) => exc && typeof exc === 'object' && !Array.isArray(exc),
+      );
+
+      assignment.exceptions.push(exception);
+      return await this.assignmentRepository.save(assignment);
+    }
+
+    // SCENARIO 2: Add exception to ALL active assignments (company-wide holiday)
+    // This is useful for national holidays like Navruz, New Year, etc.
+    const whereCondition: any = {
+      effective_to: IsNull(), // Only active assignments
+    };
+
+    // Filter by company (except SUPER_ADMIN)
+    if (actor.role !== UserRole.SUPER_ADMIN) {
+      // Get all users in the actor's company
+      const companyUsers = await this.userRepository.find({
+        where: { company_id: actor.company_id },
+        select: ['id'],
+      });
+
+      const companyUserIds = companyUsers.map((u) => u.id);
+
+      if (companyUserIds.length === 0) {
+        throw new NotFoundException('No users found in your company');
+      }
+
+      whereCondition.user_id = In(companyUserIds);
+    }
+
+    // Optional: filter by specific template
+    if (exception.default_template_id) {
+      whereCondition.default_template_id = exception.default_template_id;
+    }
+
+    // Find all matching assignments
+    const assignments = await this.assignmentRepository.find({
+      where: whereCondition,
       relations: ['user'],
     });
 
-    if (!assignment) {
-      throw new NotFoundException('Assignment not found');
-    }
-
-    // company check
-    if (
-      actor.role !== UserRole.SUPER_ADMIN &&
-      assignment.user?.company_id !== actor.company_id
-    ) {
-      throw new ForbiddenException(
-        'You can only edit your own company assignments',
+    if (assignments.length === 0) {
+      throw new NotFoundException(
+        'No active assignments found matching the criteria',
       );
     }
 
-    // Initialize exceptions array if not exists
-    if (!assignment.exceptions || !Array.isArray(assignment.exceptions)) {
-      assignment.exceptions = [];
+    // Add exception to all found assignments
+    const updatedAssignments: UserScheduleAssignment[] = [];
+
+    for (const assignment of assignments) {
+      // Initialize exceptions array if not exists
+      if (!assignment.exceptions || !Array.isArray(assignment.exceptions)) {
+        assignment.exceptions = [];
+      }
+
+      // Filter out any invalid entries (like empty arrays or non-objects)
+      assignment.exceptions = assignment.exceptions.filter(
+        (exc) => exc && typeof exc === 'object' && !Array.isArray(exc),
+      );
+
+      assignment.exceptions.push(exception);
+      const saved = await this.assignmentRepository.save(assignment);
+      updatedAssignments.push(saved);
     }
 
-    // Filter out any invalid entries (like empty arrays or non-objects)
-    assignment.exceptions = assignment.exceptions.filter(
-      (exc) => exc && typeof exc === 'object' && !Array.isArray(exc),
+    console.log(
+      `✅ Added exception to ${updatedAssignments.length} assignments`,
     );
 
-    assignment.exceptions.push(exception);
-    return await this.assignmentRepository.save(assignment);
+    return updatedAssignments;
   }
 
   /**

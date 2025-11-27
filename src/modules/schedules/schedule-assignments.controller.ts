@@ -110,6 +110,21 @@ export class ScheduleAssignmentsController {
     );
   }
 
+  @Post('exceptions')
+  @Roles(
+    UserRole.SUPER_ADMIN,
+    UserRole.COMPANY_OWNER,
+    UserRole.ADMIN,
+    UserRole.HR_MANAGER,
+  )
+  async addException(@Body() exception: CreateExceptionDto, @Req() req) {
+    return await this.assignmentsService.addException(
+      null,
+      exception,
+      req.user,
+    );
+  }
+
   @Post(':assignmentId/exceptions')
   @Roles(
     UserRole.SUPER_ADMIN,
@@ -117,7 +132,7 @@ export class ScheduleAssignmentsController {
     UserRole.ADMIN,
     UserRole.HR_MANAGER,
   )
-  async addException(
+  async addExceptionToAssignment(
     @Param('assignmentId') assignmentId: string,
     @Body() exception: CreateExceptionDto,
     @Req() req,

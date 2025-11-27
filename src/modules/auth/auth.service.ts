@@ -256,7 +256,7 @@ export class AuthService {
       last_name: registerDto.last_name.trim(),
       middle_name: registerDto.middle_name?.trim(),
       phone: registerDto.phone,
-      department_id: registerDto.department?.trim(),
+      // department_id: null, // Will be assigned later by admin
       position: registerDto.position?.trim(),
       start_date: new Date(),
       status: UserStatus.ACTIVE,
@@ -469,6 +469,41 @@ export class AuthService {
     const temporaryPassword = this.passwordService.generateTemporaryPassword();
     const hashedPassword = this.passwordService.hashPassword(temporaryPassword);
 
+    // Validate department_id if provided
+    if (createUserDto.department_id) {
+      const department = await this.companyRepository
+        .createQueryBuilder('company')
+        .leftJoinAndSelect('company.departments', 'department')
+        .where('department.id = :deptId', {
+          deptId: createUserDto.department_id,
+        })
+        .andWhere('company.id = :companyId', { companyId: targetCompanyId })
+        .getOne();
+
+      if (!department) {
+        throw new BadRequestException(
+          `Department with ID ${createUserDto.department_id} not found in this company`,
+        );
+      }
+    }
+
+    // Validate manager_id if provided
+    if (createUserDto.manager_id) {
+      const manager = await this.userRepository.findOne({
+        where: {
+          id: createUserDto.manager_id,
+          company_id: targetCompanyId,
+          active: true,
+        },
+      });
+
+      if (!manager) {
+        throw new BadRequestException(
+          `Manager with ID ${createUserDto.manager_id} not found in this company`,
+        );
+      }
+    }
+
     let savedUser: User;
     let hcResponse: any;
 
@@ -517,7 +552,23 @@ export class AuthService {
         status: UserStatus.SYNCED,
         active: true,
         hcPersonId: hcResponse.data?.personId || hcPersonCode,
-        ...createUserDto,
+        email: createUserDto.email,
+        role: createUserDto.role,
+        first_name: createUserDto.first_name,
+        last_name: createUserDto.last_name,
+        middle_name: createUserDto.middle_name,
+        phone: createUserDto.phone,
+        dob: createUserDto.dob,
+        position: createUserDto.position,
+        location: createUserDto.location,
+        start_date: createUserDto.start_date,
+        end_date: createUserDto.end_date,
+        tariff_type: createUserDto.tariff_type,
+        hourly_rate: createUserDto.hourly_rate,
+        monthly_salary: createUserDto.monthly_salary,
+        // Only set department_id and manager_id if they exist in the database
+        department_id: createUserDto.department_id || null,
+        manager_id: createUserDto.manager_id || null,
       });
 
       savedUser = await this.userRepository.save(newUser);
@@ -628,6 +679,8 @@ export class AuthService {
       active: user.active,
       mfa_enabled: user.mfa_enabled,
       created_at: user.created_at,
+      hcPersonId: user.hcPersonId,
+      photo: user.photo_url,
     };
 
     // Add company information

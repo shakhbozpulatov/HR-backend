@@ -11,6 +11,7 @@ import { InjectQueue } from '@nestjs/bull';
 import { Queue } from 'bull';
 import * as crypto from 'crypto';
 import * as moment from 'moment-timezone';
+import * as ExcelJS from 'exceljs';
 
 import {
   AttendanceEvent,
@@ -999,5 +1000,207 @@ export class AttendanceEventsService {
         totalPages: Math.ceil(total / limit),
       },
     };
+  }
+
+  /**
+   * Export attendance events to Excel
+   * Uses the same logic as getEvents but formats output as Excel file
+   */
+  async exportToExcel(dto: {
+    startTime?: string;
+    endTime?: string;
+    userId?: string;
+  }): Promise<Buffer> {
+    this.logger.log(
+      `Exporting attendance to Excel: ${dto.startTime || 'last 7 days'} to ${dto.endTime || 'now'}${dto.userId ? `, userId=${dto.userId}` : ''}`,
+    );
+
+    // Set default time range to last 7 days if not provided (UTC)
+    const endTime = dto.endTime ? new Date(dto.endTime) : new Date();
+    const startTime = dto.startTime
+      ? new Date(dto.startTime)
+      : new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+
+    // Get users with their attendance events and schedule assignments
+    let usersQuery = this.userRepository
+      .createQueryBuilder('user')
+      .leftJoinAndSelect('user.schedule_assignments', 'assignment')
+      .leftJoinAndSelect('assignment.default_template', 'template')
+      .where('user.hcPersonId IS NOT NULL');
+
+    // Filter by specific user if userId is provided
+    if (dto.userId) {
+      usersQuery = usersQuery.andWhere('user.hcPersonId = :userId', {
+        userId: dto.userId,
+      });
+    }
+
+    const users = await usersQuery.getMany();
+
+    this.logger.log(`Exporting attendance for ${users.length} users to Excel`);
+
+    // Generate all dates in the range
+    const dates: string[] = [];
+    const currentDate = moment.utc(startTime);
+    const endDate = moment.utc(endTime);
+
+    while (currentDate.isSameOrBefore(endDate, 'day')) {
+      dates.push(currentDate.format('YYYY-MM-DD'));
+      currentDate.add(1, 'day');
+    }
+
+    // Create workbook and worksheet
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet('Attendance Report');
+
+    // Set up column headers
+    const columns = [
+      { header: '№', key: 'index', width: 5 },
+      { header: 'ID', key: 'id', width: 36 },
+      { header: 'Full Name', key: 'name', width: 30 },
+      { header: 'Person ID', key: 'personId', width: 20 },
+      { header: 'Phone', key: 'phone', width: 15 },
+    ];
+
+    // Add date columns
+    dates.forEach((date) => {
+      columns.push({
+        header: date,
+        key: date,
+        width: 15,
+      });
+    });
+
+    worksheet.columns = columns;
+
+    // Style header row
+    worksheet.getRow(1).font = { bold: true, size: 11 };
+    worksheet.getRow(1).fill = {
+      type: 'pattern',
+      pattern: 'solid',
+      fgColor: { argb: 'FFE0E0E0' },
+    };
+    worksheet.getRow(1).alignment = {
+      vertical: 'middle',
+      horizontal: 'center',
+    };
+    worksheet.getRow(1).height = 25;
+
+    // Process each user's attendance
+    let rowIndex = 1;
+    for (const user of users) {
+      // Fetch all events for this user in the date range based on created_at
+      const events = await this.eventRepository
+        .createQueryBuilder('event')
+        .where('event.user_id = :userId', { userId: user.hcPersonId })
+        .andWhere('event.created_at >= :startTime', { startTime })
+        .andWhere('event.created_at <= :endTime', { endTime })
+        .orderBy('event.created_at', 'ASC')
+        .getMany();
+
+      // Get user's active schedule template
+      const activeAssignment = user.schedule_assignments?.find((assignment) => {
+        const now = new Date();
+        const effectiveFrom = new Date(assignment.effective_from);
+        const effectiveTo = assignment.effective_to
+          ? new Date(assignment.effective_to)
+          : null;
+
+        return effectiveFrom <= now && (!effectiveTo || effectiveTo >= now);
+      });
+      const scheduleTemplate = activeAssignment?.default_template;
+
+      // Group events by date (based on created_at in UTC+5)
+      const eventsByDate = new Map<string, AttendanceEvent[]>();
+      events.forEach((event) => {
+        // Convert to UTC+5 timezone for date grouping
+        const dateStr = moment
+          .utc(event.created_at)
+          .utcOffset(5)
+          .format('YYYY-MM-DD');
+        if (!eventsByDate.has(dateStr)) {
+          eventsByDate.set(dateStr, []);
+        }
+        eventsByDate.get(dateStr)!.push(event);
+      });
+
+      // Build row data
+      const rowData: any = {
+        index: rowIndex,
+        id: user.id,
+        name: `${user.first_name} ${user.last_name}`,
+        personId: user.hcPersonId || '',
+        phone: user.phone || '-',
+      };
+
+      // Add attendance data for each date
+      dates.forEach((date) => {
+        const dayEvents = eventsByDate.get(date) || [];
+
+        // Find first CLOCK_IN and last CLOCK_OUT based on created_at
+        const clockInEvents = dayEvents.filter(
+          (e) => e.event_type === EventType.CLOCK_IN,
+        );
+        const clockOutEvents = dayEvents.filter(
+          (e) => e.event_type === EventType.CLOCK_OUT,
+        );
+
+        // Calculate startTime from first clock_in's created_at (in UTC+5)
+        const startTimeStr = clockInEvents.length
+          ? moment.utc(clockInEvents[0].created_at).utcOffset(5).format('HH:mm')
+          : null;
+
+        // Calculate endTime with template fallback logic
+        let endTimeStr: string | null = null;
+        if (clockOutEvents.length > 0) {
+          // If there are clock_out events, use the last one's created_at (in UTC+5)
+          endTimeStr = moment
+            .utc(clockOutEvents[clockOutEvents.length - 1].created_at)
+            .utcOffset(5)
+            .format('HH:mm');
+        } else if (startTimeStr && scheduleTemplate) {
+          // If clock_in exists but no clock_out, use template end_time
+          endTimeStr = scheduleTemplate.end_time;
+        }
+
+        // Format: "09:00 - 18:00" or "-" if no attendance
+        rowData[date] =
+          startTimeStr && endTimeStr
+            ? `${startTimeStr} - ${endTimeStr}`
+            : startTimeStr
+              ? startTimeStr
+              : '-';
+      });
+
+      worksheet.addRow(rowData);
+      rowIndex++;
+    }
+
+    // Auto-fit columns (optional - can be removed if not needed)
+    worksheet.columns.forEach((column) => {
+      if (column.header !== '№') {
+        column.alignment = { vertical: 'middle', horizontal: 'center' };
+      }
+    });
+
+    // Add borders to all cells
+    worksheet.eachRow((row, rowNumber) => {
+      row.eachCell((cell) => {
+        cell.border = {
+          top: { style: 'thin' },
+          left: { style: 'thin' },
+          bottom: { style: 'thin' },
+          right: { style: 'thin' },
+        };
+      });
+    });
+
+    this.logger.log(
+      `Excel export complete: ${rowIndex - 1} employees exported`,
+    );
+
+    // Generate Excel file buffer
+    const buffer = await workbook.xlsx.writeBuffer();
+    return Buffer.from(buffer);
   }
 }
