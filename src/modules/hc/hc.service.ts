@@ -238,6 +238,128 @@ export class HcService implements IHcService, OnModuleInit {
   }
 
   /**
+   * Register device on HC Cabinet
+   * @param deviceData - Device registration data
+   * @returns HC API response with device data
+   */
+  async registerDeviceOnCabinet(deviceData: {
+    deviceName: string;
+    deviceType?: number;
+    ipAddress?: string;
+    port?: number;
+    serialNumber?: string;
+    locationId?: string;
+  }): Promise<HcApiResponse> {
+    const endpoint = this.config.getEndpoints().device.add;
+
+    console.log('🖥️ Registering device on HC Cabinet:', {
+      deviceName: deviceData.deviceName,
+      ipAddress: deviceData.ipAddress,
+      serialNumber: deviceData.serialNumber,
+    });
+
+    return this.apiClient.post({
+      endpoint,
+      data: deviceData,
+    });
+  }
+
+  /**
+   * Get device from HC Cabinet
+   * @param deviceId - HC device ID
+   * @returns HC API response with device data
+   */
+  async getDeviceFromCabinet(deviceId: string): Promise<HcApiResponse> {
+    const endpoint = this.config.getEndpoints().device.get;
+
+    return this.apiClient.post({
+      endpoint,
+      data: { deviceId },
+    });
+  }
+
+  /**
+   * List all devices from HC Cabinet
+   * @param pageIndex - Page number (0-based)
+   * @param pageSize - Items per page
+   * @returns HC API response with device list
+   */
+  async listDevicesFromCabinet(
+    pageIndex: number,
+    pageSize: number,
+  ): Promise<HcApiResponse> {
+    const endpoint = this.config.getEndpoints().device.list;
+
+    console.log('📋 Listing devices from HC Cabinet:', {
+      pageIndex,
+      pageSize,
+    });
+
+    return this.apiClient.post({
+      endpoint,
+      data: { pageIndex, pageSize },
+    });
+  }
+
+  /**
+   * Update device on HC Cabinet
+   * @param deviceId - HC device ID
+   * @param updateData - Device update data
+   * @returns HC API response
+   */
+  async updateDeviceOnCabinet(
+    deviceId: string,
+    updateData: Partial<{
+      deviceName: string;
+      ipAddress: string;
+      port: number;
+      locationId: string;
+    }>,
+  ): Promise<HcApiResponse> {
+    const endpoint = this.config.getEndpoints().device.update;
+
+    console.log('🔄 Updating device on HC Cabinet:', {
+      deviceId,
+      updateData,
+    });
+
+    return this.apiClient.post({
+      endpoint,
+      data: { deviceId, ...updateData },
+    });
+  }
+
+  /**
+   * Delete device from HC Cabinet
+   * @param deviceId - HC device ID
+   * @returns HC API response
+   */
+  async deleteDeviceFromCabinet(deviceId: string): Promise<HcApiResponse> {
+    const endpoint = this.config.getEndpoints().device.delete;
+
+    console.log('🗑️ Deleting device from HC Cabinet:', { deviceId });
+
+    return this.apiClient.post({
+      endpoint,
+      data: { deviceId },
+    });
+  }
+
+  /**
+   * Get device status from HC Cabinet
+   * @param deviceId - HC device ID
+   * @returns HC API response with device status
+   */
+  async getDeviceStatus(deviceId: string): Promise<HcApiResponse> {
+    const endpoint = this.config.getEndpoints().device.status;
+
+    return this.apiClient.post({
+      endpoint,
+      data: { deviceId },
+    });
+  }
+
+  /**
    * Validate configuration on module initialization
    */
   async onModuleInit() {

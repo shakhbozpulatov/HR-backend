@@ -5,12 +5,15 @@ import {
   TerminalDevice,
   DeviceStatus,
 } from './entities/terminal-device.entity';
+import { TerminalHcIntegrationService } from './services/terminal-hc-integration.service';
+import { CreateTerminalDto } from './dto/create-terminal.dto';
 
 @Injectable()
 export class TerminalsService {
   constructor(
     @InjectRepository(TerminalDevice)
     private deviceRepository: Repository<TerminalDevice>,
+    private readonly hcIntegrationService: TerminalHcIntegrationService,
   ) {}
 
   async findAll(companyId?: string): Promise<TerminalDevice[]> {
@@ -37,11 +40,23 @@ export class TerminalsService {
   }
 
   async create(
-    deviceData: Partial<TerminalDevice>,
+    deviceData: CreateTerminalDto,
     companyId: string,
   ): Promise<TerminalDevice> {
+    // Check if device should be registered on HC Cabinet
+    if (deviceData.register_on_hc) {
+      return await this.hcIntegrationService.registerTerminalWithHC(
+        deviceData,
+        companyId,
+      );
+    }
+
+    // Create terminal without HC registration
+    // Destructure to remove register_on_hc flag
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { register_on_hc, ...terminalData } = deviceData;
     const device = this.deviceRepository.create({
-      ...deviceData,
+      ...terminalData,
       company_id: companyId,
     });
     return await this.deviceRepository.save(device);

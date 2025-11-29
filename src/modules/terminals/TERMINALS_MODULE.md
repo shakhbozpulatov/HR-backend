@@ -13,9 +13,10 @@ terminals/
 │   └── update-terminal-status.dto.ts # Terminal holati yangilash
 ├── entities/
 │   └── terminal-device.entity.ts    # Terminal database entity
+├── services/
+│   └── terminal-hc-integration.service.ts  # HC Cabinet integratsiya
 ├── terminals.controller.ts          # HTTP controller
 ├── terminals.service.ts             # Terminal CRUD operatsiyalari
-├── terminal-integration.service.ts  # HC Cabinet integratsiya
 └── terminals.module.ts              # Module konfiguratsiyasi
 ```
 
@@ -41,8 +42,12 @@ terminals/
   active: boolean                      // Faollik holati
 
   // HC Integration
+  hc_device_id?: string                // HC Cabinet device ID (unique)
   hc_access_level_id?: string          // HC Cabinet access level ID
-  hc_group_id?: string                 // HC Cabinet group ID
+  serial_number?: string               // Device serial number
+  ip_address?: string                  // Device IP address
+  port?: number                        // Device port
+  is_hc_synced: boolean                // HC sync status (default: false)
 
   // Metadata (JSONB)
   metadata?: {
@@ -139,21 +144,37 @@ enum DeviceStatus {
 **Kirish ma'lumotlari**:
 ```json
 {
-  "device_id": "HC-DEVICE-456",
   "name": "Back Entrance Terminal",
   "location": "Building B, Floor 1",
-  "model": "HC F16",
+  "vendor": "HC Cabinet",
   "serial_number": "SN789012",
   "ip_address": "192.168.1.101",
-  "hc_access_level_id": "access-456"
+  "port": 8090,
+  "hc_access_level_id": "access-456",
+  "register_on_hc": true
 }
 ```
 
 **Jarayon**:
 1. Terminal ma'lumotlari validatsiya qilinadi
-2. Company ID avtomatik qo'shiladi (user'ning company_id'si)
-3. Status default OFFLINE qilib o'rnatiladi
-4. Terminal saqlanadi
+2. Agar `register_on_hc: true` bo'lsa:
+   - Terminal HC Cabinet'da ro'yxatdan o'tkaziladi
+   - HC'dan device_id olinadi
+   - `is_hc_synced: true` qilib belgilanadi
+3. Company ID avtomatik qo'shiladi (user'ning company_id'si)
+4. Status default OFFLINE qilib o'rnatiladi
+5. Terminal local DB'ga saqlanadi
+
+**Response**:
+```json
+{
+  "id": "local-terminal-uuid",
+  "name": "Back Entrance Terminal",
+  "hc_device_id": "HC-DEVICE-123",
+  "is_hc_synced": true,
+  "status": "OFFLINE"
+}
+```
 
 ### 4. Update Terminal Status
 **Endpoint**: `PATCH /terminals/:id/status`
@@ -188,17 +209,158 @@ enum DeviceStatus {
 - Faqat OFFLINE statusdagi terminallar
 - Monitoring va alerting uchun
 
+### 7. Sync Terminal Status with HC
+**Endpoint**: `POST /terminals/:id/sync-status`
+**Ruxsatlar**: SUPER_ADMIN, COMPANY_OWNER, ADMIN
+
+**Jarayon**:
+1. Terminal HC Cabinet'da ro'yxatdan o'tganligini tekshiradi
+2. HC Cabinet'dan device status olinadi
+3. Local status yangilanadi (HC status'ga asoslangan)
+4. `last_seen_at` joriy vaqtga o'rnatiladi
+
+**HC Status Mapping**:
+- HC status 1 → ONLINE
+- HC status 2 → MAINTENANCE
+- HC status 0 → OFFLINE
+
+**Response**:
+```json
+{
+  "id": "terminal-uuid",
+  "status": "ONLINE",
+  "last_seen_at": "2024-11-30T10:30:00Z",
+  "is_hc_synced": true
+}
+```
+
+### 8. Unbind Terminal from HC
+**Endpoint**: `POST /terminals/:id/unbind-hc`
+**Ruxsatlar**: SUPER_ADMIN, COMPANY_OWNER, ADMIN
+
+**Jarayon**:
+1. HC Cabinet'dan device o'chiriladi
+2. Local terminal'da `hc_device_id` null qilinadi
+3. `is_hc_synced: false` qilib belgilanadi
+
+**Use case**: Terminal HC'dan ajratish, faqat local DB'da qoldirish
+
+**Response**:
+```json
+{
+  "id": "terminal-uuid",
+  "hc_device_id": null,
+  "is_hc_synced": false
+}
+```
+
+### 9. Sync All Terminals with HC
+**Endpoint**: `POST /terminals/sync-all`
+**Ruxsatlar**: SUPER_ADMIN, COMPANY_OWNER, ADMIN
+
+**Jarayon**:
+1. Barcha HC'ga bog'langan terminallar topiladi
+2. Har biri uchun status sync qilinadi
+3. Xatolik yuz bergan terminallar ignore qilinadi
+
+**Use case**: Scheduled job orqali barcha terminallarni sync qilish
+
+**Response**:
+```json
+{
+  "synced_count": 15,
+  "terminals": [ /* array of synced terminals */ ]
+}
+```
+
+### 10. List HC Devices
+**Endpoint**: `GET /terminals/hc-devices?pageIndex=0&pageSize=100`
+**Ruxsatlar**: SUPER_ADMIN, COMPANY_OWNER, ADMIN
+
+**Query Parameters**:
+- `pageIndex`: Sahifa raqami (default: 0)
+- `pageSize`: Har sahifada nechta (default: 100)
+
+**Jarayon**:
+HC Cabinet'dan barcha devices ro'yxatini oladi
+
+**Response**:
+```json
+{
+  "totalNum": 25,
+  "pageIndex": 0,
+  "pageSize": 100,
+  "deviceList": [
+    {
+      "deviceId": "HC-DEVICE-123",
+      "deviceName": "Main Entrance",
+      "ipAddress": "192.168.1.100",
+      "status": 1,
+      "serialNumber": "SN123456"
+    }
+  ]
+}
+```
+
+**Use case**: HC Cabinet'dagi mavjud devicelarni ko'rish, import qilish
+
 ## HC Cabinet Integratsiya
 
-### Terminal Integration Service
+### Terminal HC Integration Service
 
-Bu service HC Cabinet bilan terminallarni integratsiya qilish uchun ishlatiladi.
+**Location**: `src/modules/terminals/services/terminal-hc-integration.service.ts`
 
-**Asosiy funksiyalar**:
-1. **Device Registration**: HC Cabinet'da qurilma ro'yxatdan o'tkazish
-2. **Access Level Binding**: Foydalanuvchilarni terminallarga bog'lash
-3. **Status Sync**: Terminal holatlari sinxronizatsiyasi
-4. **Event Processing**: Terminal eventlarini qayta ishlash
+Bu service HC Cabinet bilan terminallarni integratsiya qilish uchun mo'ljallangan. SOLID prinsiplariga asoslangan:
+- **Single Responsibility**: Faqat terminal-HC integratsiya logikasi
+- **Dependency Inversion**: HcService va Repository abstraktsiyalariga bog'liq
+
+**Asosiy metodlar**:
+
+#### 1. registerTerminalWithHC(dto, companyId)
+Terminal HC Cabinet'da ro'yxatdan o'tkazish va local DB'ga saqlash
+
+**Flow**:
+1. IP address validatsiya (HC registration uchun zarur)
+2. HC Cabinet API'ga device registration request
+3. HC'dan device_id olinadi
+4. Local DB'ga terminal saqlanadi (`is_hc_synced: true`)
+
+**Error Handling**:
+- HC registration muvaffaqiyatsiz bo'lsa exception
+- Device ID olmasa exception
+
+#### 2. syncTerminalStatusWithHC(terminalId)
+Terminal statusini HC Cabinet bilan sinxronlash
+
+**Flow**:
+1. Terminal topiladi va HC registration tekshiriladi
+2. HC'dan device status olinadi
+3. HC status local status'ga map qilinadi
+4. Local DB yangilanadi
+
+**Status Mapping**:
+```typescript
+HC Status 1 → DeviceStatus.ONLINE
+HC Status 2 → DeviceStatus.MAINTENANCE
+HC Status 0 → DeviceStatus.OFFLINE
+```
+
+#### 3. unbindTerminalFromHC(terminalId)
+Terminal HC Cabinet'dan ajratish
+
+**Flow**:
+1. HC Cabinet'dan device delete
+2. Local terminal'da HC fieldlar tozalanadi
+
+#### 4. syncAllTerminalsWithHC(companyId?)
+Barcha HC'ga bog'langan terminallarni sync qilish
+
+**Use case**: Cron job, scheduled sync
+
+#### 5. listHCDevices(pageIndex, pageSize)
+HC Cabinet'dagi barcha devicelar ro'yxati
+
+**Use case**: Import existing devices from HC
 
 ### Access Level Management
 
@@ -213,12 +375,44 @@ await hcService.bindUserWithTerminal(
 );
 ```
 
+### Terminal Registration Flow
+
+**Yangi terminal qo'shish (HC bilan)**:
+```typescript
+// 1. Terminal yaratish request
+POST /terminals
+{
+  "name": "Main Entrance",
+  "ip_address": "192.168.1.100",
+  "port": 8090,
+  "serial_number": "SN123456",
+  "register_on_hc": true  // HC'da ro'yxatdan o'tkazish
+}
+
+// 2. Backend flow:
+// - TerminalsService.create() chaqiriladi
+// - register_on_hc: true bo'lgani uchun
+// - TerminalHcIntegrationService.registerTerminalWithHC() chaqiriladi
+// - HC Cabinet'ga POST /device/v1/devices/add
+// - HC'dan device_id qaytadi
+// - Local DB'ga terminal saqlanadi (hc_device_id bilan)
+
+// 3. Response:
+{
+  "id": "local-uuid",
+  "name": "Main Entrance",
+  "hc_device_id": "HC-DEVICE-123",
+  "is_hc_synced": true,
+  "status": "OFFLINE"
+}
+```
+
 ### Device Enrollment
 
 **User Enrollment jarayoni**:
-1. User HC Cabinet'da yaratiladi
+1. User HC Cabinet'da yaratiladi (HcService.createUserOnCabinet)
 2. Access level ID list beriladi
-3. HC Service orqali user terminallarga bog'lanadi
+3. HC Service orqali user terminallarga bog'lanadi (bindUserWithTerminal)
 4. Biometrik ma'lumotlar terminaldan olinadi
 
 ## Status Monitoring
@@ -331,6 +525,54 @@ throw new NotFoundException('Terminal device not found');
 - **Company**: Many-to-One
 - **AttendanceEvents**: One-to-Many (indirectly through HC)
 
+## Integration Best Practices
+
+### 1. Terminal Registration
+```typescript
+// ✅ GOOD: HC bilan registration
+const terminal = await terminalsService.create({
+  name: 'Main Entrance',
+  ip_address: '192.168.1.100',
+  register_on_hc: true  // HC'da avtomatik ro'yxatdan o'tadi
+}, companyId);
+
+// ❌ BAD: HC'siz local-only terminal (attendance ishlamaydi)
+const terminal = await terminalsService.create({
+  name: 'Side Door',
+  register_on_hc: false  // HC'da ro'yxatdan o'tmaydi
+}, companyId);
+```
+
+### 2. Status Sync Strategy
+```typescript
+// Scheduled job - har 5 daqiqada barcha terminallar sync
+@Cron('*/5 * * * *')
+async syncAllTerminals() {
+  await hcIntegrationService.syncAllTerminalsWithHC();
+}
+
+// Manual sync - muayyan terminal uchun
+await hcIntegrationService.syncTerminalStatusWithHC(terminalId);
+```
+
+### 3. Error Handling
+```typescript
+try {
+  await hcIntegrationService.registerTerminalWithHC(dto, companyId);
+} catch (error) {
+  if (error.message.includes('HC Cabinet')) {
+    // HC error - local DB'ga saqla, keyinroq retry
+    logger.warn('HC registration failed, saving locally');
+  }
+  throw error;
+}
+```
+
+### 4. Company Isolation
+- Har doim `company_id` orqali filter qilish
+- SUPER_ADMIN: barcha terminallar
+- Boshqa rollar: faqat o'z kompaniyasi
+
 ## Future Enhancements
 
 1. **Device Groups**: Terminallarni guruhlash
@@ -341,6 +583,8 @@ throw new NotFoundException('Terminal device not found');
 6. **Device Health Metrics**: Batafsil health monitoring
 7. **Automated Alerts**: Smart alerting system
 8. **Backup Terminals**: Failover mechanism
+9. **Bulk Import**: HC'dan ko'p terminallarni import qilish
+10. **Auto-Discovery**: Network'dagi HC devicelarni avtomatik topish
 
 ## Testing Recommendations
 

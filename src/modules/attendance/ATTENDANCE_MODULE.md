@@ -503,6 +503,82 @@ async function determineStatus(record: AttendanceRecord) {
 **Jarayon**:
 HC Cabinet'dan `searchCertificateRecords` API orqali ma'lumotlarni olish
 
+### 8. Get Events (with Arrival/Departure Time Differences)
+**Endpoint**: `GET /attendance/events/get-events`
+**Ruxsatlar**: SUPER_ADMIN, COMPANY_OWNER, ADMIN, HR_MANAGER
+
+**Query Parameters**:
+```
+?startTime=2024-11-01T00:00:00Z&endTime=2024-11-30T23:59:59Z&page=1&limit=20&userId=HC-PERSON-ID
+```
+
+**Response Structure**:
+```json
+{
+  "employees": [
+    {
+      "id": "user-uuid",
+      "name": "John Doe",
+      "personId": "HC-PERSON-123",
+      "phone": "+998901234567",
+      "attendance": [
+        {
+          "date": "2024-11-29",
+          "startTime": "09:15",
+          "endTime": "18:30",
+          "arrivalDifferenceSeconds": -900,
+          "departureDifferenceSeconds": 1800
+        },
+        {
+          "date": "2024-11-30",
+          "startTime": "08:45",
+          "endTime": "17:45",
+          "arrivalDifferenceSeconds": 900,
+          "departureDifferenceSeconds": -900
+        }
+      ]
+    }
+  ],
+  "pagination": {
+    "page": 1,
+    "limit": 20,
+    "total": 50,
+    "totalPages": 3
+  }
+}
+```
+
+**Time Difference Calculations**:
+
+#### `arrivalDifferenceSeconds` (Kelish farqi):
+- **Negative (-)** = Kechikib kelgan
+  - Misol: `-900` = 15 daqiqa kechikkan (09:15 keldi, 09:00 bo'lishi kerak edi)
+  - Formula: `scheduled_start - actual_start` (09:00 - 09:15 = -900 seconds)
+- **Positive (+)** = Erta kelgan
+  - Misol: `+600` = 10 daqiqa erta kelgan (08:50 keldi, 09:00 bo'lishi kerak edi)
+  - Formula: `scheduled_start - actual_start` (09:00 - 08:50 = +600 seconds)
+- **null** = Schedule template yoki actual arrival mavjud emas
+
+#### `departureDifferenceSeconds` (Ketish farqi):
+- **Negative (-)** = Erta ketgan
+  - Misol: `-1200` = 20 daqiqa erta ketgan (17:40 ketdi, 18:00 bo'lishi kerak edi)
+  - Formula: `actual_end - scheduled_end` (17:40 - 18:00 = -1200 seconds)
+- **Positive (+)** = Kech ketgan / Overtime
+  - Misol: `+1800` = 30 daqiqa qo'shimcha ishlagan (18:30 ketdi, 18:00 bo'lishi kerak edi)
+  - Formula: `actual_end - scheduled_end` (18:30 - 18:00 = +1800 seconds)
+- **null** = Schedule template yoki actual departure mavjud emas
+
+**Special Cases**:
+1. Agar `check_out` event mavjud bo'lmasa, template'dagi `end_time` ishlatiladi
+2. Agar user'da schedule template tayinlanmagan bo'lsa, farq hisoblash mumkin emas (null qaytariladi)
+3. Barcha vaqtlar UTC+5 (Tashkent) timezone'ida ko'rsatiladi
+
+**Use case**:
+- Davomat hisobotlari yaratish
+- Kechikishlarni tahlil qilish
+- Overtime soatlarini hisoblash
+- Excel/PDF hisobotlar generatsiya qilish
+
 ## User Device Enrollment
 
 ### Enroll User

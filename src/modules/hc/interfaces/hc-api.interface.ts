@@ -123,6 +123,32 @@ export interface HcTokenData {
 }
 
 /**
+ * HC Device Data (from API response)
+ */
+export interface HcDeviceData {
+  deviceId: string;
+  deviceName: string;
+  deviceType?: number;
+  ipAddress?: string;
+  port?: number;
+  serialNumber?: string;
+  firmwareVersion?: string;
+  status?: number;
+  locationId?: string;
+  [key: string]: any;
+}
+
+/**
+ * HC Device List Response
+ */
+export interface HcDeviceListResponse {
+  totalNum: number;
+  pageIndex: number;
+  pageSize: number;
+  deviceList: HcDeviceData[];
+}
+
+/**
  * HC Service Interface
  * Defines the contract for HC service implementations
  * (Dependency Inversion Principle)

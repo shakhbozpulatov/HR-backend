@@ -842,6 +842,8 @@ export class AttendanceEventsService {
         date: string;
         startTime: string | null;
         endTime: string | null;
+        arrivalDifferenceSeconds: number | null; // negative = late, positive = early
+        departureDifferenceSeconds: number | null; // negative = left early, positive = left late
       }>;
     }>;
     pagination: {
@@ -972,10 +974,49 @@ export class AttendanceEventsService {
             endTime = scheduleTemplate.end_time;
           }
 
+          // Calculate arrival difference (late/early arrival) in seconds
+          let arrivalDifferenceSeconds: number | null = null;
+          if (startTime && scheduleTemplate?.start_time) {
+            // Create moment objects for scheduled and actual times on the same date
+            const scheduledStart = moment(
+              `${date} ${scheduleTemplate.start_time}`,
+              'YYYY-MM-DD HH:mm',
+            );
+            const actualStart = moment(
+              `${date} ${startTime}`,
+              'YYYY-MM-DD HH:mm',
+            );
+
+            // Calculate difference: positive = early (came before scheduled), negative = late (came after scheduled)
+            arrivalDifferenceSeconds = scheduledStart.diff(
+              actualStart,
+              'seconds',
+            );
+          }
+
+          // Calculate departure difference (early/late departure) in seconds
+          let departureDifferenceSeconds: number | null = null;
+          if (endTime && scheduleTemplate?.end_time) {
+            // Create moment objects for scheduled and actual times on the same date
+            const scheduledEnd = moment(
+              `${date} ${scheduleTemplate.end_time}`,
+              'YYYY-MM-DD HH:mm',
+            );
+            const actualEnd = moment(`${date} ${endTime}`, 'YYYY-MM-DD HH:mm');
+
+            // Calculate difference: positive = stayed late (left after scheduled), negative = left early (left before scheduled)
+            departureDifferenceSeconds = actualEnd.diff(
+              scheduledEnd,
+              'seconds',
+            );
+          }
+
           return {
             date,
             startTime,
             endTime,
+            arrivalDifferenceSeconds,
+            departureDifferenceSeconds,
           };
         });
 
@@ -1062,12 +1103,22 @@ export class AttendanceEventsService {
       { header: 'Phone', key: 'phone', width: 15 },
     ];
 
-    // Add date columns
+    // Add date columns with time and difference columns
     dates.forEach((date) => {
       columns.push({
-        header: date,
-        key: date,
-        width: 15,
+        header: `${date} Time`,
+        key: `${date}_time`,
+        width: 20,
+      });
+      columns.push({
+        header: `${date} Arrival Diff (s)`,
+        key: `${date}_arrival`,
+        width: 18,
+      });
+      columns.push({
+        header: `${date} Departure Diff (s)`,
+        key: `${date}_departure`,
+        width: 20,
       });
     });
 
@@ -1163,13 +1214,42 @@ export class AttendanceEventsService {
           endTimeStr = scheduleTemplate.end_time;
         }
 
+        // Calculate arrival difference (late/early arrival) in seconds
+        let arrivalDiff: number | null = null;
+        if (startTimeStr && scheduleTemplate?.start_time) {
+          const scheduledStart = moment(
+            `${date} ${scheduleTemplate.start_time}`,
+            'YYYY-MM-DD HH:mm',
+          );
+          const actualStart = moment(
+            `${date} ${startTimeStr}`,
+            'YYYY-MM-DD HH:mm',
+          );
+          arrivalDiff = scheduledStart.diff(actualStart, 'seconds');
+        }
+
+        // Calculate departure difference (early/late departure) in seconds
+        let departureDiff: number | null = null;
+        if (endTimeStr && scheduleTemplate?.end_time) {
+          const scheduledEnd = moment(
+            `${date} ${scheduleTemplate.end_time}`,
+            'YYYY-MM-DD HH:mm',
+          );
+          const actualEnd = moment(`${date} ${endTimeStr}`, 'YYYY-MM-DD HH:mm');
+          departureDiff = actualEnd.diff(scheduledEnd, 'seconds');
+        }
+
         // Format: "09:00 - 18:00" or "-" if no attendance
-        rowData[date] =
+        rowData[`${date}_time`] =
           startTimeStr && endTimeStr
             ? `${startTimeStr} - ${endTimeStr}`
             : startTimeStr
               ? startTimeStr
               : '-';
+
+        rowData[`${date}_arrival`] = arrivalDiff !== null ? arrivalDiff : '-';
+        rowData[`${date}_departure`] =
+          departureDiff !== null ? departureDiff : '-';
       });
 
       worksheet.addRow(rowData);

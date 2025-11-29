@@ -5,7 +5,20 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="f223feb0-6502-4a9b-9c03-44f93ba47b8c" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/src/modules/hc/Hik_Connect_for_Teams_OpenAPI_Developer_Guide_V2_13_0_20250516.pdf" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/modules/attendance/ATTENDANCE_MODULE.md" beforeDir="false" afterPath="$PROJECT_DIR$/src/modules/attendance/ATTENDANCE_MODULE.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/modules/attendance/services/attendance-events.service.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/modules/attendance/services/attendance-events.service.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/modules/hc/HC_MODULE.md" beforeDir="false" afterPath="$PROJECT_DIR$/src/modules/hc/HC_MODULE.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/modules/hc/config/hc-api.config.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/modules/hc/config/hc-api.config.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/modules/hc/hc.service.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/modules/hc/hc.service.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/modules/hc/interfaces/hc-api.interface.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/modules/hc/interfaces/hc-api.interface.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/modules/terminals/TERMINALS_MODULE.md" beforeDir="false" afterPath="$PROJECT_DIR$/src/modules/terminals/TERMINALS_MODULE.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/modules/terminals/dto/create-terminal.dto.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/modules/terminals/dto/create-terminal.dto.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/modules/terminals/entities/terminal-device.entity.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/modules/terminals/entities/terminal-device.entity.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/modules/terminals/terminals.controller.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/modules/terminals/terminals.controller.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/modules/terminals/terminals.module.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/modules/terminals/terminals.module.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/modules/terminals/terminals.service.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/modules/terminals/terminals.service.ts" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -60,6 +73,9 @@
     <key name="CopyFile.RECENT_KEYS">
       <recent name="$PROJECT_DIR$/src/modules/audit" />
     </key>
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/src/modules/hc" />
+    </key>
   </component>
   <component name="SharedIndexes">
     <attachedChunks>
@@ -99,6 +115,7 @@
       <workItem from="1763839647309" duration="11141000" />
       <workItem from="1764159264567" duration="1113000" />
       <workItem from="1764170306313" duration="9199000" />
+      <workItem from="1764434230224" duration="8484000" />
     </task>
     <servers />
   </component>

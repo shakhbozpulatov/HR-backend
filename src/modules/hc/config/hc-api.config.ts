@@ -73,6 +73,14 @@ export class HcApiConfig {
       acs: {
         certificateRecords: '/acs/v1/event/certificaterecords/search',
       },
+      device: {
+        add: '/device/v1/devices/add',
+        update: '/device/v1/devices/update',
+        delete: '/device/v1/devices/delete',
+        get: '/device/v1/devices/get',
+        list: '/device/v1/devices/list',
+        status: '/device/v1/devices/status',
+      },
       // Easy to add more endpoints in future
     };
   }

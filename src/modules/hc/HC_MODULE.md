@@ -203,7 +203,100 @@ Yangi HC API methodlarini qo'shish oson, mavjud kodni o'zgartirmasdan.
 
 **Use case**: Eventlar qayta ishlanganidan keyin batch'ni complete qilish
 
-### 11. Search Certificate Records (Attendance)
+### 11. Register Device on HC Cabinet
+**Method**: `registerDeviceOnCabinet(deviceData: HcDeviceRegistrationData)`
+
+**Kirish ma'lumotlari**:
+```typescript
+{
+  deviceName: string,        // Device nomi
+  deviceType?: number,       // Device turi (optional)
+  ipAddress?: string,        // IP manzil (optional)
+  port?: number,            // Port raqami (optional)
+  serialNumber?: string,     // Seriya raqami (optional)
+  locationId?: string        // Joylashuv ID (optional)
+}
+```
+
+**Response**:
+```typescript
+{
+  errorCode: 0,
+  message: 'success',
+  data: {
+    deviceId: 'HC-DEVICE-ID-123',
+    deviceName: 'Main Entrance Terminal',
+    status: 1
+  }
+}
+```
+
+**Use case**: Yangi terminal HC Cabinet'da ro'yxatdan o'tkazish
+
+### 12. Get Device from HC Cabinet
+**Method**: `getDeviceFromCabinet(deviceId: string)`
+
+**Response**: Device ma'lumotlari
+
+**Use case**: HC Cabinet'dan device ma'lumotlarini olish
+
+### 13. List Devices from HC Cabinet
+**Method**: `listDevicesFromCabinet(pageIndex: number, pageSize: number)`
+
+**Parameters**:
+- `pageIndex`: Sahifa raqami (0-based)
+- `pageSize`: Har sahifada nechta device (max 1000)
+
+**Response**:
+```typescript
+{
+  data: {
+    totalNum: number,
+    pageIndex: number,
+    pageSize: number,
+    deviceList: [
+      {
+        deviceId: string,
+        deviceName: string,
+        deviceType: number,
+        ipAddress: string,
+        port: number,
+        serialNumber: string,
+        status: number
+      }
+    ]
+  }
+}
+```
+
+**Use case**: Barcha HC devices ro'yxatini olish
+
+### 14. Update Device on HC Cabinet
+**Method**: `updateDeviceOnCabinet(deviceId: string, updateData: Partial<HcDeviceData>)`
+
+**Use case**: Device ma'lumotlarini yangilash
+
+### 15. Delete Device from HC Cabinet
+**Method**: `deleteDeviceFromCabinet(deviceId: string)`
+
+**Use case**: Device'ni HC Cabinet'dan o'chirish
+
+### 16. Get Device Status
+**Method**: `getDeviceStatus(deviceId: string)`
+
+**Response**:
+```typescript
+{
+  data: {
+    deviceId: string,
+    status: number  // 0 = offline, 1 = online, 2 = maintenance
+  }
+}
+```
+
+**Use case**: Device'ning real-time status holatini olish
+
+### 17. Search Certificate Records (Attendance)
 **Method**: `searchCertificateRecords(request: HcCertificateRecordSearchRequest)`
 
 **Kirish ma'lumotlari**:
@@ -367,6 +460,18 @@ endpoints.mq = {
 ```typescript
 endpoints.acs = {
   certificateRecords: '/acs/certificateRecords'
+}
+```
+
+### Device Management
+```typescript
+endpoints.device = {
+  add: '/device/v1/devices/add',
+  update: '/device/v1/devices/update',
+  delete: '/device/v1/devices/delete',
+  get: '/device/v1/devices/get',
+  list: '/device/v1/devices/list',
+  status: '/device/v1/devices/status'
 }
 ```
 

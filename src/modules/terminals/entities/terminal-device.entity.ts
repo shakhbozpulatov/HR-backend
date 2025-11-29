@@ -41,6 +41,25 @@ export class TerminalDevice {
   @Column({ type: 'json', nullable: true })
   metadata?: any;
 
+  // HC Cabinet Integration Fields
+  @Column({ nullable: true, unique: true })
+  hc_device_id?: string;
+
+  @Column({ nullable: true })
+  hc_access_level_id?: string;
+
+  @Column({ nullable: true })
+  serial_number?: string;
+
+  @Column({ nullable: true })
+  ip_address?: string;
+
+  @Column({ nullable: true })
+  port?: number;
+
+  @Column({ type: 'boolean', default: false })
+  is_hc_synced: boolean;
+
   @CreateDateColumn()
   created_at: Date;
 

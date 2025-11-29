@@ -6,8 +6,10 @@ import {
   Param,
   Patch,
   UseGuards,
+  Query,
 } from '@nestjs/common';
 import { TerminalsService } from './terminals.service';
+import { TerminalHcIntegrationService } from './services/terminal-hc-integration.service';
 import { AuthGuard } from '@/common/guards/auth.guard';
 import { RolesGuard } from '@/common/guards/roles.guard';
 import { Roles } from '@/common/decorators/roles.decorator';
@@ -19,7 +21,10 @@ import { UpdateTerminalStatusDto } from './dto/update-terminal-status.dto';
 @Controller('terminals')
 @UseGuards(AuthGuard, RolesGuard)
 export class TerminalsController {
-  constructor(private readonly terminalsService: TerminalsService) {}
+  constructor(
+    private readonly terminalsService: TerminalsService,
+    private readonly hcIntegrationService: TerminalHcIntegrationService,
+  ) {}
 
   @Get()
   @Roles(
@@ -76,5 +81,36 @@ export class TerminalsController {
       statusData.status,
       companyId,
     );
+  }
+
+  // HC Cabinet Integration Endpoints
+
+  @Post(':id/sync-status')
+  @Roles(UserRole.SUPER_ADMIN, UserRole.COMPANY_OWNER, UserRole.ADMIN)
+  async syncTerminalStatusWithHC(@Param('id') id: string) {
+    return await this.hcIntegrationService.syncTerminalStatusWithHC(id);
+  }
+
+  @Post(':id/unbind-hc')
+  @Roles(UserRole.SUPER_ADMIN, UserRole.COMPANY_OWNER, UserRole.ADMIN)
+  async unbindTerminalFromHC(@Param('id') id: string) {
+    return await this.hcIntegrationService.unbindTerminalFromHC(id);
+  }
+
+  @Post('sync-all')
+  @Roles(UserRole.SUPER_ADMIN, UserRole.COMPANY_OWNER, UserRole.ADMIN)
+  async syncAllTerminalsWithHC(@CurrentUser() user: any) {
+    const companyId =
+      user.role === UserRole.SUPER_ADMIN ? undefined : user.company_id;
+    return await this.hcIntegrationService.syncAllTerminalsWithHC(companyId);
+  }
+
+  @Get('hc-devices')
+  @Roles(UserRole.SUPER_ADMIN, UserRole.COMPANY_OWNER, UserRole.ADMIN)
+  async listHCDevices(
+    @Query('pageIndex') pageIndex: number = 0,
+    @Query('pageSize') pageSize: number = 100,
+  ) {
+    return await this.hcIntegrationService.listHCDevices(pageIndex, pageSize);
   }
 }
