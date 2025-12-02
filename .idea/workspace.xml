@@ -5,20 +5,8 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="f223feb0-6502-4a9b-9c03-44f93ba47b8c" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/src/modules/hc/Hik_Connect_for_Teams_OpenAPI_Developer_Guide_V2_13_0_20250516.pdf" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/modules/attendance/ATTENDANCE_MODULE.md" beforeDir="false" afterPath="$PROJECT_DIR$/src/modules/attendance/ATTENDANCE_MODULE.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/modules/attendance/services/attendance-events.service.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/modules/attendance/services/attendance-events.service.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/modules/hc/HC_MODULE.md" beforeDir="false" afterPath="$PROJECT_DIR$/src/modules/hc/HC_MODULE.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/modules/hc/config/hc-api.config.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/modules/hc/config/hc-api.config.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/modules/hc/hc.service.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/modules/hc/hc.service.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/modules/hc/interfaces/hc-api.interface.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/modules/hc/interfaces/hc-api.interface.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/modules/terminals/TERMINALS_MODULE.md" beforeDir="false" afterPath="$PROJECT_DIR$/src/modules/terminals/TERMINALS_MODULE.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/modules/terminals/dto/create-terminal.dto.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/modules/terminals/dto/create-terminal.dto.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/modules/terminals/entities/terminal-device.entity.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/modules/terminals/entities/terminal-device.entity.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/modules/terminals/terminals.controller.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/modules/terminals/terminals.controller.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/modules/terminals/terminals.module.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/modules/terminals/terminals.module.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/modules/terminals/terminals.service.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/modules/terminals/terminals.service.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/modules/schedules/schedule-assignments.service.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/modules/schedules/schedule-assignments.service.ts" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -52,9 +40,12 @@
     &quot;ASKED_SHARE_PROJECT_CONFIGURATION_FILES&quot;: &quot;true&quot;,
     &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
     &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252&quot;: &quot;true&quot;,
     &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
+    &quot;com.intellij.ml.llm.matterhorn.ej.ui.settings.DefaultModelSelectionForGA.v1&quot;: &quot;true&quot;,
     &quot;git-widget-placeholder&quot;: &quot;main&quot;,
     &quot;js.linters.configure.manually.selectedeslint&quot;: &quot;true&quot;,
+    &quot;junie.onboarding.icon.badge.shown&quot;: &quot;true&quot;,
     &quot;last_opened_file_path&quot;: &quot;/Users/shaxbozbekpulatov/Documents/Back/HR-back/hr-platform/src/modules/audit&quot;,
     &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
     &quot;node.js.detected.package.standard&quot;: &quot;true&quot;,
@@ -65,6 +56,7 @@
     &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
     &quot;prettierjs.PrettierConfiguration.Package&quot;: &quot;/Users/shaxbozbekpulatov/Documents/Back/HR-back/hr-platform/node_modules/prettier&quot;,
     &quot;settings.editor.selected.configurable&quot;: &quot;terminal&quot;,
+    &quot;to.speed.mode.migration.done&quot;: &quot;true&quot;,
     &quot;ts.external.directory.path&quot;: &quot;/Users/shaxbozbekpulatov/Documents/Back/HR-back/hr-platform/node_modules/typescript/lib&quot;,
     &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
   }
@@ -80,7 +72,7 @@
   <component name="SharedIndexes">
     <attachedChunks>
       <set>
-        <option value="bundled-js-predefined-d6986cc7102b-09060db00ec0-JavaScript-WS-251.29188.1" />
+        <option value="bundled-js-predefined-d6986cc7102b-a71380e98a7c-JavaScript-WS-252.28238.10" />
       </set>
     </attachedChunks>
   </component>
@@ -115,7 +107,10 @@
       <workItem from="1763839647309" duration="11141000" />
       <workItem from="1764159264567" duration="1113000" />
       <workItem from="1764170306313" duration="9199000" />
-      <workItem from="1764434230224" duration="8484000" />
+      <workItem from="1764434230224" duration="8870000" />
+      <workItem from="1764449435717" duration="665000" />
+      <workItem from="1764601764341" duration="620000" />
+      <workItem from="1764670939580" duration="1335000" />
     </task>
     <servers />
   </component>
