@@ -67,18 +67,64 @@ export class ScheduleAssignmentsService {
         );
       }
 
-      // 3️⃣ Aktiv assignmentni topamiz (effective_to = null)
-      // Bir user uchun faqat bitta aktiv template bo'lishi kerak
-      const activeAssignment = await this.assignmentRepository.findOne({
-        where: {
-          user_id: userId,
-          effective_to: IsNull(),
-        },
+      // 3️⃣ Barcha assignmentlarni tekshiramiz - overlap (ustma-ust tushish) bo'lmasligi kerak
+      const allAssignments = await this.assignmentRepository.find({
+        where: { user_id: userId },
         order: { effective_from: 'DESC' },
       });
 
-      // 4️⃣ Agar aktiv assignment bo'lsa, uni yangi assignment boshlanish sanasidan bir kun oldin tugatamiz
-      if (activeAssignment) {
+      // 4️⃣ Overlap validatsiyasi - yangi assignment boshqa assignmentlar bilan ustma-ust tushmayotganini tekshiramiz
+      const newStart = new Date(createAssignmentDto.effective_from);
+      const newEnd = createAssignmentDto.effective_to
+        ? new Date(createAssignmentDto.effective_to)
+        : null; // null = hozircha davom etadi
+
+      for (const existing of allAssignments) {
+        const existingStart = new Date(existing.effective_from);
+        const existingEnd = existing.effective_to
+          ? new Date(existing.effective_to)
+          : null;
+
+        // Agar bir xil effective_from bo'lsa - keyinroq update qilamiz, hozir tekshirmasdan o'tamiz
+        if (
+          existingStart.toISOString().split('T')[0] ===
+          newStart.toISOString().split('T')[0]
+        ) {
+          continue;
+        }
+
+        // Overlap tekshiruvi
+        let hasOverlap = false;
+
+        if (newEnd === null && existingEnd === null) {
+          // Ikkala assignment ham "cheksiz" - har doim overlap
+          hasOverlap = true;
+        } else if (newEnd === null) {
+          // Yangi assignment "cheksiz" - agar mavjud assignment yangi boshlanishdan keyin boshlanmasa overlap
+          hasOverlap = existingEnd === null || existingEnd >= newStart;
+        } else if (existingEnd === null) {
+          // Mavjud assignment "cheksiz" - agar yangi assignment mavjud boshlanishdan oldin tugamasa overlap
+          hasOverlap = newEnd >= existingStart;
+        } else {
+          // Ikkala assignment ham aniq muddatli - standart overlap tekshiruvi
+          hasOverlap = newStart <= existingEnd && newEnd >= existingStart;
+        }
+
+        if (hasOverlap) {
+          throw new BadRequestException(
+            `Bu davr uchun allaqachon assignment mavjud. Mavjud assignment: ${existingStart.toISOString().split('T')[0]} dan ${existingEnd ? existingEnd.toISOString().split('T')[0] : 'hozir'} gacha. Iltimos, boshqa davr tanlang yoki mavjud assignmentni o'zgartiring.`,
+          );
+        }
+      }
+
+      // 5️⃣ Aktiv assignmentni topamiz (effective_to = null)
+      // Agar yangi assignment hozirdan boshlanayotgan bo'lsa, eski aktiv assignmentni tugatamiz
+      const activeAssignment = allAssignments.find(
+        (a) => a.effective_to === null,
+      );
+
+      if (activeAssignment && newEnd === null) {
+        // Agar yangi assignment ham "cheksiz" bo'lsa, eski aktiv assignmentni tugatish kerak
         const dayBeforeNewEffective = new Date(
           createAssignmentDto.effective_from,
         );
@@ -87,7 +133,7 @@ export class ScheduleAssignmentsService {
         await this.assignmentRepository.save(activeAssignment);
       }
 
-      // 5️⃣ Bir xil effective_from bilan assignmentni tekshiramiz
+      // 6️⃣ Bir xil effective_from bilan assignmentni tekshiramiz
       const existingAssignment = await this.assignmentRepository.findOne({
         where: {
           user_id: userId,
@@ -421,13 +467,55 @@ export class ScheduleAssignmentsService {
       );
     }
 
-    // 5️⃣ Eski assignmentni tugatamiz (effective_to ni o'rnatamiz)
+    // 5️⃣ Overlap validatsiyasi - yangi assignment boshqa assignmentlar bilan ustma-ust tushmayotganini tekshiramiz
+    const allAssignments = await this.assignmentRepository.find({
+      where: { user_id: updateTemplateDto.user_id },
+      order: { effective_from: 'DESC' },
+    });
+
+    const newStart = new Date(updateTemplateDto.effective_from);
+    const newEnd = updateTemplateDto.effective_to
+      ? new Date(updateTemplateDto.effective_to)
+      : null;
+
+    for (const existing of allAssignments) {
+      // Skip the current assignment that we're about to close
+      if (existing.assignment_id === currentAssignment.assignment_id) {
+        continue;
+      }
+
+      const existingStart = new Date(existing.effective_from);
+      const existingEnd = existing.effective_to
+        ? new Date(existing.effective_to)
+        : null;
+
+      // Overlap tekshiruvi
+      let hasOverlap = false;
+
+      if (newEnd === null && existingEnd === null) {
+        hasOverlap = true;
+      } else if (newEnd === null) {
+        hasOverlap = existingEnd === null || existingEnd >= newStart;
+      } else if (existingEnd === null) {
+        hasOverlap = newEnd >= existingStart;
+      } else {
+        hasOverlap = newStart <= existingEnd && newEnd >= existingStart;
+      }
+
+      if (hasOverlap) {
+        throw new BadRequestException(
+          `Bu davr uchun allaqachon assignment mavjud. Mavjud assignment: ${existingStart.toISOString().split('T')[0]} dan ${existingEnd ? existingEnd.toISOString().split('T')[0] : 'hozir'} gacha. Iltimos, boshqa davr tanlang yoki mavjud assignmentni o'zgartiring.`,
+        );
+      }
+    }
+
+    // 6️⃣ Eski assignmentni tugatamiz (effective_to ni o'rnatamiz)
     const dayBeforeNewEffective = new Date(updateTemplateDto.effective_from);
     dayBeforeNewEffective.setDate(dayBeforeNewEffective.getDate() - 1);
     currentAssignment.effective_to = dayBeforeNewEffective;
     await this.assignmentRepository.save(currentAssignment);
 
-    // 6️⃣ Yangi assignment yaratamiz
+    // 7️⃣ Yangi assignment yaratamiz
     const newAssignment = this.assignmentRepository.create({
       user_id: updateTemplateDto.user_id,
       default_template_id: updateTemplateDto.new_template_id,
