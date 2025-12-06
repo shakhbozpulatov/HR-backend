@@ -105,22 +105,92 @@ constructor(
 ### 3. Admin Create User (Admin tomonidan foydalanuvchi yaratish)
 **Endpoint**: `POST /auth/create-user`
 **Ruxsatlar**: SUPER_ADMIN, COMPANY_OWNER, ADMIN, HR_MANAGER
+**Content-Type**: `multipart/form-data`
 
 **Xususiyatlari**:
 - Foto yuklash majburiy (5MB gacha, JPG/JPEG/PNG formatda)
 - HC Cabinet bilan integratsiya
 - Background queue orqali foto yuklash
 - Vaqtinchalik parol yaratish
-- Terminal bilan bog'lash imkoniyati
+- Terminal bilan bog'lash imkoniyati (accessLevelIdList orqali)
+
+**Request Format**:
+```
+POST /auth/create-user
+Content-Type: multipart/form-data
+
+photo: [file]
+email: "user@example.com"
+first_name: "John"
+last_name: "Doe"
+groupId: "1"
+gender: 1
+start_date: "2025-01-01"
+role: "EMPLOYEE"
+tariff_type: "MONTHLY"
+monthly_salary: 1000
+accessLevelIdList: ["641639369392200704"]  // JSON array as string
+```
+
+**Important**: `accessLevelIdList` must be sent as a JSON string in multipart form-data requests. The controller automatically parses it.
 
 **Jarayon**:
-1. Foydalanuvchini yaratish huquqi tekshiriladi (PermissionService)
-2. Email unikal ekanligini tekshirish
-3. Vaqtinchalik parol yaratiladi (PasswordService)
-4. HC Cabinet'da foydalanuvchi yaratiladi
-5. Ma'lumotlar bazasiga saqlanadi (status: SYNCED)
-6. Terminal bilan bog'lanadi (agar kerak bo'lsa)
-7. Foto yuklash queue'ga qo'shiladi
+1. **Multipart Form Data Parsing** (`auth.controller.ts:96-119`):
+   - `accessLevelIdList` ni JSON parse qilish (agar string bo'lsa)
+   - Array ekanligini validate qilish
+   - Array elementlarini double-stringification'dan tozalash
+
+2. Foydalanuvchini yaratish huquqi tekshiriladi (PermissionService)
+3. Email unikal ekanligini tekshirish
+4. Vaqtinchalik parol yaratiladi (PasswordService)
+5. HC Cabinet'da foydalanuvchi yaratiladi
+6. Ma'lumotlar bazasiga saqlanadi (status: SYNCED)
+7. **Terminal bilan bog'lanadi** (agar `accessLevelIdList` berilgan bo'lsa):
+   - `HcService.bindUserWithTerminal()` chaqiriladi
+   - User terminallarga kirish huquqini oladi
+8. Foto yuklash queue'ga qo'shiladi
+
+**Multipart Form-Data Parsing Logic**:
+
+Controller level'da automatic parsing (`auth.controller.ts:96-146`):
+```typescript
+// Fix: Parse accessLevelIdList if it's a stringified JSON array
+if (createUserDto.accessLevelIdList &&
+    typeof createUserDto.accessLevelIdList === 'string') {
+  try {
+    createUserDto.accessLevelIdList = JSON.parse(
+      createUserDto.accessLevelIdList as any
+    );
+  } catch (e) {
+    throw new BadRequestException(
+      'accessLevelIdList must be a valid JSON array'
+    );
+  }
+}
+
+// Handle array with stringified values (double stringification)
+if (Array.isArray(createUserDto.accessLevelIdList)) {
+  createUserDto.accessLevelIdList = createUserDto.accessLevelIdList.map(
+    (item) => {
+      if (typeof item === 'string') {
+        try {
+          const parsed = JSON.parse(item);
+          return Array.isArray(parsed) ? parsed[0] : parsed;
+        } catch (e) {
+          return item;
+        }
+      }
+      return item;
+    }
+  );
+}
+```
+
+**Why is this needed?**
+- Multipart form-data can double-stringify JSON arrays
+- Frontend might send: `'["641639369392200704"]'` (string)
+- Or even: `['["641639369392200704"]']` (array with stringified elements)
+- Controller automatically handles both cases
 
 **Javob**:
 ```json
@@ -137,9 +207,44 @@ constructor(
     "status": "QUEUED",
     "jobId": "job-id-123"
   },
-  "hcUser": { ... }
+  "hcUser": {
+    "personId": "HC-PERSON-ID",
+    "personCode": "EMP001"
+  },
+  "syncStatus": "SYNCED"
 }
 ```
+
+**Error Handling**:
+
+Agar terminal binding fail bo'lsa lekin user yaratilgan bo'lsa:
+```json
+{
+  "message": "User created successfully",
+  "user": { ... },
+  "temporary_password": "Temp123!",
+  "warning": "User created but terminal binding failed",
+  "syncStatus": "SYNCED",
+  "hcError": "HC API returned an error",
+  "hcUser": null
+}
+```
+
+**Common Issues and Solutions**:
+
+1. **Terminal Binding Fails (VMS000001 - Value type must be all numbers)**:
+   - **Cause**: `accessLevelIdList` is double-stringified
+   - **Solution**: Controller automatically parses and cleans the array
+   - **Prevention**: Send as JSON string: `'["ID1", "ID2"]'`
+
+2. **Invalid Access Level ID**:
+   - **Cause**: Access level doesn't exist in HC Cabinet
+   - **Solution**: Verify access level IDs in HC Cabinet first
+   - **API**: Check available access levels via HC API
+
+3. **User Created but Not Visible in Terminal**:
+   - **Cause**: Missing `accessLevelIdList` in request
+   - **Solution**: Include access level IDs to bind user to terminals
 
 ### 4. Profile Management
 

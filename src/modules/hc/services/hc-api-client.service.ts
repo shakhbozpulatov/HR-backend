@@ -15,6 +15,7 @@ import {
 @Injectable()
 export class HcApiClient {
   private readonly axiosInstance: AxiosInstance;
+  private readonly MAX_TOKEN_RETRY_ATTEMPTS = 1; // Only retry once to avoid infinite loops
 
   constructor(
     private readonly config: HcApiConfig,
@@ -58,13 +59,64 @@ export class HcApiClient {
       },
     );
 
-    // Response interceptor
+    // Response interceptor - Handle token expiration errors
     this.axiosInstance.interceptors.response.use(
-      (response) => {
+      async (response) => {
         console.log('📥 HC API Response:', {
           status: response.status,
           data: response.data,
         });
+
+        // Check if response contains TOKEN_NOT_FOUND error (OPEN000006)
+        const responseData = response.data;
+        if (
+          responseData.errorCode === 'OPEN000006' &&
+          responseData.message?.includes('TOKEN_NOT_FOUND')
+        ) {
+          // Check retry count to prevent infinite loops
+          const retryCount = (response.config as any)._retryCount || 0;
+
+          if (retryCount >= this.MAX_TOKEN_RETRY_ATTEMPTS) {
+            console.error(
+              '❌ Max token retry attempts reached, failing request',
+            );
+            return Promise.reject(
+              new HttpException(
+                {
+                  message: 'Authentication failed after token refresh',
+                  error: responseData.message,
+                  errorCode: responseData.errorCode,
+                },
+                HttpStatus.UNAUTHORIZED,
+              ),
+            );
+          }
+
+          console.warn(
+            `⚠️ Token expired (OPEN000006), refreshing token... (Attempt ${retryCount + 1}/${this.MAX_TOKEN_RETRY_ATTEMPTS})`,
+          );
+
+          try {
+            // Refresh the access token
+            await this.authService.refreshToken();
+
+            // Get new access token
+            const accessToken = await this.authService.getAccessToken();
+
+            // Update the original request with new token and increment retry count
+            response.config.headers.token = accessToken;
+            (response.config as any)._retryCount = retryCount + 1;
+
+            console.log('🔄 Retrying request with new token...');
+
+            // Retry the original request
+            return this.axiosInstance.request(response.config);
+          } catch (refreshError) {
+            console.error('❌ Failed to refresh token:', refreshError);
+            return Promise.reject(refreshError);
+          }
+        }
+
         return response;
       },
       (error) => {

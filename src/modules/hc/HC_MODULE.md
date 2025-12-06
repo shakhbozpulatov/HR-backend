@@ -348,7 +348,46 @@ async post<T>({
 - Avtomatik authentication
 - Error handling
 - Request/Response logging
-- Retry mechanism (optional)
+- Avtomatik token refresh va retry mechanism
+
+### Automatic Token Refresh Mechanism
+
+**TOKEN_NOT_FOUND (OPEN000006) Error Handling**:
+
+HcApiClient response interceptor avtomatik ravishda token muddati tugagan xatolarni aniqlaydi va qayta ishlaydi:
+
+```typescript
+// Response interceptor
+if (responseData.errorCode === 'OPEN000006' &&
+    responseData.message?.includes('TOKEN_NOT_FOUND')) {
+  // 1. Refresh access token
+  await this.authService.refreshToken();
+
+  // 2. Get new token
+  const accessToken = await this.authService.getAccessToken();
+
+  // 3. Retry original request with new token
+  return this.axiosInstance.request(config);
+}
+```
+
+**Xususiyatlar**:
+- Barcha HC API endpoints uchun avtomatik ishlaydi
+- Failed request avtomatik retry qilinadi
+- Infinite loop'dan himoya (max 1 retry attempt)
+- Retry count tracking orqali boshqariladi
+- Agar retry ham fail bo'lsa, `UNAUTHORIZED (401)` error qaytariladi
+
+**Error Flow**:
+```
+Request → HC API → Error (OPEN000006)
+    ↓
+Token Refresh (HcAuthService.refreshToken())
+    ↓
+Retry Request with New Token
+    ↓
+Success ✅ or Fail (401) after max retries ❌
+```
 
 ### Error Handling
 ```typescript
@@ -486,9 +525,24 @@ const HC_ERROR_CODES = {
   3: 'Duplicate person code',
   4: 'Database error',
   5: 'Photo upload failed',
+  'OPEN000006': 'TOKEN_NOT_FOUND - Token muddati tugagan yoki noto\'g\'ri',
   // ... more error codes
 }
 ```
+
+### Automatic Error Recovery (OPEN000006)
+
+`OPEN000006` (TOKEN_NOT_FOUND) xatoligi uchun avtomatik recovery mexanizmi mavjud:
+
+1. **Detection**: Response interceptor xatolikni aniqlaydi
+2. **Token Refresh**: `HcAuthService.refreshToken()` chaqiriladi
+3. **Retry**: Failed request avtomatik qayta yuboriladi
+4. **Fallback**: Agar retry ham fail bo'lsa, `UNAUTHORIZED (401)` error qaytariladi
+
+**Qo'shimcha sozlamalar**:
+- `MAX_TOKEN_RETRY_ATTEMPTS = 1` - Faqat 1 marta retry qilinadi
+- Retry counter `_retryCount` orqali kuzatiladi
+- Infinite loop xavfi yo'q
 
 ### Error Response
 ```typescript

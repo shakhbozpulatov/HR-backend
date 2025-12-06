@@ -6,7 +6,12 @@
   <component name="ChangeListManager">
     <list default="true" id="f223feb0-6502-4a9b-9c03-44f93ba47b8c" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/modules/schedules/schedule-assignments.service.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/modules/schedules/schedule-assignments.service.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/modules/attendance/dto/webhook-event.dto.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/modules/attendance/dto/webhook-event.dto.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/modules/attendance/services/attendance-events.service.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/modules/attendance/services/attendance-events.service.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/modules/auth/auth.controller.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/modules/auth/auth.controller.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/modules/hc/HC_MODULE.md" beforeDir="false" afterPath="$PROJECT_DIR$/src/modules/hc/HC_MODULE.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/modules/hc/hc.service.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/modules/hc/hc.service.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/modules/hc/services/hc-api-client.service.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/modules/hc/services/hc-api-client.service.ts" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -110,7 +115,9 @@
       <workItem from="1764434230224" duration="8870000" />
       <workItem from="1764449435717" duration="665000" />
       <workItem from="1764601764341" duration="620000" />
-      <workItem from="1764670939580" duration="1335000" />
+      <workItem from="1764670939580" duration="3534000" />
+      <workItem from="1764814068486" duration="1283000" />
+      <workItem from="1765011708425" duration="8083000" />
     </task>
     <servers />
   </component>

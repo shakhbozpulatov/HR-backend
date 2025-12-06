@@ -137,14 +137,37 @@ export class HcService implements IHcService, OnModuleInit {
     };
 
     console.log('🔗 Binding user to terminal:', {
+      endpoint,
       personId,
       accessLevelIdList,
+      fullRequestData: JSON.stringify(requestData, null, 2),
     });
 
-    return this.apiClient.post({
-      endpoint,
-      data: requestData,
-    });
+    try {
+      const response = await this.apiClient.post({
+        endpoint,
+        data: requestData,
+      });
+
+      console.log('✅ Terminal binding successful:', {
+        personId,
+        response: JSON.stringify(response, null, 2),
+      });
+
+      return response;
+    } catch (error) {
+      console.error('❌ Terminal binding failed:', {
+        personId,
+        accessLevelIdList,
+        endpoint,
+        requestData: JSON.stringify(requestData, null, 2),
+        error: error.message,
+        errorResponse: error.response?.data
+          ? JSON.stringify(error.response.data, null, 2)
+          : 'No response data',
+      });
+      throw error;
+    }
   }
 
   /**

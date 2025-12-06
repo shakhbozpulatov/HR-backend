@@ -675,6 +675,192 @@ HC Cabinet'dan `searchCertificateRecords` API orqali ma'lumotlarni olish
 7. **Leave Integration**: Absence management
 8. **Notification System**: Late arrival alerts
 
+## Timestamp Handling and Timezone Management
+
+### Overview
+Attendance module handles timestamps from HC Cabinet API with proper timezone conversion to ensure accurate local time representation.
+
+### Timestamp Fields in AttendanceEvent
+```typescript
+{
+  ts_utc: Date        // Event time in UTC (from HC API)
+  ts_local: Date      // Event time in local timezone (Asia/Tashkent)
+  source_payload: any // Raw HC API response (includes deviceTime)
+}
+```
+
+### Timestamp Sources
+
+#### 1. **deviceTime** (Primary Source - Most Accurate)
+HC Cabinet returns multiple timestamp fields, but `deviceTime` is the most accurate:
+
+```json
+{
+  "occurTime": "2025-12-06T11:23:35Z",        // ❌ UTC time (not accurate)
+  "deviceTime": "2025-12-06T16:23:35+05:00",  // ✅ Device local time with timezone
+  "recordTime": "2025-12-06T11:22:20Z"        // ❌ Processing time (not actual event time)
+}
+```
+
+**Why deviceTime?**
+- Contains actual device timezone offset (`+05:00` for Tashkent)
+- Reflects the real time when event occurred at the terminal
+- More accurate than `occurTime` which is converted to UTC
+
+#### 2. Webhook Event Processing
+
+When processing webhook events, the service prioritizes `deviceTime`:
+
+```typescript
+// attendance-events.service.ts:256-273
+const deviceTime = eventData.metadata?.deviceTime || eventData.timestamp;
+
+const timezone = eventData.timezone ||
+  this.configService.get('DEFAULT_TIMEZONE', 'Asia/Tashkent');
+
+// Parse deviceTime - it already contains timezone offset (+05:00)
+const tsUtc = moment.utc(deviceTime).toDate();
+const tsLocal = moment.tz(deviceTime, timezone).toDate();
+
+this.logger.debug('Timestamp parsing:', {
+  deviceTime,
+  timestamp: eventData.timestamp,
+  tsUtc: tsUtc.toISOString(),
+  tsLocal: tsLocal.toISOString(),
+  timezone,
+});
+```
+
+**Flow**:
+1. Extract `deviceTime` from `metadata` (if available)
+2. Fallback to `timestamp` if `deviceTime` not present
+3. Parse to UTC and local timezone
+4. Store both in database
+5. Log for debugging
+
+### API Response Format
+
+#### GET /attendance/events/user/:userId
+
+Returns events with properly formatted timestamps:
+
+```json
+{
+  "userId": "652589467101967360",
+  "userName": "John Doe",
+  "attendance": [
+    {
+      "eventId": "uuid",
+      "eventType": "CLOCK_IN",
+      "timestamp": "2025-12-06T11:23:35.000Z",        // UTC time
+      "timestampLocal": "2025-12-06T16:23:35.000+05:00"  // Local time with timezone
+    }
+  ]
+}
+```
+
+**Implementation** (`attendance-events.service.ts:827-829`):
+```typescript
+timestampLocal: moment(event.ts_local)
+  .tz('Asia/Tashkent')
+  .format('YYYY-MM-DDTHH:mm:ss.SSSZ')
+```
+
+### Timezone Configuration
+
+Default timezone is configurable via environment variables:
+
+```env
+DEFAULT_TIMEZONE=Asia/Tashkent  # UTC+5
+```
+
+Supported timezone operations:
+- Event parsing (from HC deviceTime)
+- Event grouping by date
+- Response formatting
+- Excel report generation
+
+### Common Pitfalls and Solutions
+
+#### Problem 1: Wrong Local Time in Response
+**Symptom**: `timestampLocal` shows UTC time instead of local time
+
+**Cause**: Using `.toISOString()` which always returns UTC format
+
+**Solution**: Use `moment.tz().format()` with timezone:
+```typescript
+// ❌ Wrong
+timestampLocal: event.ts_local.toISOString()  // Returns UTC format
+
+// ✅ Correct
+timestampLocal: moment(event.ts_local)
+  .tz('Asia/Tashkent')
+  .format('YYYY-MM-DDTHH:mm:ss.SSSZ')
+```
+
+#### Problem 2: Date Grouping Issues
+**Symptom**: Events grouped incorrectly across midnight
+
+**Solution**: Convert to local timezone before date extraction:
+```typescript
+const dateStr = moment
+  .utc(event.created_at)
+  .utcOffset(5)  // +5 hours for Tashkent
+  .format('YYYY-MM-DD');
+```
+
+#### Problem 3: Missing deviceTime in Webhook
+**Symptom**: Webhook doesn't include `deviceTime` in metadata
+
+**Solution**: Ensure webhook payload includes full HC response:
+```typescript
+// webhook-event.dto.ts:40-41
+metadata?: {
+  deviceTime?: string;  // Device local time
+  [key: string]: any;   // Allow all HC fields
+}
+```
+
+### Testing Timestamp Handling
+
+#### Example Test Case:
+```typescript
+// Event occurs at 16:23 local time (Tashkent)
+const hcEvent = {
+  occurTime: "2025-12-06T11:23:35Z",        // UTC representation
+  deviceTime: "2025-12-06T16:23:35+05:00",  // Local with timezone
+};
+
+// After processing:
+expect(savedEvent.ts_utc).toEqual(new Date("2025-12-06T11:23:35.000Z"));
+expect(savedEvent.ts_local).toEqual(new Date("2025-12-06T16:23:35.000Z"));
+
+// In API response:
+expect(response.timestampLocal).toBe("2025-12-06T16:23:35.000+05:00");
+```
+
+### Debugging Timestamp Issues
+
+Enable debug logging to track timestamp conversions:
+
+```typescript
+this.logger.debug('Timestamp parsing:', {
+  deviceTime,          // Input from HC
+  timestamp,           // Fallback timestamp
+  tsUtc: tsUtc.toISOString(),     // Stored UTC
+  tsLocal: tsLocal.toISOString(), // Stored local
+  timezone,            // Timezone used
+});
+```
+
+### Best Practices
+
+1. **Always use deviceTime** when available from HC API
+2. **Store both UTC and local** timestamps in database
+3. **Format responses** with timezone offset for clarity
+4. **Test edge cases**: midnight transitions, DST changes
+5. **Log timestamp conversions** for debugging
+
 ## Dependencies
 
 ### Internal
@@ -687,7 +873,7 @@ HC Cabinet'dan `searchCertificateRecords` API orqali ma'lumotlarni olish
 ### External
 - TypeORM
 - Bull (queue)
-- moment-timezone
+- moment-timezone (timestamp handling)
 - ExcelJS (reporting)
 
 ## Environment Variables
@@ -695,4 +881,5 @@ HC Cabinet'dan `searchCertificateRecords` API orqali ma'lumotlarni olish
 WEBHOOK_SECRET=your-webhook-secret
 ATTENDANCE_QUEUE_CONCURRENCY=5
 HC_POLL_INTERVAL=60000
+DEFAULT_TIMEZONE=Asia/Tashkent
 ```

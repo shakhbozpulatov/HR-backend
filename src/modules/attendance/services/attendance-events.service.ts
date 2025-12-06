@@ -253,11 +253,24 @@ export class AttendanceEventsService {
     }
 
     // 4. Parse timestamps with timezone handling
+    // Use deviceTime from metadata if available (most accurate), otherwise fall back to timestamp
+    const deviceTime = eventData.metadata?.deviceTime || eventData.timestamp;
+
     const timezone =
       eventData.timezone ||
       this.configService.get('DEFAULT_TIMEZONE', 'Asia/Tashkent');
-    const tsUtc = moment.utc(eventData.timestamp).toDate();
-    const tsLocal = moment.tz(eventData.timestamp, timezone).toDate();
+
+    // Parse deviceTime - it already contains timezone offset (+05:00)
+    const tsUtc = moment.utc(deviceTime).toDate();
+    const tsLocal = moment.tz(deviceTime, timezone).toDate();
+
+    this.logger.debug('Timestamp parsing:', {
+      deviceTime,
+      timestamp: eventData.timestamp,
+      tsUtc: tsUtc.toISOString(),
+      tsLocal: tsLocal.toISOString(),
+      timezone,
+    });
 
     // 5. Create event with transaction
     const queryRunner = this.dataSource.createQueryRunner();
@@ -810,7 +823,10 @@ export class AttendanceEventsService {
         ? 'CLOCK_IN'
         : 'CLOCK_OUT') as 'CLOCK_IN' | 'CLOCK_OUT',
       timestamp: event.ts_utc.toISOString(),
-      timestampLocal: event.ts_local.toISOString(),
+      // Format local time as ISO but in local timezone (without 'Z' suffix)
+      timestampLocal: moment(event.ts_local)
+        .tz('Asia/Tashkent')
+        .format('YYYY-MM-DDTHH:mm:ss.SSSZ'),
     }));
 
     return {

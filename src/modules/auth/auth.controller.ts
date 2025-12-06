@@ -93,6 +93,58 @@ export class AuthController {
       throw new BadRequestException('User photo is required');
     }
 
+    // Debug: Log raw accessLevelIdList before parsing
+    console.log('🔍 DEBUG - Raw accessLevelIdList:', {
+      value: createUserDto.accessLevelIdList,
+      type: typeof createUserDto.accessLevelIdList,
+      isArray: Array.isArray(createUserDto.accessLevelIdList),
+    });
+
+    // Fix: Parse accessLevelIdList if it's a stringified JSON array
+    // This happens when using multipart/form-data
+    if (createUserDto.accessLevelIdList) {
+      // Handle if it's a string
+      if (typeof createUserDto.accessLevelIdList === 'string') {
+        try {
+          createUserDto.accessLevelIdList = JSON.parse(
+            createUserDto.accessLevelIdList as any,
+          );
+          console.log('✅ Parsed string accessLevelIdList:', createUserDto.accessLevelIdList);
+        } catch (e) {
+          throw new BadRequestException(
+            'accessLevelIdList must be a valid JSON array',
+          );
+        }
+      }
+
+      // Handle if it's already an array but contains stringified values
+      if (Array.isArray(createUserDto.accessLevelIdList)) {
+        createUserDto.accessLevelIdList = createUserDto.accessLevelIdList.map(
+          (item) => {
+            if (typeof item === 'string') {
+              try {
+                // Try to parse if it's a stringified array
+                const parsed = JSON.parse(item);
+                // If parsed result is an array, return its first element
+                // Otherwise return the parsed value
+                return Array.isArray(parsed) ? parsed[0] : parsed;
+              } catch (e) {
+                // If parsing fails, return the original item
+                return item;
+              }
+            }
+            return item;
+          },
+        );
+        console.log('✅ Cleaned array accessLevelIdList:', createUserDto.accessLevelIdList);
+      }
+
+      // Final validation: ensure it's an array
+      if (!Array.isArray(createUserDto.accessLevelIdList)) {
+        throw new BadRequestException('accessLevelIdList must be an array');
+      }
+    }
+
     const result = await this.authService.createUserByAdmin(
       createUserDto,
       req.user.user_id,
