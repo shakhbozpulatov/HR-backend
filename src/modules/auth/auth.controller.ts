@@ -12,6 +12,8 @@ import {
   UseInterceptors,
   UploadedFile,
   BadRequestException,
+  UsePipes,
+  ValidationPipe,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { AuthService } from './auth.service';
@@ -84,14 +86,34 @@ export class AuthController {
   )
   @HttpCode(HttpStatus.CREATED)
   async createUserByAdmin(
-    @Body() createUserDto: AdminCreateUserDto,
+    @Body(
+      new ValidationPipe({
+        whitelist: true,
+        forbidNonWhitelisted: false,
+        skipMissingProperties: true, // Skip validation for missing properties
+        transform: true,
+        transformOptions: {
+          enableImplicitConversion: true,
+        },
+      }),
+    )
+    createUserDto: AdminCreateUserDto,
     @UploadedFile() photo: Express.Multer.File,
     @Req() req,
   ) {
+    // Debug: Log incoming DTO before processing
+    console.log('🔍 DEBUG - Incoming DTO:', createUserDto);
+    console.log('🔍 DEBUG - Has gender?', 'gender' in createUserDto);
+    console.log('🔍 DEBUG - Has groupId?', 'groupId' in createUserDto);
+
     // Validate photo is provided (mandatory)
     if (!photo) {
       throw new BadRequestException('User photo is required');
     }
+
+    // Remove gender and groupId from DTO (hard-coded in service)
+    delete (createUserDto as any).gender;
+    delete (createUserDto as any).groupId;
 
     // Debug: Log raw accessLevelIdList before parsing
     console.log('🔍 DEBUG - Raw accessLevelIdList:', {
@@ -109,7 +131,10 @@ export class AuthController {
           createUserDto.accessLevelIdList = JSON.parse(
             createUserDto.accessLevelIdList as any,
           );
-          console.log('✅ Parsed string accessLevelIdList:', createUserDto.accessLevelIdList);
+          console.log(
+            '✅ Parsed string accessLevelIdList:',
+            createUserDto.accessLevelIdList,
+          );
         } catch (e) {
           throw new BadRequestException(
             'accessLevelIdList must be a valid JSON array',
@@ -136,7 +161,10 @@ export class AuthController {
             return item;
           },
         );
-        console.log('✅ Cleaned array accessLevelIdList:', createUserDto.accessLevelIdList);
+        console.log(
+          '✅ Cleaned array accessLevelIdList:',
+          createUserDto.accessLevelIdList,
+        );
       }
 
       // Final validation: ensure it's an array

@@ -344,11 +344,11 @@ export class AuthService {
 
           // Build HC user data - only include fields with values
           const hcResyncData: any = {
-            groupId: createUserDto.groupId || '1',
+            groupId: '1',
             personCode: hcPersonCode,
             firstName: createUserDto.first_name,
             lastName: createUserDto.last_name,
-            gender: createUserDto.gender,
+            gender: 2,
             startDate: createUserDto.start_date,
           };
 
@@ -511,11 +511,11 @@ export class AuthService {
       // First, create user in HC system (atomic operation)
       const hcPersonCode = this.cryptoUtils.generateHcPersonId();
       const hcUserData: any = {
-        groupId: createUserDto.groupId || '1',
+        groupId: '1',
         personCode: hcPersonCode,
         firstName: createUserDto.first_name,
         lastName: createUserDto.last_name,
-        gender: createUserDto.gender,
+        gender: 2,
         startDate: createUserDto.start_date,
       };
 

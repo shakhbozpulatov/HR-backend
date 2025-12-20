@@ -10,9 +10,17 @@ import {
   IsUUID,
   ValidateIf,
 } from 'class-validator';
+import { Exclude } from 'class-transformer';
 import { TariffType, UserRole } from '@/modules/users/entities/user.entity';
 
 export class AdminCreateUserDto {
+  // Explicitly exclude these fields - they are hard-coded in the service
+  @Exclude()
+  gender?: any;
+
+  @Exclude()
+  groupId?: any;
+
   @IsEnum(UserRole, { message: 'Invalid user role' })
   role: UserRole;
 
@@ -28,12 +36,6 @@ export class AdminCreateUserDto {
 
   @IsString()
   last_name: string;
-
-  @IsString()
-  groupId: string;
-
-  @IsNumber()
-  gender: number;
 
   @IsOptional()
   @IsArray()
