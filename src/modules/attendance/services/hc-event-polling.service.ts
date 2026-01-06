@@ -286,6 +286,7 @@ export class HcEventPollingService implements OnModuleInit, OnModuleDestroy {
       );
 
       let savedCount = 0;
+      const savedEvents: any[] = [];
 
       // Process each event
       for (const event of events) {
@@ -358,6 +359,24 @@ export class HcEventPollingService implements OnModuleInit, OnModuleDestroy {
             `✅ Saved event ${savedEvent.event_id} for user ${savedEvent.user_id} (${savedEvent.event_type})`,
           );
 
+          // Collect saved event info for Telegram notification
+          const firstName = matchingRecord.personInfo.baseInfo?.firstName || '';
+          const lastName = matchingRecord.personInfo.baseInfo?.lastName || '';
+          const fullName =
+            `${firstName} ${lastName}`.trim() || 'Unknown Employee';
+
+          savedEvents.push({
+            eventId: savedEvent.event_id,
+            userId: matchingRecord.personInfo.id,
+            userName: fullName,
+            eventType: savedEvent.event_type,
+            deviceId: matchingRecord.deviceId,
+            deviceName:
+              event.basicInfo?.resourceInfo?.deviceInfo?.name || 'Unknown',
+            occurTime: matchingRecord.occurTime,
+            deviceTime: matchingRecord.deviceTime,
+          });
+
           savedCount++;
         } catch (error) {
           await queryRunner.rollbackTransaction();
@@ -372,12 +391,85 @@ export class HcEventPollingService implements OnModuleInit, OnModuleDestroy {
       this.logger.log(
         `✅ Batch processing complete: ${savedCount}/${events.length} events saved`,
       );
+
+      // Send detailed Telegram notification with employee info
+      if (savedCount > 0) {
+        await this.sendDetailedEventNotification(
+          batchId,
+          savedEvents,
+          savedCount,
+          events.length,
+        );
+      }
     } catch (error) {
       this.logger.error(
         `❌ Failed to process events: ${error.message}`,
         error.stack,
       );
       throw error;
+    }
+  }
+
+  /**
+   * Send detailed event notification to Telegram
+   * Shows employee names, times, and event types
+   */
+  private async sendDetailedEventNotification(
+    batchId: string,
+    savedEvents: any[],
+    savedCount: number,
+    totalEvents: number,
+  ): Promise<void> {
+    try {
+      // Format employee attendance details
+      const employeeDetails = savedEvents
+        .map((event, index) => {
+          const eventIcon =
+            event.eventType === EventType.CLOCK_IN ? '🟢' : '🔴';
+          const eventTypeText =
+            event.eventType === EventType.CLOCK_IN ? 'KIRISH' : 'CHIQISH';
+
+          // Format times in Tashkent timezone
+          const occurTimeFormatted = new Date(event.occurTime).toLocaleString(
+            'uz-UZ',
+            {
+              timeZone: 'Asia/Tashkent',
+              year: 'numeric',
+              month: '2-digit',
+              day: '2-digit',
+              hour: '2-digit',
+              minute: '2-digit',
+              second: '2-digit',
+            },
+          );
+
+          return `${index + 1}. ${eventIcon} <b>${event.userName}</b>
+   ├ Turi: <b>${eventTypeText}</b>
+   ├ User ID: <code>${event.userId}</code>
+   ├ Vaqt: ${occurTimeFormatted}
+   └ Qurilma: ${event.deviceName}`;
+        })
+        .join('\n\n');
+
+      const timestamp = new Date().toLocaleString('uz-UZ', {
+        timeZone: 'Asia/Tashkent',
+      });
+
+      const message = `🟢 <b>XODIMLAR KIRISH/CHIQISH</b>
+⏰ ${timestamp}
+
+${employeeDetails}
+
+━━━━━━━━━━━━━━━━━━━━━
+<b>Batch ID:</b> <code>${batchId}</code>
+<b>Saqlandi:</b> ${savedCount}/${totalEvents}
+<b>Holat:</b> ✅ Muvaffaqiyatli`;
+
+      await this.telegramService.sendRawHtml(message);
+    } catch (error) {
+      this.logger.error(
+        `Failed to send detailed notification: ${error.message}`,
+      );
     }
   }
 

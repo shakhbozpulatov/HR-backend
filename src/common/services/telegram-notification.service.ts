@@ -215,6 +215,16 @@ export class TelegramNotificationService {
   }
 
   /**
+   * Send raw HTML message to Telegram
+   * Useful for custom formatted messages
+   */
+  async sendRawHtml(html: string): Promise<void> {
+    if (!this.enabled) return;
+
+    await this.sendMessage(html);
+  }
+
+  /**
    * Check if notifications are enabled
    */
   isEnabled(): boolean {
