@@ -1,9 +1,19 @@
-import { Injectable, Logger, OnModuleInit, OnModuleDestroy } from '@nestjs/common';
+import {
+  Injectable,
+  Logger,
+  OnModuleInit,
+  OnModuleDestroy,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, Repository } from 'typeorm';
 import { HcService } from '@/modules/hc/hc.service';
 import { TelegramNotificationService } from '@/common/services/telegram-notification.service';
-import { AttendanceEvent, EventSource, EventType, ProcessingStatus } from '../entities/attendance-event.entity';
+import {
+  AttendanceEvent,
+  EventSource,
+  EventType,
+  ProcessingStatus,
+} from '../entities/attendance-event.entity';
 
 /**
  * HC Event Polling Service
@@ -121,13 +131,13 @@ export class HcEventPollingService implements OnModuleInit, OnModuleDestroy {
       );
 
       // Check if we have events
-      if (!response.data?.alarmMsg || response.data.alarmMsg.length === 0) {
+      if (!response.data?.events || response.data.events.length === 0) {
         // No events, continue polling silently
         return;
       }
 
       const batchId = response.data.batchId;
-      const events = response.data.alarmMsg;
+      const events = response.data.events;
 
       this.logger.log(
         `📨 Received ${events.length} events from HC (batchId: ${batchId})`,
@@ -137,8 +147,7 @@ export class HcEventPollingService implements OnModuleInit, OnModuleDestroy {
       await this.telegramService.sendInfo('Events Received from HC', {
         'Batch ID': batchId,
         'Events Count': events.length,
-        'First Event Type':
-          events[0]?.basicInfo?.eventType || 'Unknown',
+        'First Event Type': events[0]?.basicInfo?.eventType || 'Unknown',
         'Device ID':
           events[0]?.basicInfo?.resourceInfo?.deviceInfo?.id || 'Unknown',
       });
@@ -158,7 +167,8 @@ export class HcEventPollingService implements OnModuleInit, OnModuleDestroy {
       });
     } catch (error) {
       // Check if error is OPEN000016 (subscription required)
-      const errorResponse = typeof error.getResponse === 'function' ? error.getResponse() : error;
+      const errorResponse =
+        typeof error.getResponse === 'function' ? error.getResponse() : error;
 
       const isOpen000016Error =
         errorResponse?.errorCode === 'OPEN000016' ||
@@ -241,17 +251,16 @@ export class HcEventPollingService implements OnModuleInit, OnModuleDestroy {
 
   /**
    * Process events and save to database
-   * Reuses logic from writeEvent method
+   * Loops through all events and saves to DB
    */
-  private async processAndSaveEvents(events: any[], batchId: string): Promise<void> {
-    const queryRunner = this.dataSource.createQueryRunner();
-    await queryRunner.connect();
-    await queryRunner.startTransaction();
-
+  private async processAndSaveEvents(
+    events: any[],
+    batchId: string,
+  ): Promise<void> {
     try {
-      // Get time range for certificate records
+      // Get time range for certificate records (last 10 seconds)
       const endTime = new Date().toISOString();
-      const beginTime = new Date(Date.now() - 3 * 1000).toISOString();
+      const beginTime = new Date(Date.now() - 10 * 1000).toISOString();
 
       // Fetch certificate records from HC
       const hcRecords = await this.hcService.searchCertificateRecords({
@@ -264,69 +273,111 @@ export class HcEventPollingService implements OnModuleInit, OnModuleDestroy {
       });
 
       // Validate we have records
-      if (!hcRecords.data?.recordList || hcRecords.data.recordList.length === 0) {
-        this.logger.debug('No certificate records found from HC service');
-        await queryRunner.commitTransaction();
+      if (
+        !hcRecords.data?.recordList ||
+        hcRecords.data.recordList.length === 0
+      ) {
+        this.logger.warn('No certificate records found from HC service');
         return;
       }
-
-      this.logger.log(`📋 Fetched ${hcRecords.data.recordList.length} certificate records from HC`);
-
-      const firstEvent = events[0];
-      const firstRecord = hcRecords.data.recordList[0];
-
-      // Validate required data exists
-      if (!firstEvent?.basicInfo?.resourceInfo?.deviceInfo?.id) {
-        this.logger.warn('Invalid event structure from HC - skipping');
-        await queryRunner.commitTransaction();
-        return;
-      }
-
-      if (!firstRecord?.deviceId || !firstRecord?.personInfo?.id) {
-        this.logger.warn('Invalid record structure from HC - skipping');
-        await queryRunner.commitTransaction();
-        return;
-      }
-
-      // Check if device IDs match
-      if (firstEvent.basicInfo.resourceInfo.deviceInfo.id !== firstRecord.deviceId) {
-        this.logger.warn(
-          `Device ID mismatch: Event device ${firstEvent.basicInfo.resourceInfo.deviceInfo.id} vs Record device ${firstRecord.deviceId}`,
-        );
-        await queryRunner.commitTransaction();
-        return;
-      }
-
-      // Create attendance event
-      const attendanceEvent = this.attendanceEventRepository.create({
-        user_id: firstRecord.personInfo.id,
-        device_id: firstRecord.deviceId,
-        event_type:
-          firstRecord.attendanceStatus === 1
-            ? EventType.CLOCK_IN
-            : EventType.CLOCK_OUT,
-        event_source: EventSource.BIOMETRIC_DEVICE,
-        ts_utc: new Date(firstRecord.occurTime),
-        ts_local: new Date(firstRecord.deviceTime),
-        source_payload: firstRecord,
-        signature_valid: true,
-        processing_status: ProcessingStatus.PENDING,
-      });
-
-      // Save within transaction
-      const savedEvent = await queryRunner.manager.save(attendanceEvent);
-
-      await queryRunner.commitTransaction();
 
       this.logger.log(
-        `✅ Successfully saved attendance event ${savedEvent.event_id} for user ${savedEvent.user_id}`,
+        `📋 Fetched ${hcRecords.data.recordList.length} certificate records from HC`,
+      );
+
+      let savedCount = 0;
+
+      // Process each event
+      for (const event of events) {
+        const queryRunner = this.dataSource.createQueryRunner();
+        await queryRunner.connect();
+        await queryRunner.startTransaction();
+
+        try {
+          // Validate event structure
+          if (!event?.basicInfo?.resourceInfo?.deviceInfo?.id) {
+            this.logger.warn(
+              `Invalid event structure - eventId: ${event.eventId}`,
+            );
+            await queryRunner.rollbackTransaction();
+            await queryRunner.release();
+            continue;
+          }
+
+          const deviceId = event.basicInfo.resourceInfo.deviceInfo.id;
+
+          // Find matching certificate record for this event
+          const matchingRecord = hcRecords.data.recordList.find(
+            (record) => record.deviceId === deviceId,
+          );
+
+          if (!matchingRecord) {
+            this.logger.warn(
+              `No matching certificate record for device ${deviceId}`,
+            );
+            await queryRunner.rollbackTransaction();
+            await queryRunner.release();
+            continue;
+          }
+
+          // Validate record has user info
+          if (!matchingRecord.personInfo?.id) {
+            this.logger.warn(
+              `Certificate record missing personInfo for device ${deviceId}`,
+            );
+            await queryRunner.rollbackTransaction();
+            await queryRunner.release();
+            continue;
+          }
+
+          // Create attendance event
+          const attendanceEvent = this.attendanceEventRepository.create({
+            user_id: matchingRecord.personInfo.id,
+            device_id: matchingRecord.deviceId,
+            event_type:
+              matchingRecord.attendanceStatus === 1
+                ? EventType.CLOCK_IN
+                : EventType.CLOCK_OUT,
+            event_source: EventSource.BIOMETRIC_DEVICE,
+            ts_utc: new Date(matchingRecord.occurTime),
+            ts_local: new Date(matchingRecord.deviceTime),
+            source_payload: {
+              event: event,
+              certificateRecord: matchingRecord,
+            },
+            signature_valid: true,
+            processing_status: ProcessingStatus.PENDING,
+          });
+
+          // Save within transaction
+          const savedEvent = await queryRunner.manager.save(attendanceEvent);
+
+          await queryRunner.commitTransaction();
+
+          this.logger.log(
+            `✅ Saved event ${savedEvent.event_id} for user ${savedEvent.user_id} (${savedEvent.event_type})`,
+          );
+
+          savedCount++;
+        } catch (error) {
+          await queryRunner.rollbackTransaction();
+          this.logger.error(
+            `Failed to save event ${event.eventId}: ${error.message}`,
+          );
+        } finally {
+          await queryRunner.release();
+        }
+      }
+
+      this.logger.log(
+        `✅ Batch processing complete: ${savedCount}/${events.length} events saved`,
       );
     } catch (error) {
-      await queryRunner.rollbackTransaction();
-      this.logger.error(`❌ Failed to process and save events: ${error.message}`, error.stack);
+      this.logger.error(
+        `❌ Failed to process events: ${error.message}`,
+        error.stack,
+      );
       throw error;
-    } finally {
-      await queryRunner.release();
     }
   }
 
