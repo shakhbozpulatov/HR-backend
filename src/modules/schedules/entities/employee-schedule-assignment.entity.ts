@@ -77,7 +77,9 @@ export class UserScheduleAssignment {
   user: User;
 
   /** Shablon bilan bog'lanish (relationship) - qaysi jadval shabloni ishlatilayotgani */
-  @ManyToOne(() => ScheduleTemplate, (template) => template.assignments)
+  @ManyToOne(() => ScheduleTemplate, (template) => template.assignments, {
+    onDelete: 'CASCADE',
+  })
   @JoinColumn({ name: 'default_template_id' })
   default_template: ScheduleTemplate;
 }

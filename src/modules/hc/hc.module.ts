@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { ScheduleModule } from '@nestjs/schedule';
 import { HcService } from './hc.service';
 import { HcApiClient } from './services/hc-api-client.service';
 import { HcAuthService } from './services/hc-auth.service';
@@ -9,6 +10,7 @@ import { HcApiConfig } from './config/hc-api.config';
  * Provides all HC-related services following SOLID principles
  */
 @Module({
+  imports: [ScheduleModule.forRoot()],
   providers: [
     HcApiConfig, // Configuration service
     HcAuthService, // Authentication service (token management)

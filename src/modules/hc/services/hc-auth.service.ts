@@ -1,4 +1,5 @@
-import { Injectable, Logger, HttpException, HttpStatus } from '@nestjs/common';
+import { Injectable, Logger, HttpException, HttpStatus, OnModuleInit } from '@nestjs/common';
+import { Cron, CronExpression } from '@nestjs/schedule';
 import axios, { AxiosInstance } from 'axios';
 import {
   HcTokenRequest,
@@ -13,13 +14,15 @@ import {
  * - Fetches access token from HC API
  * - Caches token in memory
  * - Auto-refreshes token before expiration
+ * - Proactively refreshes token every 6 hours if less than 24 hours remain
  */
 @Injectable()
-export class HcAuthService {
+export class HcAuthService implements OnModuleInit {
   private readonly logger = new Logger(HcAuthService.name);
   private tokenData: HcTokenData | null = null;
   private readonly axiosInstance: AxiosInstance;
   private readonly TOKEN_REFRESH_BUFFER = 5 * 60 * 1000; // Refresh 5 minutes before expiry
+  private readonly PROACTIVE_REFRESH_THRESHOLD = 24 * 60 * 60 * 1000; // Refresh if less than 24 hours remain
 
   constructor() {
     const baseUrl = process.env.HC_API_URL || '';
@@ -183,5 +186,71 @@ export class HcAuthService {
   clearToken(): void {
     this.logger.log('Clearing cached HC access token');
     this.tokenData = null;
+  }
+
+  /**
+   * Initialize token on module startup
+   */
+  async onModuleInit() {
+    this.logger.log('Initializing HC Auth Service - fetching initial token');
+    try {
+      await this.getAccessToken();
+      this.logger.log('Initial HC token fetched successfully');
+    } catch (error) {
+      this.logger.error('Failed to fetch initial HC token', {
+        error: error.message,
+      });
+    }
+  }
+
+  /**
+   * Proactive token refresh cron job
+   * Runs every 6 hours to check if token needs refreshing
+   * Refreshes if less than 24 hours remain until expiration
+   */
+  @Cron(CronExpression.EVERY_6_HOURS)
+  async handleProactiveTokenRefresh() {
+    this.logger.debug('Running proactive token refresh check');
+
+    if (!this.tokenData) {
+      this.logger.warn('No token data available, fetching new token');
+      try {
+        await this.getAccessToken();
+      } catch (error) {
+        this.logger.error('Failed to fetch token during proactive refresh', {
+          error: error.message,
+        });
+      }
+      return;
+    }
+
+    const now = Date.now();
+    const timeUntilExpiry = this.tokenData.expiresAt - now;
+    const hoursUntilExpiry = timeUntilExpiry / (60 * 60 * 1000);
+
+    this.logger.debug('Token status check', {
+      expiresAt: new Date(this.tokenData.expiresAt).toISOString(),
+      hoursUntilExpiry: hoursUntilExpiry.toFixed(2),
+      willRefresh: timeUntilExpiry < this.PROACTIVE_REFRESH_THRESHOLD,
+    });
+
+    // Refresh if less than 24 hours remain
+    if (timeUntilExpiry < this.PROACTIVE_REFRESH_THRESHOLD) {
+      this.logger.log(
+        `🔄 Proactively refreshing HC token (${hoursUntilExpiry.toFixed(2)} hours remaining)`,
+      );
+      try {
+        await this.refreshToken();
+        this.logger.log('✅ HC token successfully refreshed proactively');
+      } catch (error) {
+        this.logger.error('❌ Failed to proactively refresh HC token', {
+          error: error.message,
+        });
+      }
+    } else {
+      this.logger.debug(
+        `Token still valid (${hoursUntilExpiry.toFixed(2)} hours remaining)`,
+      );
+    }
   }
 }

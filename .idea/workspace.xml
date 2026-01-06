@@ -5,10 +5,13 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="f223feb0-6502-4a9b-9c03-44f93ba47b8c" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/.env.example" beforeDir="false" afterPath="$PROJECT_DIR$/.env.example" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/modules/auth/auth.controller.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/modules/auth/auth.controller.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/modules/auth/auth.service.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/modules/auth/auth.service.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/modules/auth/dto/admin-create-user.dto.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/modules/auth/dto/admin-create-user.dto.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/modules/attendance/attendance.module.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/modules/attendance/attendance.module.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/modules/attendance/controllers/attendance-events.controller.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/modules/attendance/controllers/attendance-events.controller.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/modules/hc/hc.module.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/modules/hc/hc.module.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/modules/hc/services/hc-auth.service.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/modules/hc/services/hc-auth.service.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/modules/schedules/entities/employee-schedule-assignment.entity.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/modules/schedules/entities/employee-schedule-assignment.entity.ts" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -61,6 +64,11 @@
     &quot;to.speed.mode.migration.done&quot;: &quot;true&quot;,
     &quot;ts.external.directory.path&quot;: &quot;/Users/shaxbozbekpulatov/Documents/Back/HR-back/hr-platform/node_modules/typescript/lib&quot;,
     &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
+  },
+  &quot;keyToStringList&quot;: {
+    &quot;DatabaseDriversLRU&quot;: [
+      &quot;postgresql&quot;
+    ]
   }
 }</component>
   <component name="RecentsManager">
@@ -116,7 +124,10 @@
       <workItem from="1764814068486" duration="1283000" />
       <workItem from="1765011708425" duration="9699000" />
       <workItem from="1765715116422" duration="2709000" />
-      <workItem from="1766212057386" duration="1697000" />
+      <workItem from="1766212057386" duration="3752000" />
+      <workItem from="1766564919534" duration="2000000" />
+      <workItem from="1766667689706" duration="1669000" />
+      <workItem from="1767682171378" duration="6504000" />
     </task>
     <servers />
   </component>

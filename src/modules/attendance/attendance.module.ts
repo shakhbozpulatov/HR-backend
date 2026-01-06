@@ -21,6 +21,7 @@ import { AttendanceRecordsService } from './services/attendance-records.service'
 import { AttendanceProcessorService } from './services/attendance-processor.service';
 import { UserDeviceMappingService } from './services/user-device-mapping.service';
 import { HcAttendanceFetchService } from './services/hc-attendance-fetch.service';
+import { HcEventPollingService } from './services/hc-event-polling.service';
 
 // Controllers
 import { AttendanceEventsController } from '@/modules/attendance/controllers';
@@ -40,6 +41,7 @@ import { HcService } from '@/modules/hc/hc.service';
 import { HcApiClient } from '@/modules/hc/services/hc-api-client.service';
 import { HcApiConfig } from '@/modules/hc/config/hc-api.config';
 import { HcAuthService } from '@/modules/hc/services/hc-auth.service';
+import { TelegramNotificationService } from '@/common/services/telegram-notification.service';
 
 @Module({
   imports: [
@@ -94,12 +96,14 @@ import { HcAuthService } from '@/modules/hc/services/hc-auth.service';
     AttendanceProcessorService,
     UserDeviceMappingService,
     HcAttendanceFetchService,
+    HcEventPollingService,
     HcAuthService,
     AttendanceQueueProcessor,
     AttendanceCronService,
     HcService,
     HcApiClient,
     HcApiConfig,
+    TelegramNotificationService,
   ],
   exports: [
     AttendanceEventsService,

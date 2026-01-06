@@ -26,6 +26,7 @@ import { AttendanceEventsService } from '@/modules/attendance';
 import { WebhookEventDto, ResolveQuarantineDto } from '../dto';
 import { GetEventsDto } from '../dto/fetch-attendance-events.dto';
 import { HcAttendanceFetchService } from '../services/hc-attendance-fetch.service';
+import { HcEventPollingService } from '../services/hc-event-polling.service';
 
 import { AuthGuard } from '@/common/guards/auth.guard';
 import { RolesGuard } from '@/common/guards/roles.guard';
@@ -41,6 +42,7 @@ export class AttendanceEventsController {
   constructor(
     private readonly eventsService: AttendanceEventsService,
     private readonly hcAttendanceFetchService: HcAttendanceFetchService,
+    private readonly pollingService: HcEventPollingService,
   ) {}
 
   @Post('subscribe')
@@ -48,9 +50,37 @@ export class AttendanceEventsController {
     return await this.eventsService.subscribeService(subscribeType);
   }
 
+  /**
+   * @deprecated This endpoint is deprecated. Events are now automatically polled in the background.
+   * The HcEventPollingService continuously polls HC API every 0.5 seconds.
+   */
   @Get('write-event')
-  async writeEvent(@Query('maxNumberPerTime') maxNumberPerTime: number) {
-    return await this.eventsService.writeEvent(maxNumberPerTime);
+  async writeEvent() {
+    return {
+      success: false,
+      message:
+        'This endpoint is deprecated. Events are now automatically polled in the background by HcEventPollingService.',
+      info: 'The system polls HC API every 0.5 seconds automatically. No manual triggering is required.',
+    };
+  }
+
+  /**
+   * Get polling status
+   * Returns current polling status and configuration
+   */
+  @Get('polling-status')
+  @UseGuards(AuthGuard, RolesGuard)
+  @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN)
+  async getPollingStatus() {
+    const status = this.pollingService.getStatus();
+
+    return {
+      success: true,
+      data: status,
+      message: status.isPolling
+        ? 'Polling is active'
+        : 'Polling is currently stopped',
+    };
   }
 
   /**
