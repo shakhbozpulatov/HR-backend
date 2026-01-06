@@ -73,18 +73,10 @@ export class HcEventPollingService implements OnModuleInit, OnModuleDestroy {
     try {
       await this.hcService.subscribeEvent(1); // subscribeType 1 = alarm events
       this.logger.log('✅ Successfully subscribed to HC events');
-
-      // Send Telegram notification
-      await this.telegramService.sendSuccess('HC Polling Started', {
-        'Polling Interval': `${this.POLLING_INTERVAL_MS}ms`,
-        'Max Events Per Request': this.MAX_EVENTS_PER_REQUEST,
-        'Subscribe Type': 'Alarm Events (1)',
-        Status: 'Active',
-      });
     } catch (error) {
       this.logger.error('❌ Failed to subscribe to HC events', error.message);
 
-      // Send Telegram error notification
+      // Send Telegram error notification only on startup failure
       await this.telegramService.sendError(
         'Failed to Subscribe to HC Events',
         error,
@@ -143,28 +135,12 @@ export class HcEventPollingService implements OnModuleInit, OnModuleDestroy {
         `📨 Received ${events.length} events from HC (batchId: ${batchId})`,
       );
 
-      // Send Telegram notification about received events
-      await this.telegramService.sendInfo('Events Received from HC', {
-        'Batch ID': batchId,
-        'Events Count': events.length,
-        'First Event Type': events[0]?.basicInfo?.eventType || 'Unknown',
-        'Device ID':
-          events[0]?.basicInfo?.resourceInfo?.deviceInfo?.id || 'Unknown',
-      });
-
-      // Process and save events
-      await this.processAndSaveEvents(events, batchId);
+      // Process and save events (sends individual notifications)
+      await this.processAndSaveEvents(events);
 
       // Complete the batch
       await this.hcService.completeEvent(batchId);
       this.logger.log(`✅ Completed batch: ${batchId}`);
-
-      // Send Telegram success notification
-      await this.telegramService.sendSuccess('Batch Completed Successfully', {
-        'Batch ID': batchId,
-        'Events Processed': events.length,
-        Status: 'Completed & Saved to Database',
-      });
     } catch (error) {
       // Check if error is OPEN000016 (subscription required)
       const errorResponse =
@@ -185,34 +161,17 @@ export class HcEventPollingService implements OnModuleInit, OnModuleDestroy {
           '⚠️ OPEN000016 error detected - resubscribing to HC events',
         );
 
-        // Send Telegram warning
-        await this.telegramService.sendWarning(
-          'Subscription Expired - Resubscribing',
-          {
-            'Error Code': 'OPEN000016',
-            Action: 'Auto-resubscribing to HC events',
-            'Subscribe Type': 'Alarm Events (1)',
-          },
-        );
-
         try {
           // Resubscribe to events
           await this.hcService.subscribeEvent(1);
           this.logger.log('✅ Successfully resubscribed to HC events');
-
-          // Send Telegram success notification
-          await this.telegramService.sendSuccess('Resubscribed Successfully', {
-            'Error Code': 'OPEN000016',
-            'Subscribe Type': 'Alarm Events (1)',
-            Status: 'Polling Continues',
-          });
         } catch (resubscribeError) {
           this.logger.error(
             '❌ Failed to resubscribe to HC events',
             resubscribeError.message,
           );
 
-          // Send Telegram error notification
+          // Send Telegram error notification only for critical failures
           await this.telegramService.sendError(
             'Failed to Resubscribe - Polling Stopped',
             resubscribeError,
@@ -233,7 +192,7 @@ export class HcEventPollingService implements OnModuleInit, OnModuleDestroy {
           response: errorResponse,
         });
 
-        // Send Telegram error notification
+        // Send Telegram error notification only for critical errors
         await this.telegramService.sendError(
           'Critical Polling Error - Polling Stopped',
           error,
@@ -253,10 +212,7 @@ export class HcEventPollingService implements OnModuleInit, OnModuleDestroy {
    * Process events and save to database
    * Loops through all events and saves to DB
    */
-  private async processAndSaveEvents(
-    events: any[],
-    batchId: string,
-  ): Promise<void> {
+  private async processAndSaveEvents(events: any[]): Promise<void> {
     try {
       // Get time range for certificate records (last 10 seconds)
       const endTime = new Date().toISOString();
@@ -286,13 +242,16 @@ export class HcEventPollingService implements OnModuleInit, OnModuleDestroy {
       );
 
       let savedCount = 0;
-      const savedEvents: any[] = [];
+      const failedEvents: any[] = [];
 
       // Process each event
       for (const event of events) {
         const queryRunner = this.dataSource.createQueryRunner();
         await queryRunner.connect();
         await queryRunner.startTransaction();
+
+        let userName: string = 'Unknown';
+        let deviceName: string = 'Unknown';
 
         try {
           // Validate event structure
@@ -302,10 +261,19 @@ export class HcEventPollingService implements OnModuleInit, OnModuleDestroy {
             );
             await queryRunner.rollbackTransaction();
             await queryRunner.release();
+
+            // Send error notification
+            await this.sendEventErrorNotification(
+              'Unknown',
+              'Invalid event structure',
+              event.eventId || 'Unknown',
+            );
             continue;
           }
 
           const deviceId = event.basicInfo.resourceInfo.deviceInfo.id;
+          deviceName =
+            event.basicInfo?.resourceInfo?.deviceInfo?.name || 'Unknown';
 
           // Find matching certificate record for this event
           const matchingRecord = hcRecords.data.recordList.find(
@@ -318,6 +286,14 @@ export class HcEventPollingService implements OnModuleInit, OnModuleDestroy {
             );
             await queryRunner.rollbackTransaction();
             await queryRunner.release();
+
+            // Send error notification
+            await this.sendEventErrorNotification(
+              'Unknown',
+              'No matching certificate record',
+              deviceId,
+              deviceName,
+            );
             continue;
           }
 
@@ -328,12 +304,26 @@ export class HcEventPollingService implements OnModuleInit, OnModuleDestroy {
             );
             await queryRunner.rollbackTransaction();
             await queryRunner.release();
+
+            // Send error notification
+            await this.sendEventErrorNotification(
+              'Unknown',
+              'Missing person information',
+              deviceId,
+              deviceName,
+            );
             continue;
           }
 
+          // Get user info for notification
+          const firstName = matchingRecord.personInfo.baseInfo?.firstName || '';
+          const lastName = matchingRecord.personInfo.baseInfo?.lastName || '';
+          userName = `${firstName} ${lastName}`.trim() || 'Unknown Employee';
+          const userId = matchingRecord.personInfo.id;
+
           // Create attendance event
           const attendanceEvent = this.attendanceEventRepository.create({
-            user_id: matchingRecord.personInfo.id,
+            user_id: userId,
             device_id: matchingRecord.deviceId,
             event_type:
               matchingRecord.attendanceStatus === 1
@@ -359,30 +349,38 @@ export class HcEventPollingService implements OnModuleInit, OnModuleDestroy {
             `✅ Saved event ${savedEvent.event_id} for user ${savedEvent.user_id} (${savedEvent.event_type})`,
           );
 
-          // Collect saved event info for Telegram notification
-          const firstName = matchingRecord.personInfo.baseInfo?.firstName || '';
-          const lastName = matchingRecord.personInfo.baseInfo?.lastName || '';
-          const fullName =
-            `${firstName} ${lastName}`.trim() || 'Unknown Employee';
-
-          savedEvents.push({
-            eventId: savedEvent.event_id,
-            userId: matchingRecord.personInfo.id,
-            userName: fullName,
-            eventType: savedEvent.event_type,
-            deviceId: matchingRecord.deviceId,
-            deviceName:
-              event.basicInfo?.resourceInfo?.deviceInfo?.name || 'Unknown',
-            occurTime: matchingRecord.occurTime,
-            deviceTime: matchingRecord.deviceTime,
-          });
+          // Send success notification for this event
+          await this.sendEventSuccessNotification(
+            userName,
+            savedEvent.event_type,
+            matchingRecord.occurTime,
+            deviceName,
+          );
 
           savedCount++;
         } catch (error) {
           await queryRunner.rollbackTransaction();
+          const errorMsg = error.message || 'Unknown error';
           this.logger.error(
-            `Failed to save event ${event.eventId}: ${error.message}`,
+            `Failed to save event ${event.eventId}: ${errorMsg}`,
           );
+
+          // Send error notification
+          if (!deviceName || deviceName === 'Unknown') {
+            deviceName =
+              event?.basicInfo?.resourceInfo?.deviceInfo?.name || 'Unknown';
+          }
+          await this.sendEventErrorNotification(
+            userName,
+            errorMsg,
+            event.eventId || 'Unknown',
+            deviceName,
+          );
+
+          failedEvents.push({
+            eventId: event.eventId,
+            error: errorMsg,
+          });
         } finally {
           await queryRunner.release();
         }
@@ -391,16 +389,6 @@ export class HcEventPollingService implements OnModuleInit, OnModuleDestroy {
       this.logger.log(
         `✅ Batch processing complete: ${savedCount}/${events.length} events saved`,
       );
-
-      // Send detailed Telegram notification with employee info
-      if (savedCount > 0) {
-        await this.sendDetailedEventNotification(
-          batchId,
-          savedEvents,
-          savedCount,
-          events.length,
-        );
-      }
     } catch (error) {
       this.logger.error(
         `❌ Failed to process events: ${error.message}`,
@@ -411,65 +399,81 @@ export class HcEventPollingService implements OnModuleInit, OnModuleDestroy {
   }
 
   /**
-   * Send detailed event notification to Telegram
-   * Shows employee names, times, and event types
+   * Send success notification for a single attendance event
    */
-  private async sendDetailedEventNotification(
-    batchId: string,
-    savedEvents: any[],
-    savedCount: number,
-    totalEvents: number,
+  private async sendEventSuccessNotification(
+    userName: string,
+    eventType: EventType,
+    occurTime: string,
+    deviceName: string,
   ): Promise<void> {
     try {
-      // Format employee attendance details
-      const employeeDetails = savedEvents
-        .map((event, index) => {
-          const eventIcon =
-            event.eventType === EventType.CLOCK_IN ? '🟢' : '🔴';
-          const eventTypeText =
-            event.eventType === EventType.CLOCK_IN ? 'KIRISH' : 'CHIQISH';
+      const eventIcon = eventType === EventType.CLOCK_IN ? '🟢' : '🔴';
+      const eventTypeText =
+        eventType === EventType.CLOCK_IN ? 'KIRISH' : 'CHIQISH';
 
-          // Format times in Tashkent timezone
-          const occurTimeFormatted = new Date(event.occurTime).toLocaleString(
-            'uz-UZ',
-            {
-              timeZone: 'Asia/Tashkent',
-              year: 'numeric',
-              month: '2-digit',
-              day: '2-digit',
-              hour: '2-digit',
-              minute: '2-digit',
-              second: '2-digit',
-            },
-          );
-
-          return `${index + 1}. ${eventIcon} <b>${event.userName}</b>
-   ├ Turi: <b>${eventTypeText}</b>
-   ├ User ID: <code>${event.userId}</code>
-   ├ Vaqt: ${occurTimeFormatted}
-   └ Qurilma: ${event.deviceName}`;
-        })
-        .join('\n\n');
-
-      const timestamp = new Date().toLocaleString('uz-UZ', {
+      // Format time in Tashkent timezone
+      const occurTimeFormatted = new Date(occurTime).toLocaleString('uz-UZ', {
         timeZone: 'Asia/Tashkent',
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
       });
 
-      const message = `🟢 <b>XODIMLAR KIRISH/CHIQISH</b>
-⏰ ${timestamp}
+      const message = `${eventIcon} <b>${eventTypeText} - Muvaffaqiyatli</b>
 
-${employeeDetails}
+👤 <b>Xodim:</b> ${userName}
+⏰ <b>Vaqt:</b> ${occurTimeFormatted}
+📱 <b>Qurilma:</b> ${deviceName}
 
-━━━━━━━━━━━━━━━━━━━━━
-<b>Batch ID:</b> <code>${batchId}</code>
-<b>Saqlandi:</b> ${savedCount}/${totalEvents}
-<b>Holat:</b> ✅ Muvaffaqiyatli`;
+✅ <b>Holat:</b> Muvaffaqiyatli saqlandi`;
 
       await this.telegramService.sendRawHtml(message);
     } catch (error) {
       this.logger.error(
-        `Failed to send detailed notification: ${error.message}`,
+        `Failed to send success notification: ${error.message}`,
       );
+    }
+  }
+
+  /**
+   * Send error notification for a failed attendance event
+   */
+  private async sendEventErrorNotification(
+    userName: string,
+    errorMessage: string,
+    eventId: string,
+    deviceName?: string,
+  ): Promise<void> {
+    try {
+      const timestamp = new Date().toLocaleString('uz-UZ', {
+        timeZone: 'Asia/Tashkent',
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+      });
+
+      let message = `🔴 <b>KIRISH/CHIQISH - Xatolik</b>
+
+👤 <b>Xodim:</b> ${userName}
+⏰ <b>Vaqt:</b> ${timestamp}`;
+
+      if (deviceName) {
+        message += `\n📱 <b>Qurilma:</b> ${deviceName}`;
+      }
+
+      message += `\n❌ <b>Xatolik:</b> ${errorMessage}
+🆔 <b>Event ID:</b> <code>${eventId}</code>`;
+
+      await this.telegramService.sendRawHtml(message);
+    } catch (error) {
+      this.logger.error(`Failed to send error notification: ${error.message}`);
     }
   }
 
