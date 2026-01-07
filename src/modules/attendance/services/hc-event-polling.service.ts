@@ -361,26 +361,39 @@ export class HcEventPollingService implements OnModuleInit, OnModuleDestroy {
         } catch (error) {
           await queryRunner.rollbackTransaction();
           const errorMsg = error.message || 'Unknown error';
-          this.logger.error(
-            `Failed to save event ${event.eventId}: ${errorMsg}`,
-          );
 
-          // Send error notification
-          if (!deviceName || deviceName === 'Unknown') {
-            deviceName =
-              event?.basicInfo?.resourceInfo?.deviceInfo?.name || 'Unknown';
+          // Check if this is a duplicate key error (PostgreSQL error code 23505)
+          const isDuplicateError =
+            error.code === '23505' || errorMsg.includes('duplicate key');
+
+          if (isDuplicateError) {
+            // This is a duplicate event - just log it and skip notification
+            this.logger.warn(
+              `⚠️ Duplicate event detected for user ${userName} at device ${deviceName} - skipping`,
+            );
+          } else {
+            // This is a real error - log and send notification
+            this.logger.error(
+              `Failed to save event ${event.eventId}: ${errorMsg}`,
+            );
+
+            // Send error notification
+            if (!deviceName || deviceName === 'Unknown') {
+              deviceName =
+                event?.basicInfo?.resourceInfo?.deviceInfo?.name || 'Unknown';
+            }
+            await this.sendEventErrorNotification(
+              userName,
+              errorMsg,
+              event.eventId || 'Unknown',
+              deviceName,
+            );
+
+            failedEvents.push({
+              eventId: event.eventId,
+              error: errorMsg,
+            });
           }
-          await this.sendEventErrorNotification(
-            userName,
-            errorMsg,
-            event.eventId || 'Unknown',
-            deviceName,
-          );
-
-          failedEvents.push({
-            eventId: event.eventId,
-            error: errorMsg,
-          });
         } finally {
           await queryRunner.release();
         }

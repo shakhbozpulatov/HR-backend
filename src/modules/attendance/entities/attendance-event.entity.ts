@@ -28,6 +28,7 @@ export enum ProcessingStatus {
 }
 
 @Entity('attendance_events')
+@Index(['user_id', 'device_id', 'ts_utc'], { unique: true })
 @Index(['user_id', 'ts_local'])
 @Index(['device_id', 'ts_local'])
 @Index(['processing_status', 'created_at'])
