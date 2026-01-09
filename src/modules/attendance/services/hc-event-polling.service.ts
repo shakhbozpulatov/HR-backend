@@ -167,45 +167,95 @@ export class HcEventPollingService implements OnModuleInit, OnModuleDestroy {
           this.logger.log('✅ Successfully resubscribed to HC events');
         } catch (resubscribeError) {
           this.logger.error(
-            '❌ Failed to resubscribe to HC events',
+            '❌ Failed to resubscribe to HC events - continuing polling',
             resubscribeError.message,
           );
 
-          // Send Telegram error notification only for critical failures
+          // Send Telegram error notification but DON'T stop polling
           await this.telegramService.sendError(
-            'Failed to Resubscribe - Polling Stopped',
+            'Failed to Resubscribe - Will Retry',
             resubscribeError,
             {
               'Original Error': 'OPEN000016',
               'Subscribe Type': 'Alarm Events (1)',
-              'Polling Status': 'Stopped',
+              'Polling Status': 'Continuing',
+              Action: 'Will retry on next poll cycle',
             },
           );
 
-          this.stopPolling();
+          // DON'T stop polling - just continue and try again next cycle
         }
       } else {
-        // Unknown error - stop polling and log
-        this.logger.error('❌ Polling error - stopping polling', {
-          error: error.message,
-          stack: error.stack,
-          response: errorResponse,
-        });
+        // Check if it's a network error that we should tolerate
+        const isNetworkError = this.isNetworkError(error);
 
-        // Send Telegram error notification only for critical errors
-        await this.telegramService.sendError(
-          'Critical Polling Error - Polling Stopped',
-          error,
-          {
-            'Error Response': errorResponse,
-            'Polling Status': 'Stopped',
-            Action: 'Manual intervention required',
-          },
-        );
+        if (isNetworkError) {
+          // Network error - log warning but continue polling
+          this.logger.warn(
+            '⚠️ Network error during polling - will retry on next cycle',
+            {
+              error: error.message,
+              code: error.code,
+            },
+          );
+          // Don't send telegram notification for every network error
+          // Don't stop polling - network issues are temporary
+        } else {
+          // Unknown/critical error - log error but STILL continue polling
+          this.logger.error('❌ Unexpected polling error - continuing polling', {
+            error: error.message,
+            stack: error.stack,
+            response: errorResponse,
+          });
 
-        this.stopPolling();
+          // Send Telegram error notification for critical errors
+          await this.telegramService.sendError(
+            'Unexpected Polling Error - Continuing',
+            error,
+            {
+              'Error Response': errorResponse,
+              'Polling Status': 'Continuing',
+              Action: 'Monitoring - will alert if persists',
+            },
+          );
+
+          // DON'T stop polling - let it continue and self-recover
+        }
       }
     }
+  }
+
+  /**
+   * Check if error is a network error
+   */
+  private isNetworkError(error: any): boolean {
+    // Check for common network error codes
+    const networkErrorCodes = [
+      'ECONNRESET',
+      'ENOTFOUND',
+      'ETIMEDOUT',
+      'ECONNREFUSED',
+      'EHOSTUNREACH',
+      'ENETUNREACH',
+      'EAI_AGAIN',
+    ];
+
+    // Check error code
+    if (error.code && networkErrorCodes.includes(error.code)) {
+      return true;
+    }
+
+    // Check error message
+    const errorMessage = error.message?.toLowerCase() || '';
+    const networkKeywords = [
+      'network',
+      'timeout',
+      'connection',
+      'econnreset',
+      'socket',
+    ];
+
+    return networkKeywords.some((keyword) => errorMessage.includes(keyword));
   }
 
   /**

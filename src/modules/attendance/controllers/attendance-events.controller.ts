@@ -27,6 +27,7 @@ import { WebhookEventDto, ResolveQuarantineDto } from '../dto';
 import { GetEventsDto } from '../dto/fetch-attendance-events.dto';
 import { HcAttendanceFetchService } from '../services/hc-attendance-fetch.service';
 import { HcEventPollingService } from '../services/hc-event-polling.service';
+import { AttendanceCronService } from '../cron/attendance-cron.service';
 
 import { AuthGuard } from '@/common/guards/auth.guard';
 import { RolesGuard } from '@/common/guards/roles.guard';
@@ -43,6 +44,7 @@ export class AttendanceEventsController {
     private readonly eventsService: AttendanceEventsService,
     private readonly hcAttendanceFetchService: HcAttendanceFetchService,
     private readonly pollingService: HcEventPollingService,
+    private readonly cronService: AttendanceCronService,
   ) {}
 
   @Post('subscribe')
@@ -264,6 +266,27 @@ export class AttendanceEventsController {
     return {
       success: true,
       message: 'Failed events queued for retry',
+    };
+  }
+
+  /**
+   * Clean up all failed jobs from queue
+   * Removes all failed jobs from the attendance queue
+   * ADMIN ONLY - Use with caution
+   */
+  @Post('cleanup-failed-jobs')
+  @UseGuards(AuthGuard, RolesGuard)
+  @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN)
+  @HttpCode(HttpStatus.OK)
+  async cleanupFailedJobs() {
+    const count = await this.cronService.cleanupAllFailedJobs();
+
+    return {
+      success: true,
+      message: `Successfully cleaned up ${count} failed jobs`,
+      data: {
+        cleanedCount: count,
+      },
     };
   }
 

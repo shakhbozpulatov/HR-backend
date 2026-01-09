@@ -372,6 +372,7 @@ export class AttendanceCronService {
       const active = await this.attendanceQueue.getActiveCount();
       const failed = await this.attendanceQueue.getFailedCount();
       const delayed = await this.attendanceQueue.getDelayedCount();
+      const completed = await this.attendanceQueue.getCompletedCount();
 
       // Alert if queue is backing up
       if (waiting > 100) {
@@ -381,21 +382,72 @@ export class AttendanceCronService {
       // Alert if too many failures
       if (failed > 50) {
         this.logger.error(`High failure rate detected: ${failed} failed jobs`);
+
+        // Auto-clean old failed jobs to prevent accumulation
+        await this.cleanupOldFailedJobs();
+
         await this.sendCronAlert(
           'queue-health',
-          new Error(`${failed} failed jobs`),
+          new Error(`${failed} failed jobs (cleanup initiated)`),
         );
       }
 
-      // Log stats periodically (every hour)
+      // Log stats periodically (every 30 minutes instead of 60)
       const minute = new Date().getMinutes();
-      if (minute % 60 === 0) {
+      if (minute % 30 === 0) {
         this.logger.log(
-          `Queue stats - Waiting: ${waiting}, Active: ${active}, Failed: ${failed}, Delayed: ${delayed}`,
+          `Queue stats - Waiting: ${waiting}, Active: ${active}, Failed: ${failed}, Delayed: ${delayed}, Completed: ${completed}`,
         );
       }
     } catch (error) {
       this.logger.error(`Queue health check failed: ${error.message}`);
+    }
+  }
+
+  /**
+   * Clean up old failed jobs
+   * Removes failed jobs older than 24 hours
+   */
+  private async cleanupOldFailedJobs(): Promise<void> {
+    try {
+      const failedJobs = await this.attendanceQueue.getFailed();
+      const oneDayAgo = Date.now() - 24 * 60 * 60 * 1000;
+
+      let cleanedCount = 0;
+
+      for (const job of failedJobs) {
+        // Remove jobs older than 24 hours
+        if (job.timestamp && job.timestamp < oneDayAgo) {
+          await job.remove();
+          cleanedCount++;
+        }
+      }
+
+      if (cleanedCount > 0) {
+        this.logger.log(`🧹 Cleaned up ${cleanedCount} old failed jobs (older than 24 hours)`);
+      }
+    } catch (error) {
+      this.logger.error(`Failed to cleanup old failed jobs: ${error.message}`);
+    }
+  }
+
+  /**
+   * Manual cleanup of all failed jobs
+   * Can be called manually when needed
+   */
+  async cleanupAllFailedJobs(): Promise<number> {
+    try {
+      const failedJobs = await this.attendanceQueue.getFailed();
+
+      for (const job of failedJobs) {
+        await job.remove();
+      }
+
+      this.logger.log(`🧹 Manually cleaned up ${failedJobs.length} failed jobs`);
+      return failedJobs.length;
+    } catch (error) {
+      this.logger.error(`Failed to cleanup all failed jobs: ${error.message}`);
+      throw error;
     }
   }
 

@@ -1,5 +1,5 @@
-import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
-import axios, { AxiosInstance, AxiosRequestConfig } from 'axios';
+import { Injectable, HttpException, HttpStatus, Logger } from '@nestjs/common';
+import axios, { AxiosInstance, AxiosRequestConfig, AxiosError } from 'axios';
 import { HcApiConfig } from '../config/hc-api.config';
 import { HcAuthService } from './hc-auth.service';
 import {
@@ -14,8 +14,11 @@ import {
  */
 @Injectable()
 export class HcApiClient {
+  private readonly logger = new Logger(HcApiClient.name);
   private readonly axiosInstance: AxiosInstance;
   private readonly MAX_TOKEN_RETRY_ATTEMPTS = 1; // Only retry once to avoid infinite loops
+  private readonly MAX_RETRY_ATTEMPTS = 3; // Retry for network errors
+  private readonly RETRY_DELAY_MS = 1000; // Base delay between retries
 
   constructor(
     private readonly config: HcApiConfig,
@@ -127,12 +130,12 @@ export class HcApiClient {
   }
 
   /**
-   * Generic POST request to HC API
+   * Generic POST request to HC API with retry logic
    * @param options - Request options
    * @returns HC API response
    */
   async post<T = any>(options: HcApiRequestOptions): Promise<HcApiResponse<T>> {
-    try {
+    return this.executeWithRetry(async () => {
       const requestConfig: AxiosRequestConfig = {
         timeout: options.timeout || this.config.getDefaultTimeout(),
       };
@@ -145,9 +148,7 @@ export class HcApiClient {
 
       // Validate HC API response
       return this.validateResponse<T>(response.data);
-    } catch (error) {
-      throw this.handleError(error, options);
-    }
+    }, options);
   }
 
   /**
@@ -201,6 +202,95 @@ export class HcApiClient {
   }
 
   /**
+   * Execute request with retry logic for network errors
+   */
+  private async executeWithRetry<T>(
+    fn: () => Promise<HcApiResponse<T>>,
+    options: HcApiRequestOptions,
+  ): Promise<HcApiResponse<T>> {
+    let lastError: any;
+
+    for (let attempt = 1; attempt <= this.MAX_RETRY_ATTEMPTS; attempt++) {
+      try {
+        return await fn();
+      } catch (error) {
+        lastError = error;
+
+        // Don't retry if it's an HttpException (business logic error)
+        if (error instanceof HttpException) {
+          throw error;
+        }
+
+        // Check if it's a network error that we should retry
+        const isNetworkError = this.isRetryableNetworkError(error);
+
+        if (!isNetworkError) {
+          // Not a network error, throw immediately
+          throw this.handleError(error, options);
+        }
+
+        // Network error - check if we should retry
+        if (attempt < this.MAX_RETRY_ATTEMPTS) {
+          const delay = this.RETRY_DELAY_MS * Math.pow(2, attempt - 1); // Exponential backoff
+          this.logger.warn(
+            `⚠️ Network error on attempt ${attempt}/${this.MAX_RETRY_ATTEMPTS} for ${options.endpoint}. Retrying in ${delay}ms... Error: ${error.message}`,
+          );
+          await this.sleep(delay);
+        } else {
+          this.logger.error(
+            `❌ Failed after ${this.MAX_RETRY_ATTEMPTS} attempts for ${options.endpoint}. Error: ${error.message}`,
+          );
+          throw this.handleError(error, options);
+        }
+      }
+    }
+
+    throw this.handleError(lastError, options);
+  }
+
+  /**
+   * Check if error is a retryable network error
+   */
+  private isRetryableNetworkError(error: any): boolean {
+    // Check for common network errors
+    const networkErrorCodes = [
+      'ECONNRESET',
+      'ENOTFOUND',
+      'ETIMEDOUT',
+      'ECONNREFUSED',
+      'EHOSTUNREACH',
+      'ENETUNREACH',
+      'EAI_AGAIN',
+    ];
+
+    // Check error code
+    if (error.code && networkErrorCodes.includes(error.code)) {
+      return true;
+    }
+
+    // Check if axios error with network-related status
+    if (error.response) {
+      const status = error.response.status;
+      // Retry on 5xx errors (server errors) and 408 (timeout)
+      return status >= 500 || status === 408;
+    }
+
+    // Check if it's a timeout error
+    if (error.message && error.message.toLowerCase().includes('timeout')) {
+      return true;
+    }
+
+    return false;
+  }
+
+  /**
+   * Sleep helper for retry delays
+   */
+  private sleep(ms: number): Promise<void> {
+    return new Promise((resolve) => setTimeout(resolve, ms));
+  }
+
+  /**
    * Handle errors from HC API
    */
   private handleError(error: any, options: HcApiRequestOptions): HttpException {
@@ -212,6 +302,7 @@ export class HcApiClient {
     // Handle network/axios errors
     const errorDetails = {
       message: error.message,
+      code: error.code,
       endpoint: options.endpoint,
       requestData: options.data,
       responseStatus: error.response?.status,
