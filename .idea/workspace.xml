@@ -5,10 +5,11 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="f223feb0-6502-4a9b-9c03-44f93ba47b8c" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/dataSources.local.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/dataSources.local.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/modules/attendance/cron/attendance-cron.service.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/modules/attendance/cron/attendance-cron.service.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/modules/attendance/services/hc-event-polling.service.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/modules/attendance/services/hc-event-polling.service.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/modules/hc/services/hc-api-client.service.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/modules/hc/services/hc-api-client.service.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/modules/attendance/attendance.module.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/modules/attendance/attendance.module.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/modules/attendance/controllers/index.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/modules/attendance/controllers/index.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/modules/attendance/dto/index.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/modules/attendance/dto/index.ts" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -79,7 +80,7 @@
   <component name="SharedIndexes">
     <attachedChunks>
       <set>
-        <option value="bundled-js-predefined-d6986cc7102b-a71380e98a7c-JavaScript-WS-252.28238.10" />
+        <option value="bundled-js-predefined-d6986cc7102b-a71380e98a7c-JavaScript-WS-252.28539.21" />
       </set>
     </attachedChunks>
   </component>
@@ -126,7 +127,9 @@
       <workItem from="1766667689706" duration="1669000" />
       <workItem from="1767682171378" duration="12210000" />
       <workItem from="1767787683272" duration="4501000" />
-      <workItem from="1767931761328" duration="612000" />
+      <workItem from="1767931761328" duration="1211000" />
+      <workItem from="1768135203831" duration="3687000" />
+      <workItem from="1768407044459" duration="1370000" />
     </task>
     <servers />
   </component>

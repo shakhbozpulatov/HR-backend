@@ -14,6 +14,8 @@ import { AttendanceProcessingLog } from '@/modules/attendance/entities';
 import { User } from '@/modules/users/entities/user.entity';
 import { TerminalDevice } from '@/modules/terminals/entities/terminal-device.entity';
 import { UserScheduleAssignment } from '@/modules/schedules/entities/employee-schedule-assignment.entity';
+import { ScheduleTemplate } from '@/modules/schedules/entities/schedule-template.entity';
+import { Holiday } from '@/modules/holidays/entities/holiday.entity';
 
 // Services
 import { AttendanceEventsService } from './services/attendance-events.service';
@@ -22,6 +24,7 @@ import { AttendanceProcessorService } from './services/attendance-processor.serv
 import { UserDeviceMappingService } from './services/user-device-mapping.service';
 import { HcAttendanceFetchService } from './services/hc-attendance-fetch.service';
 import { HcEventPollingService } from './services/hc-event-polling.service';
+import { DashboardService } from './services/dashboard.service';
 
 // Controllers
 import { AttendanceEventsController } from '@/modules/attendance/controllers';
@@ -29,6 +32,7 @@ import { AttendanceRecordsController } from '@/modules/attendance/controllers';
 import { DeviceEnrollmentController } from '@/modules/attendance/controllers';
 import { DeviceStatusController } from '@/modules/attendance/controllers';
 import { BatchProcessingController } from '@/modules/attendance/controllers';
+import { DashboardController } from '@/modules/attendance/controllers';
 
 // Processors & Cron
 import { AttendanceQueueProcessor } from './processors/attendance-queue.processor';
@@ -53,6 +57,8 @@ import { TelegramNotificationService } from '@/common/services/telegram-notifica
       User,
       TerminalDevice,
       UserScheduleAssignment,
+      ScheduleTemplate,
+      Holiday,
     ]),
     BullModule.registerQueue({
       name: 'attendance',
@@ -89,6 +95,7 @@ import { TelegramNotificationService } from '@/common/services/telegram-notifica
     DeviceEnrollmentController,
     DeviceStatusController,
     BatchProcessingController,
+    DashboardController,
   ],
   providers: [
     AttendanceEventsService,
@@ -104,6 +111,7 @@ import { TelegramNotificationService } from '@/common/services/telegram-notifica
     HcApiClient,
     HcApiConfig,
     TelegramNotificationService,
+    DashboardService,
   ],
   exports: [
     AttendanceEventsService,

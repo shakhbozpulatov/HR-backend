@@ -10,6 +10,7 @@ export * from './device-status.dto';
 // Filter & Query DTOs
 export * from './attendance-filter.dto';
 export * from './user-attendance.dto';
+export * from './dashboard.dto';
 
 // Action DTOs
 export * from './manual-adjustment.dto';
