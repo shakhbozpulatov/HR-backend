@@ -105,12 +105,29 @@ export class DashboardService {
       relations: ['default_template'],
     });
 
+    // DEBUG: Track why employees are being filtered out
+    const debugStats = {
+      totalAssignments: userAssignments.length,
+      usersWithoutAssignment: totalEmployees - userAssignments.length,
+      filteredByEffectiveTo: 0,
+      filteredByException: 0,
+      noTemplate: 0,
+      noWorkdays: 0,
+      dayNotInWorkdays: 0,
+      added: 0,
+    };
+
+    this.logger.debug(
+      `DEBUG: Found ${userAssignments.length} assignments for ${totalEmployees} active users`,
+    );
+
     for (const assignment of userAssignments) {
       // Check if assignment is still active
       if (
         assignment.effective_to &&
         moment(assignment.effective_to).format('YYYY-MM-DD') < date
       ) {
+        debugStats.filteredByEffectiveTo++;
         continue;
       }
 
@@ -129,23 +146,58 @@ export class DashboardService {
       });
 
       if (hasException) {
+        debugStats.filteredByException++;
         continue; // Employee is off today
       }
 
       // Check if this day is in the workdays
       const template = assignment.default_template;
-      if (template && template.workdays) {
-        const workdays = Array.isArray(template.workdays)
-          ? template.workdays
-          : [];
-        if (workdays.includes(dayOfWeek)) {
-          expectedUserIds.push(assignment.user_id);
-        }
+      if (!template) {
+        debugStats.noTemplate++;
+        continue;
+      }
+
+      if (!template.workdays) {
+        debugStats.noWorkdays++;
+        continue;
+      }
+
+      const workdays = Array.isArray(template.workdays)
+        ? template.workdays
+        : [];
+
+      if (workdays.includes(dayOfWeek)) {
+        expectedUserIds.push(assignment.user_id);
+        debugStats.added++;
+      } else {
+        debugStats.dayNotInWorkdays++;
+        this.logger.debug(
+          `DEBUG: Day "${dayOfWeek}" not in workdays: ${JSON.stringify(workdays)} for user ${assignment.user_id}`,
+        );
       }
     }
 
     const expectedToday = expectedUserIds.length;
-    this.logger.log(`Employees expected to work today: ${expectedToday}`);
+
+    // Log debug summary
+    this.logger.warn(`DEBUG SUMMARY for date ${date} (${dayOfWeek}):`);
+    this.logger.warn(`  - Total active employees: ${totalEmployees}`);
+    this.logger.warn(
+      `  - Users without assignment: ${debugStats.usersWithoutAssignment}`,
+    );
+    this.logger.warn(
+      `  - Total assignments found: ${debugStats.totalAssignments}`,
+    );
+    this.logger.warn(
+      `  - Filtered by effective_to: ${debugStats.filteredByEffectiveTo}`,
+    );
+    this.logger.warn(
+      `  - Filtered by exception (OFF): ${debugStats.filteredByException}`,
+    );
+    this.logger.warn(`  - No template: ${debugStats.noTemplate}`);
+    this.logger.warn(`  - No workdays in template: ${debugStats.noWorkdays}`);
+    this.logger.warn(`  - Day not in workdays: ${debugStats.dayNotInWorkdays}`);
+    this.logger.warn(`  - Expected today (added): ${debugStats.added}`);
 
     // Get attendance records for today
     const attendanceRecords = await this.recordRepository.find({
