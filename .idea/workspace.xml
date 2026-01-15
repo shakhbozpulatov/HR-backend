@@ -5,7 +5,12 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="f223feb0-6502-4a9b-9c03-44f93ba47b8c" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/dbnavigator.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/dbnavigator.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/common/utils/time.utils.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/common/utils/time.utils.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/modules/attendance/services/attendance-processor.service.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/modules/attendance/services/attendance-processor.service.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/modules/attendance/services/attendance-records.service.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/modules/attendance/services/attendance-records.service.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/modules/attendance/services/dashboard.service.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/modules/attendance/services/dashboard.service.ts" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -125,7 +130,7 @@
       <workItem from="1767787683272" duration="4501000" />
       <workItem from="1767931761328" duration="1211000" />
       <workItem from="1768135203831" duration="3687000" />
-      <workItem from="1768407044459" duration="8248000" />
+      <workItem from="1768407044459" duration="10969000" />
     </task>
     <servers />
   </component>

@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import moment from 'moment-timezone';
+import * as moment from 'moment-timezone';
 
 @Injectable()
 export class TimeUtils {

@@ -200,12 +200,31 @@ export class DashboardService {
     this.logger.warn(`  - Expected today (added): ${debugStats.added}`);
 
     // Get attendance records for today
+    // DEBUG: Log the query parameters
+    this.logger.warn(`DEBUG: Querying attendance_records with:`);
+    this.logger.warn(`  - expectedUserIds count: ${expectedUserIds.length}`);
+    this.logger.warn(`  - expectedUserIds sample: ${expectedUserIds.slice(0, 3).join(', ')}`);
+    this.logger.warn(`  - date: ${date}`);
+
     const attendanceRecords = await this.recordRepository.find({
       where: {
-        user_id: In(expectedUserIds),
+        user_id: In(expectedUserIds.length > 0 ? expectedUserIds : ['no-users']),
         date: new Date(date),
       },
     });
+
+    this.logger.warn(`DEBUG: Found ${attendanceRecords.length} attendance records`);
+
+    // DEBUG: Check if there are ANY records for this date (regardless of user)
+    const allRecordsForDate = await this.recordRepository.find({
+      where: { date: new Date(date) },
+      take: 5,
+    });
+    this.logger.warn(`DEBUG: Total records for date ${date}: ${allRecordsForDate.length}`);
+    if (allRecordsForDate.length > 0) {
+      this.logger.warn(`DEBUG: Sample record user_ids: ${allRecordsForDate.map((r) => r.user_id).join(', ')}`);
+      this.logger.warn(`DEBUG: Sample record first_clock_in: ${allRecordsForDate.map((r) => r.first_clock_in).join(', ')}`);
+    }
 
     // Count checked in employees (those who have first_clock_in)
     const checkedIn = attendanceRecords.filter(
@@ -219,7 +238,7 @@ export class DashboardService {
         (r.late_minutes === null || r.late_minutes <= 0),
     ).length;
 
-    this.logger.log(`Checked in: ${checkedIn}, On-time: ${onTimeArrivals}`);
+    this.logger.warn(`DEBUG: Checked in: ${checkedIn}, On-time: ${onTimeArrivals}`);
 
     return {
       date,
