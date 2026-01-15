@@ -176,14 +176,42 @@ export class AttendanceEventsService {
         };
       }
 
+      // Determine event type
+      let eventType =
+        firstRecord.attendanceStatus === 1
+          ? EventType.CLOCK_IN
+          : EventType.CLOCK_OUT;
+
+      // If CLOCK_OUT, check if user has CLOCK_IN today - if not, convert to CLOCK_IN
+      if (eventType === EventType.CLOCK_OUT) {
+        const eventDate = new Date(firstRecord.deviceTime);
+        const startOfDay = moment(eventDate).startOf('day').toDate();
+        const endOfDay = moment(eventDate).endOf('day').toDate();
+
+        const existingClockIn = await queryRunner.manager.findOne(
+          AttendanceEvent,
+          {
+            where: {
+              user_id: firstRecord.personInfo.id,
+              event_type: EventType.CLOCK_IN,
+              ts_local: Between(startOfDay, endOfDay),
+            },
+          },
+        );
+
+        if (!existingClockIn) {
+          this.logger.warn(
+            `User ${firstRecord.personInfo.id} has no CLOCK_IN today. Converting CLOCK_OUT to CLOCK_IN.`,
+          );
+          eventType = EventType.CLOCK_IN;
+        }
+      }
+
       // Create attendance event
       const attendanceEvent = this.attendanceEventRepository.create({
         user_id: firstRecord.personInfo.id,
         device_id: firstRecord.deviceId,
-        event_type:
-          firstRecord.attendanceStatus === 1
-            ? EventType.CLOCK_IN
-            : EventType.CLOCK_OUT,
+        event_type: eventType,
         event_source: EventSource.BIOMETRIC_DEVICE,
         ts_utc: new Date(firstRecord.occurTime),
         ts_local: new Date(firstRecord.deviceTime),
