@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, Between, DataSource } from 'typeorm';
+import { Repository, Between, DataSource, IsNull, MoreThanOrEqual } from 'typeorm';
 import { ConfigService } from '@nestjs/config';
 import * as moment from 'moment-timezone';
 import {
@@ -15,6 +15,7 @@ import {
 } from '@/modules/attendance';
 import { ScheduleAssignmentsService } from '@/modules/schedules/schedule-assignments.service';
 import { HolidaysService } from '@/modules/holidays/holidays.service';
+import { User } from '@/modules/users/entities/user.entity';
 
 @Injectable()
 export class AttendanceProcessorService {
@@ -718,13 +719,26 @@ export class AttendanceProcessorService {
 
     this.logger.log(`Starting batch processing for ${dateStr}`);
 
-    const targetUserIds = userIds;
+    let targetUserIds = userIds;
 
     // If no specific users, get all active users with schedules
     if (!targetUserIds || targetUserIds.length === 0) {
-      // This would require a method to get all active employee IDs
-      // For now, we'll skip this scenario
-      this.logger.warn('No user IDs provided for batch processing');
+      this.logger.log('No user IDs provided, fetching all active users...');
+
+      // Get all active users (end_date is null or >= today)
+      const activeUsers = await this.dataSource
+        .getRepository(User)
+        .createQueryBuilder('user')
+        .select('user.id')
+        .where('user.end_date IS NULL OR user.end_date >= :date', { date: dateStr })
+        .getMany();
+
+      targetUserIds = activeUsers.map((u) => u.id);
+      this.logger.log(`Found ${targetUserIds.length} active users to process`);
+    }
+
+    if (targetUserIds.length === 0) {
+      this.logger.warn('No users found for batch processing');
       return { total: 0, success: 0, failed: 0 };
     }
 
