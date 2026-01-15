@@ -25,7 +25,7 @@ import { UserRole } from '@/modules/users/entities/user.entity';
 
 @Controller('attendance/batch')
 @UseGuards(AuthGuard, RolesGuard)
-@Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN)
+@Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.COMPANY_OWNER)
 export class BatchProcessingController {
   constructor(private readonly processorService: AttendanceProcessorService) {}
 

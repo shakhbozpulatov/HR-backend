@@ -6,6 +6,7 @@
   <component name="ChangeListManager">
     <list default="true" id="f223feb0-6502-4a9b-9c03-44f93ba47b8c" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/modules/attendance/controllers/batch-processing.controller.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/modules/attendance/controllers/batch-processing.controller.ts" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -125,7 +126,7 @@
       <workItem from="1767787683272" duration="4501000" />
       <workItem from="1767931761328" duration="1211000" />
       <workItem from="1768135203831" duration="3687000" />
-      <workItem from="1768407044459" duration="12407000" />
+      <workItem from="1768407044459" duration="12901000" />
     </task>
     <servers />
   </component>
