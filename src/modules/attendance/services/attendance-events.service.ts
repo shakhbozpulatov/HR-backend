@@ -781,19 +781,26 @@ export class AttendanceEventsService {
       timestampLocal: string;
     }>;
   }> {
-    // Find the user by HC person ID
-    const user = await this.userRepository.findOne({
-      where: { hcPersonId: userId },
+    // Find the user by UUID (id) or HC person ID (hcPersonId)
+    let user = await this.userRepository.findOne({
+      where: { id: userId },
     });
+
+    // If not found by UUID, try hcPersonId
+    if (!user) {
+      user = await this.userRepository.findOne({
+        where: { hcPersonId: userId },
+      });
+    }
 
     if (!user) {
       throw new NotFoundException(`User with ID ${userId} not found`);
     }
 
-    // Build query for attendance events
+    // Build query for attendance events using user's UUID
     const queryBuilder = this.eventRepository
       .createQueryBuilder('event')
-      .where('event.user_id = :userId', { userId })
+      .where('event.user_id = :userUuid', { userUuid: user.id })
       .orderBy('event.created_at', 'ASC');
 
     // Apply date filters if provided
