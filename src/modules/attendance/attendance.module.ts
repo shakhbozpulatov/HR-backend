@@ -16,6 +16,7 @@ import { TerminalDevice } from '@/modules/terminals/entities/terminal-device.ent
 import { UserScheduleAssignment } from '@/modules/schedules/entities/employee-schedule-assignment.entity';
 import { ScheduleTemplate } from '@/modules/schedules/entities/schedule-template.entity';
 import { Holiday } from '@/modules/holidays/entities/holiday.entity';
+import { Company } from '@/modules/company/entities/company.entity';
 
 // Services
 import { AttendanceEventsService } from './services/attendance-events.service';
@@ -59,6 +60,7 @@ import { TelegramNotificationService } from '@/common/services/telegram-notifica
       UserScheduleAssignment,
       ScheduleTemplate,
       Holiday,
+      Company,
     ]),
     BullModule.registerQueue({
       name: 'attendance',

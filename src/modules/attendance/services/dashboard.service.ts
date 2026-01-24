@@ -1,9 +1,10 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, In, LessThanOrEqual } from 'typeorm';
 import * as moment from 'moment-timezone';
 
 import { User } from '@/modules/users/entities/user.entity';
+import { Company } from '@/modules/company/entities/company.entity';
 import { AttendanceRecord } from '@/modules/attendance/entities/attendance-record.entity';
 import { AttendanceEvent } from '@/modules/attendance/entities/attendance-event.entity';
 import { UserScheduleAssignment } from '@/modules/schedules/entities/employee-schedule-assignment.entity';
@@ -31,6 +32,8 @@ export class DashboardService {
   private readonly timezone = 'Asia/Tashkent';
 
   constructor(
+    @InjectRepository(Company)
+    private companyRepository: Repository<Company>,
     @InjectRepository(User)
     private userRepository: Repository<User>,
     @InjectRepository(AttendanceRecord)
@@ -49,6 +52,15 @@ export class DashboardService {
    * Get dashboard statistics for a specific date
    */
   async getDashboardStatistics(dto: DashboardStatisticsDto) {
+    if (dto.company_id) {
+      const companyExists = await this.companyRepository.exist({
+        where: { id: dto.company_id },
+      });
+      if (!companyExists) {
+        throw new BadRequestException('company_id topilmadi');
+      }
+    }
+
     const date = dto.date
       ? moment(dto.date).format('YYYY-MM-DD')
       : moment().tz(this.timezone).format('YYYY-MM-DD');
@@ -73,6 +85,18 @@ export class DashboardService {
     const totalEmployees = activeUsers.length;
 
     this.logger.log(`Total active employees: ${totalEmployees}`);
+
+    // If company exists but has no active employees, return zeros (avoid In([]) SQL errors)
+    if (totalEmployees === 0) {
+      return {
+        date,
+        is_holiday: false,
+        total_employees: 0,
+        expected_today: 0,
+        checked_in: 0,
+        on_time_arrivals: 0,
+      };
+    }
 
     // Check if today is a holiday
     const holiday = await this.holidayRepository.findOne({
