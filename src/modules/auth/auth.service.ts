@@ -32,6 +32,7 @@ import { PermissionService } from './services/permission.service';
 import { CompanyService } from './services/company.service';
 import { PhotoUploadService } from './services/photo-upload.service';
 import { PhotoUploadJobDto } from './dto/photo-upload-job.dto';
+import { UserPhotoStorageService } from '@/common/services/user-photo-storage.service';
 
 /**
  * Auth Service
@@ -63,6 +64,7 @@ export class AuthService {
     private permissionService: PermissionService,
     private companyService: CompanyService,
     private photoUploadService: PhotoUploadService,
+    private userPhotoStorage: UserPhotoStorageService,
   ) {}
 
   /**
@@ -399,6 +401,17 @@ export class AuthService {
             }
           }
 
+          // Save photo to local folder immediately for existing user as well
+          if (photoBuffer && photoMimetype) {
+            const photoPath = await this.userPhotoStorage.saveUserPhotoFromBuffer(
+              existingUser.id,
+              photoBuffer,
+              photoMimetype,
+            );
+            existingUser.photo_url = photoPath;
+            await this.userRepository.save(existingUser);
+          }
+
           return {
             user: existingUser,
             hcUser: hcResponse,
@@ -577,6 +590,17 @@ export class AuthService {
         `✅ User saved to database: ${savedUser.email} (${savedUser.role})`,
       );
 
+      // Save photo to local folder immediately (no Base64 in DB)
+      if (photoBuffer && photoMimetype) {
+        const photoPath = await this.userPhotoStorage.saveUserPhotoFromBuffer(
+          savedUser.id,
+          photoBuffer,
+          photoMimetype,
+        );
+        savedUser.photo_url = photoPath;
+        await this.userRepository.save(savedUser);
+      }
+
       // Step 3: Bind user to terminal if accessLevelIdList is provided
       if (
         createUserDto.accessLevelIdList &&
@@ -680,7 +704,7 @@ export class AuthService {
       mfa_enabled: user.mfa_enabled,
       created_at: user.created_at,
       hcPersonId: user.hcPersonId,
-      photo: user.photo_url,
+      photo_url: user.photo_url ? `/${user.photo_url}` : null,
     };
 
     // Add company information
@@ -930,18 +954,20 @@ export class AuthService {
       );
     }
 
-    // Convert buffer to base64
-    const photoData = photoBuffer.toString('base64');
-
-    // Save photo locally (as base64 URL for now - can be changed to file storage)
-    const photoUrl = `data:${mimetype};base64,${photoData}`;
-    user.photo_url = photoUrl;
+    // Save photo to file storage (DB stores relative file path)
+    const photoPath = await this.userPhotoStorage.saveUserPhotoFromBuffer(
+      user.id,
+      photoBuffer,
+      mimetype,
+    );
+    user.photo_url = photoPath;
     await this.userRepository.save(user);
 
     console.log(`📸 Photo saved locally for user: ${user.email}`);
 
     // Upload to HC system
     try {
+      const photoData = photoBuffer.toString('base64');
       await this.hcService.uploadUserPhoto(user.hcPersonId, photoData);
 
       console.log(
@@ -950,7 +976,7 @@ export class AuthService {
 
       return {
         message: 'Photo uploaded successfully to both database and HC system',
-        photo_url: photoUrl,
+        photo_url: `/${photoPath}`,
       };
     } catch (hcError) {
       console.warn(
@@ -962,7 +988,7 @@ export class AuthService {
       return {
         message:
           'Photo uploaded to database but HC upload failed. Please try again later.',
-        photo_url: photoUrl,
+        photo_url: `/${photoPath}`,
       };
     }
   }

@@ -1,4 +1,4 @@
-import { IsOptional, IsDateString, IsInt, Min, Max } from 'class-validator';
+import { IsOptional, IsDateString, IsInt, Min, Max, IsIn, IsString } from 'class-validator';
 import { Type, Transform } from 'class-transformer';
 
 /**
@@ -99,6 +99,31 @@ export class GetEventsDto {
   @IsOptional()
   @Transform(({ value }) => (value === '' ? undefined : value))
   userId?: string; // Filter by user_id (HC person ID from events table, matches hcPersonId in users table)
+
+  // Additional filtering
+  @IsOptional()
+  @IsString()
+  @Transform(({ value }) => (value === '' ? undefined : value))
+  companyId?: string;
+
+  @IsOptional()
+  @IsString()
+  @Transform(({ value }) => (value === '' ? undefined : value))
+  departmentId?: string;
+
+  @IsOptional()
+  @IsString()
+  @Transform(({ value }) => (value === '' ? undefined : value))
+  search?: string;
+
+  // Additional sorting
+  @IsOptional()
+  @IsIn(['NAME', 'PERSON_ID', 'PHONE', 'CREATED_AT'])
+  sortBy?: 'NAME' | 'PERSON_ID' | 'PHONE' | 'CREATED_AT' = 'NAME';
+
+  @IsOptional()
+  @IsIn(['ASC', 'DESC'])
+  sortOrder?: 'ASC' | 'DESC' = 'ASC';
 }
 
 /**

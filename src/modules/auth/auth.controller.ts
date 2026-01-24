@@ -12,7 +12,6 @@ import {
   UseInterceptors,
   UploadedFile,
   BadRequestException,
-  UsePipes,
   ValidationPipe,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';

@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Delete,
@@ -6,7 +7,10 @@ import {
   Param,
   Patch,
   Post,
+  Query,
   Req,
+  UploadedFile,
+  UseInterceptors,
   UseGuards,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
@@ -16,6 +20,8 @@ import { AuthGuard } from '@/common/guards/auth.guard';
 import { RolesGuard } from '@/common/guards/roles.guard';
 import { Roles } from '@/common/decorators/roles.decorator';
 import { UserRole } from './entities/user.entity';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { GetUsersDto } from './dto/get-users.dto';
 
 @Controller('users')
 @UseGuards(AuthGuard, RolesGuard)
@@ -24,8 +30,27 @@ export class UsersController {
 
   @Post()
   @Roles(UserRole.SUPER_ADMIN, UserRole.COMPANY_OWNER, UserRole.ADMIN)
-  async create(@Body() createUserDto: CreateUserDto) {
-    return await this.usersService.create(createUserDto);
+  @UseInterceptors(
+    FileInterceptor('photo', {
+      limits: { fileSize: 5 * 1024 * 1024 },
+      fileFilter: (_req, file, callback) => {
+        if (!file.mimetype.match(/\/(jpg|jpeg|png)$/)) {
+          return callback(
+            new BadRequestException(
+              'Only JPG, JPEG, and PNG files are allowed',
+            ),
+            false,
+          );
+        }
+        callback(null, true);
+      },
+    }),
+  )
+  async create(
+    @Body() createUserDto: CreateUserDto,
+    @UploadedFile() photo?: Express.Multer.File,
+  ) {
+    return await this.usersService.create(createUserDto, photo);
   }
 
   @Get()
@@ -35,9 +60,9 @@ export class UsersController {
     UserRole.ADMIN,
     UserRole.HR_MANAGER,
   )
-  async findAll(@Req() req) {
+  async findAll(@Req() req, @Query() dto: GetUsersDto) {
     const { role, company_id } = req.user;
-    return await this.usersService.findAll(role, company_id);
+    return await this.usersService.findAll(role, company_id, dto);
   }
 
   @Get(':id')

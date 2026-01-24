@@ -5,6 +5,8 @@ import { Queue } from 'bull';
 import { Repository } from 'typeorm';
 import { User } from '@/modules/users/entities/user.entity';
 import { HcService } from '@/modules/hc/hc.service';
+import { UserPhotoStorageService } from '@/common/services/user-photo-storage.service';
+import { readFile } from 'fs/promises';
 import {
   PhotoUploadJobDto,
   PhotoUploadResult,
@@ -35,6 +37,7 @@ export class PhotoUploadService implements IPhotoUploadService {
     @InjectQueue('photo-upload') private photoUploadQueue: Queue,
     @InjectRepository(User) private userRepository: Repository<User>,
     private hcService: HcService,
+    private userPhotoStorage: UserPhotoStorageService,
   ) {}
 
   /**
@@ -90,10 +93,14 @@ export class PhotoUploadService implements IPhotoUploadService {
       }
 
       // 2. Create photo URL for local storage (data URL)
-      const photoUrl = `data:${jobData.mimetype};base64,${jobData.photoData}`;
+      const photoPath = await this.userPhotoStorage.saveUserPhotoFromBase64(
+        user.id,
+        jobData.photoData,
+        jobData.mimetype,
+      );
 
-      // 3. Save photo URL locally first (ensures we have a backup)
-      user.photo_url = photoUrl;
+      // 3. Save photo path locally first (ensures we have a backup)
+      user.photo_url = photoPath;
       await this.userRepository.save(user);
 
       this.logger.log(
@@ -115,7 +122,7 @@ export class PhotoUploadService implements IPhotoUploadService {
           success: true,
           message:
             'Photo uploaded successfully to both database and HC system',
-          photo_url: photoUrl,
+          photo_url: photoPath,
         };
       } catch (hcError) {
         // HC upload failed, but local save succeeded
@@ -129,7 +136,7 @@ export class PhotoUploadService implements IPhotoUploadService {
         return {
           success: false,
           message: 'Photo saved locally but HC upload failed',
-          photo_url: photoUrl,
+          photo_url: photoPath,
           error: hcError.message,
         };
       }
@@ -175,13 +182,21 @@ export class PhotoUploadService implements IPhotoUploadService {
       );
     }
 
-    // Extract base64 data from data URL
-    const matches = user.photo_url.match(/^data:(.+);base64,(.+)$/);
-    if (!matches) {
-      throw new Error(`Invalid photo URL format for user: ${userId}`);
-    }
+    let mimetype: string;
+    let photoData: string;
 
-    const [, mimetype, photoData] = matches;
+    // Legacy: base64 data URL stored in DB
+    const matches = user.photo_url.match(/^data:(.+);base64,(.+)$/);
+    if (matches) {
+      mimetype = matches[1];
+      photoData = matches[2];
+    } else {
+      // Current: file path stored in DB → read and convert to base64 for HC upload
+      const absPath = this.userPhotoStorage.toAbsolutePath(user.photo_url);
+      const buf = await readFile(absPath);
+      mimetype = this.userPhotoStorage.contentTypeFromPath(absPath);
+      photoData = buf.toString('base64');
+    }
 
     // Queue photo upload
     const jobData: PhotoUploadJobDto = {

@@ -5,13 +5,15 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { In, Not, Repository } from 'typeorm';
+import { Repository } from 'typeorm';
 import { User, UserRole, UserStatus } from './entities/user.entity';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { CryptoUtils } from '@/common/utils/crypto.utils';
 import { HcService } from '@/modules/hc/hc.service';
 import { HcDateFormatter } from '@/modules/hc/utils/hc-date.util';
+import { UserPhotoStorageService } from '@/common/services/user-photo-storage.service';
+import { GetUsersDto } from './dto/get-users.dto';
 
 @Injectable()
 export class UsersService {
@@ -20,9 +22,13 @@ export class UsersService {
     private userRepository: Repository<User>,
     private cryptoUtils: CryptoUtils,
     private hcService: HcService,
+    private userPhotoStorage: UserPhotoStorageService,
   ) {}
 
-  async create(createUserDto: CreateUserDto): Promise<User> {
+  async create(
+    createUserDto: CreateUserDto,
+    photo?: Express.Multer.File,
+  ): Promise<any> {
     const existingUser = await this.userRepository.findOne({
       where: { email: createUserDto.email },
     });
@@ -31,37 +37,119 @@ export class UsersService {
       throw new BadRequestException('Email already exists');
     }
 
+    if (!photo?.buffer) {
+      throw new BadRequestException('User photo is required');
+    }
+
     // Hash password
     const hashedPassword = this.cryptoUtils.hashPassword(
       createUserDto.password,
     );
 
     // Create new entity
+    const { password: _password, ...rest } = createUserDto as any;
     const user = this.userRepository.create({
-      ...createUserDto,
+      ...rest,
       password_hash: hashedPassword,
     });
 
     // Save and return single User
-    return await this.userRepository.save(user);
+    const savedAny = await this.userRepository.save(user as any);
+    const saved = Array.isArray(savedAny) ? savedAny[0] : savedAny;
+
+    const photoPath = await this.userPhotoStorage.saveUserPhotoFromBuffer(
+      saved.id,
+      photo.buffer,
+      photo.mimetype,
+    );
+    saved.photo_url = photoPath;
+    await this.userRepository.save(saved);
+
+    return this.toUserResponse(saved);
   }
 
-  async findAll(role: UserRole, company_id: string): Promise<User[]> {
-    if (role === UserRole.SUPER_ADMIN) {
-      return await this.userRepository.find();
+  async findAll(
+    role: UserRole,
+    company_id: string,
+    dto: GetUsersDto,
+  ): Promise<{
+    data: any[];
+    pagination: { page: number; limit: number; total: number; totalPages: number };
+  }> {
+    const page = dto.page || 1;
+    const limit = dto.limit || 20;
+
+    const qb = this.userRepository.createQueryBuilder('u');
+
+    // Never return secrets
+    qb.select([
+      'u.id',
+      'u.email',
+      'u.role',
+      'u.company_id',
+      'u.active',
+      'u.status',
+      'u.first_name',
+      'u.last_name',
+      'u.middle_name',
+      'u.phone',
+      'u.department_id',
+      'u.position',
+      'u.start_date',
+      'u.end_date',
+      'u.photo_url',
+      'u.created_at',
+      'u.updated_at',
+    ]);
+
+    if (role !== UserRole.SUPER_ADMIN) {
+      qb.andWhere('u.company_id = :company_id', { company_id });
+      qb.andWhere('u.role NOT IN (:...blockedRoles)', {
+        blockedRoles: [UserRole.SUPER_ADMIN, UserRole.COMPANY_OWNER],
+      });
     }
-    return await this.userRepository.find({
-      where: {
-        company_id,
-        role: Not(In([UserRole.SUPER_ADMIN, UserRole.COMPANY_OWNER])),
+
+    const [users, total] = await qb
+      .orderBy('u.created_at', 'DESC')
+      .skip((page - 1) * limit)
+      .take(limit)
+      .getManyAndCount();
+
+    // Migrate legacy base64 photos to file paths (no Base64 returned)
+    await Promise.all(users.map((u) => this.migratePhotoIfNeeded(u)));
+
+    return {
+      data: users.map((u) => this.toUserResponse(u)),
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit),
       },
-    });
+    };
   }
 
-  async findOne(id: string, user: any): Promise<User> {
+  async findOne(id: string, user: any): Promise<any> {
     const targetUser = await this.userRepository.findOne({
       where: { id },
-      select: ['id', 'email', 'role', 'active', 'created_at', 'company_id'],
+      select: [
+        'id',
+        'email',
+        'role',
+        'active',
+        'created_at',
+        'company_id',
+        'status',
+        'first_name',
+        'last_name',
+        'middle_name',
+        'phone',
+        'department_id',
+        'position',
+        'start_date',
+        'end_date',
+        'photo_url',
+      ],
     });
 
     if (!targetUser) {
@@ -78,7 +166,42 @@ export class UsersService {
       );
     }
 
-    return targetUser;
+    await this.migratePhotoIfNeeded(targetUser);
+    return this.toUserResponse(targetUser) as any;
+  }
+
+  private toUserResponse(u: User) {
+    return {
+      id: u.id,
+      email: u.email,
+      role: u.role,
+      company_id: u.company_id,
+      active: u.active,
+      status: u.status,
+      first_name: u.first_name,
+      last_name: u.last_name,
+      middle_name: u.middle_name,
+      phone: u.phone,
+      department_id: u.department_id,
+      position: u.position,
+      start_date: u.start_date,
+      end_date: u.end_date,
+      photo_url: u.photo_url ? `/${u.photo_url}` : null,
+      created_at: u.created_at,
+      updated_at: u.updated_at,
+    };
+  }
+
+  private async migratePhotoIfNeeded(u: User): Promise<void> {
+    if (!u?.photo_url) return;
+    if (!this.userPhotoStorage.isDataUrl(u.photo_url)) return;
+
+    const migrated = await this.userPhotoStorage.saveUserPhotoFromDataUrl(
+      u.id,
+      u.photo_url,
+    );
+    u.photo_url = migrated.path;
+    await this.userRepository.save(u);
   }
 
   async update(
@@ -117,9 +240,11 @@ export class UsersService {
     }
 
     if (updateUserDto.password) {
-      updateUserDto.password = this.cryptoUtils.hashPassword(
+      // NOTE: entity column is password_hash
+      (updateUserDto as any).password_hash = this.cryptoUtils.hashPassword(
         updateUserDto.password,
       );
+      delete (updateUserDto as any).password;
     }
 
     // Apply updates to user entity

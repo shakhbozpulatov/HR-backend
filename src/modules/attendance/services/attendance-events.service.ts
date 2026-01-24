@@ -883,6 +883,11 @@ export class AttendanceEventsService {
     page?: number;
     limit?: number;
     userId?: string;
+    companyId?: string;
+    departmentId?: string;
+    search?: string;
+    sortBy?: 'NAME' | 'PERSON_ID' | 'PHONE' | 'CREATED_AT';
+    sortOrder?: 'ASC' | 'DESC';
   }): Promise<{
     employees: Array<{
       id: string;
@@ -929,6 +934,41 @@ export class AttendanceEventsService {
       usersQuery = usersQuery.andWhere('user.hcPersonId = :userId', {
         userId: dto.userId,
       });
+    }
+
+    if (dto.companyId) {
+      usersQuery = usersQuery.andWhere('user.company_id = :companyId', {
+        companyId: dto.companyId,
+      });
+    }
+
+    if (dto.departmentId) {
+      usersQuery = usersQuery.andWhere('user.department_id = :departmentId', {
+        departmentId: dto.departmentId,
+      });
+    }
+
+    if (dto.search) {
+      const search = `%${dto.search}%`;
+      usersQuery = usersQuery.andWhere(
+        '(user.first_name ILIKE :search OR user.last_name ILIKE :search OR user.email ILIKE :search OR user.phone ILIKE :search)',
+        { search },
+      );
+    }
+
+    const sortBy = dto.sortBy || 'NAME';
+    const sortOrder = dto.sortOrder || 'ASC';
+
+    if (sortBy === 'PERSON_ID') {
+      usersQuery = usersQuery.orderBy('user.hcPersonId', sortOrder);
+    } else if (sortBy === 'PHONE') {
+      usersQuery = usersQuery.orderBy('user.phone', sortOrder);
+    } else if (sortBy === 'CREATED_AT') {
+      usersQuery = usersQuery.orderBy('user.created_at', sortOrder);
+    } else {
+      usersQuery = usersQuery
+        .orderBy('user.first_name', sortOrder)
+        .addOrderBy('user.last_name', sortOrder);
     }
 
     // Get total count for pagination
@@ -1102,6 +1142,11 @@ export class AttendanceEventsService {
     startTime?: string;
     endTime?: string;
     userId?: string;
+    companyId?: string;
+    departmentId?: string;
+    search?: string;
+    sortBy?: 'NAME' | 'PERSON_ID' | 'PHONE' | 'CREATED_AT';
+    sortOrder?: 'ASC' | 'DESC';
   }): Promise<Buffer> {
     this.logger.log(
       `Exporting attendance to Excel: ${dto.startTime || 'last 7 days'} to ${dto.endTime || 'now'}${dto.userId ? `, userId=${dto.userId}` : ''}`,
@@ -1125,6 +1170,41 @@ export class AttendanceEventsService {
       usersQuery = usersQuery.andWhere('user.hcPersonId = :userId', {
         userId: dto.userId,
       });
+    }
+
+    if (dto.companyId) {
+      usersQuery = usersQuery.andWhere('user.company_id = :companyId', {
+        companyId: dto.companyId,
+      });
+    }
+
+    if (dto.departmentId) {
+      usersQuery = usersQuery.andWhere('user.department_id = :departmentId', {
+        departmentId: dto.departmentId,
+      });
+    }
+
+    if (dto.search) {
+      const search = `%${dto.search}%`;
+      usersQuery = usersQuery.andWhere(
+        '(user.first_name ILIKE :search OR user.last_name ILIKE :search OR user.email ILIKE :search OR user.phone ILIKE :search)',
+        { search },
+      );
+    }
+
+    const sortBy = dto.sortBy || 'NAME';
+    const sortOrder = dto.sortOrder || 'ASC';
+
+    if (sortBy === 'PERSON_ID') {
+      usersQuery = usersQuery.orderBy('user.hcPersonId', sortOrder);
+    } else if (sortBy === 'PHONE') {
+      usersQuery = usersQuery.orderBy('user.phone', sortOrder);
+    } else if (sortBy === 'CREATED_AT') {
+      usersQuery = usersQuery.orderBy('user.created_at', sortOrder);
+    } else {
+      usersQuery = usersQuery
+        .orderBy('user.first_name', sortOrder)
+        .addOrderBy('user.last_name', sortOrder);
     }
 
     const users = await usersQuery.getMany();

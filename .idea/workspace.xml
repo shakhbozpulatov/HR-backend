@@ -5,7 +5,19 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="f223feb0-6502-4a9b-9c03-44f93ba47b8c" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/src/modules/attendance/services/attendance-processor.service.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/modules/attendance/services/attendance-processor.service.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/common/common.module.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/common/common.module.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/main.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/modules/attendance/dto/fetch-attendance-events.dto.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/modules/attendance/dto/fetch-attendance-events.dto.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/modules/attendance/services/attendance-events.service.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/modules/attendance/services/attendance-events.service.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/modules/auth/auth.controller.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/modules/auth/auth.controller.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/modules/auth/auth.module.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/modules/auth/auth.module.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/modules/auth/auth.service.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/modules/auth/auth.service.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/modules/auth/services/photo-upload.service.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/modules/auth/services/photo-upload.service.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/modules/users/users.controller.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/modules/users/users.controller.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/modules/users/users.module.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/modules/users/users.module.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/modules/users/users.service.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/modules/users/users.service.ts" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -125,7 +137,9 @@
       <workItem from="1767787683272" duration="4501000" />
       <workItem from="1767931761328" duration="1211000" />
       <workItem from="1768135203831" duration="3687000" />
-      <workItem from="1768407044459" duration="13285000" />
+      <workItem from="1768407044459" duration="15573000" />
+      <workItem from="1769093014754" duration="1189000" />
+      <workItem from="1769273451844" duration="4975000" />
     </task>
     <servers />
   </component>

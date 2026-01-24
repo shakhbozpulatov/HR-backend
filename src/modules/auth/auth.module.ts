@@ -18,6 +18,7 @@ import { PermissionService } from './services/permission.service';
 import { CompanyService } from './services/company.service';
 import { PhotoUploadService } from './services/photo-upload.service';
 import { HcAuthService } from '@/modules/hc/services/hc-auth.service';
+import { CommonModule } from '@/common/common.module';
 
 // Queue processor
 import { PhotoUploadQueueProcessor } from './processors/photo-upload-queue.processor';
@@ -46,6 +47,7 @@ import { PhotoUploadQueueProcessor } from './processors/photo-upload-queue.proce
   imports: [
     TypeOrmModule.forFeature([User, Company]),
     PassportModule,
+    CommonModule,
     // Register photo upload queue
     BullModule.registerQueue({
       name: 'photo-upload',
